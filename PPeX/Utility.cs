@@ -127,7 +127,7 @@ namespace PPeX
 
                 byte[] fileHeaderBuf = new byte[288 * count];
                 uint fileOffset = (uint)headerBuf.Length;
-                uint largestSize = 1024 * 1024;
+                uint largestSize = 32 * 1024;
                 var list = arc.ToArray();
 
                 for (int i = 0; i < count; i++)
