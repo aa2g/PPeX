@@ -18,7 +18,7 @@ namespace PPeX
 
         public static List<ExtendedArchive> archives = new List<ExtendedArchive>();
 
-        public static Settings Settings;
+        private static Settings Settings;
 
 
         static Manager()
@@ -41,6 +41,19 @@ namespace PPeX
 
                 }
             }
+            /*
+            foreach (string path in new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory).GetFiles("*.dll").Select(x => x.FullName))
+            {
+                try
+                {
+                    assemblies.Add(Assembly.LoadFile(path));
+                }
+                catch (Exception ex)
+                {
+
+                }
+            }*/
+
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
                 return assemblies.First(x => args.Name == x.FullName);
