@@ -55,6 +55,8 @@ namespace PPeXUI
 
         public void OpenFile()
         {
+            txtSaveLocation.Text = "";
+            txtArchiveName.Text = "";
             cxtItems.Enabled = true;
         }
 
