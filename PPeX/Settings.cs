@@ -42,6 +42,11 @@ namespace PPeX
         /// </summary>
         [JsonProperty]
         public string PPXLocation = "";
+        /// <summary>
+        /// The location to load PPX archives.
+        /// </summary>
+        [JsonProperty]
+        public string PlaceholdersLocation = "";
 
         public static Settings Load()
         {
