@@ -17,21 +17,16 @@ namespace PPeX
 
         public static List<ExtendedArchive> archives = new List<ExtendedArchive>();
 
+        public static Settings Settings = Settings.Load();
+
 
         static Manager()
         {
+#if DEBUG
             System.Diagnostics.Debugger.Launch();
+#endif
 
-            try
-            {
-                //body goes here
-            }
-            catch (Exception ex)
-            {
-                object test = ex;
-            }
-
-            foreach (string dir in Directory.EnumerateFiles(@"I:\AA2\Pure\Play\data", "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
+            foreach (string dir in Directory.EnumerateFiles(Settings.PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
             {
                 var archive = new ExtendedArchive(dir);
 
@@ -82,7 +77,7 @@ namespace PPeX
             }
             else
             {
-                using (FileStream fs = new FileStream("B:\\ppex.log", FileMode.OpenOrCreate))
+                using (FileStream fs = new FileStream("ppex.log", FileMode.OpenOrCreate))
                 using (StreamWriter writer = new StreamWriter(fs))
                 {
                     fs.Position = fs.Length;
@@ -107,7 +102,7 @@ namespace PPeX
             }
             else
             {
-                using (FileStream fs = new FileStream("B:\\ppex.log", FileMode.OpenOrCreate))
+                using (FileStream fs = new FileStream("ppex.log", FileMode.OpenOrCreate))
                 using (StreamWriter writer = new StreamWriter(fs))
                 {
                     fs.Position = fs.Length;
