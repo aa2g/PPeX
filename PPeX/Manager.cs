@@ -95,7 +95,7 @@ namespace PPeX
 
             foreach (var arc in ppf)
             {
-                File.WriteAllBytes(@"I:\AA2\Pure\Play\data\placeholder\" + arc.Key + ".pp", Utility.CreateHeader(arc.Value));
+                File.WriteAllBytes(Settings.PlaceholdersLocation + "\\" + arc.Key + ".pp", Utility.CreateHeader(arc.Value));
             }
             
         }
