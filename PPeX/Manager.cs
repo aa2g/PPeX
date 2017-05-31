@@ -82,7 +82,7 @@ namespace PPeX
                 LoadedArchives.Add(archive);
             }
 
-            /*
+            
             Dictionary<string, List<string>> ppf = new Dictionary<string, List<string>>();
             foreach (var kv in FileCache)
             {
@@ -95,9 +95,9 @@ namespace PPeX
 
             foreach (var arc in ppf)
             {
-                File.WriteAllBytes(@"I:\AA2\Pure\Play\data\placeholder\" + arc.Key, Utility.CreateHeader(arc.Value));
+                File.WriteAllBytes(@"I:\AA2\Pure\Play\data\placeholder\" + arc.Key + ".pp", Utility.CreateHeader(arc.Value));
             }
-            */
+            
         }
 
 
