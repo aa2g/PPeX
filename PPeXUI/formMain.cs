@@ -40,7 +40,7 @@ namespace PPeXUI
 
         private void formMain_Load(object sender, EventArgs e)
         {
-            cmbCompression.SelectedIndex = 1;
+            cmbCompression.SelectedIndex = 2;
             cmbArchiveType.SelectedIndex = 0;
         }
 
