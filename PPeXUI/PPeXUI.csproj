@@ -137,6 +137,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\OpusWrapper\OpusWrapper.csproj">
+      <Project>{838bdb0b-5eb1-4c1e-9026-0a8842ac00c6}</Project>
+      <Name>OpusWrapper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\PPeX\PPeX.csproj">
       <Project>{a611a988-d477-4e16-af2f-d3a661b909a9}</Project>
       <Name>PPeX</Name>
