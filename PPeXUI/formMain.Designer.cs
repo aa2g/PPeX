@@ -48,6 +48,8 @@
             this.btnImportPP = new System.Windows.Forms.ToolStripButton();
             this.btnImportFolder = new System.Windows.Forms.ToolStripButton();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.convertxggTowavToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.lsvSource = new System.Windows.Forms.ListView();
@@ -81,8 +83,6 @@
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.numBitrate = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.convertxggTowavToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -288,6 +288,18 @@
             this.toolStripDropDownButton1.Size = new System.Drawing.Size(29, 22);
             this.toolStripDropDownButton1.Text = "Plugins";
             // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(179, 6);
+            // 
+            // convertxggTowavToolStripMenuItem
+            // 
+            this.convertxggTowavToolStripMenuItem.Name = "convertxggTowavToolStripMenuItem";
+            this.convertxggTowavToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.convertxggTowavToolStripMenuItem.Text = "Convert .xgg to .wav";
+            this.convertxggTowavToolStripMenuItem.Click += new System.EventHandler(this.convertxggTowavToolStripMenuItem_Click);
+            // 
             // tabControl1
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
@@ -327,6 +339,8 @@
             // 
             // lsvSource
             // 
+            this.lsvSource.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.lsvSource.GridLines = true;
             this.lsvSource.Location = new System.Drawing.Point(318, 6);
             this.lsvSource.Name = "lsvSource";
@@ -346,6 +360,9 @@
             // 
             // txtFileProg
             // 
+            this.txtFileProg.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.txtFileProg.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtFileProg.Location = new System.Drawing.Point(9, 194);
             this.txtFileProg.Multiline = true;
@@ -357,6 +374,8 @@
             // 
             // prgFileProgress
             // 
+            this.prgFileProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.prgFileProgress.Location = new System.Drawing.Point(9, 165);
             this.prgFileProgress.Name = "prgFileProgress";
             this.prgFileProgress.Size = new System.Drawing.Size(537, 23);
@@ -481,6 +500,9 @@
             // 
             // txtSaveProg
             // 
+            this.txtSaveProg.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.txtSaveProg.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtSaveProg.Location = new System.Drawing.Point(9, 194);
             this.txtSaveProg.Multiline = true;
@@ -492,6 +514,8 @@
             // 
             // prgSaveProgress
             // 
+            this.prgSaveProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.prgSaveProgress.Location = new System.Drawing.Point(9, 165);
             this.prgSaveProgress.Name = "prgSaveProgress";
             this.prgSaveProgress.Size = new System.Drawing.Size(537, 23);
@@ -499,6 +523,8 @@
             // 
             // btnSave
             // 
+            this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.Location = new System.Drawing.Point(9, 136);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(537, 23);
@@ -632,18 +658,6 @@
             this.label9.Size = new System.Drawing.Size(123, 13);
             this.label9.TabIndex = 0;
             this.label9.Text = "Audio bitrate (0 for auto):";
-            // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(179, 6);
-            // 
-            // convertxggTowavToolStripMenuItem
-            // 
-            this.convertxggTowavToolStripMenuItem.Name = "convertxggTowavToolStripMenuItem";
-            this.convertxggTowavToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
-            this.convertxggTowavToolStripMenuItem.Text = "Convert .xgg to .wav";
-            this.convertxggTowavToolStripMenuItem.Click += new System.EventHandler(this.convertxggTowavToolStripMenuItem_Click);
             // 
             // formMain
             // 
