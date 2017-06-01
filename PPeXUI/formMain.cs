@@ -581,8 +581,9 @@ namespace PPeXUI
                 OverwritePrompt = true
             };
             dialog.Filters.Add(new CommonFileDialogFilter("Extended PP archive", "*.ppx"));
-            
-            var result = dialog.ShowDialog();
+
+            if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+                return;
 
             txtSaveLocation.Text = dialog.FileName;
         }
