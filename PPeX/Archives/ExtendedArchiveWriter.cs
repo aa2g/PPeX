@@ -76,9 +76,11 @@ namespace PPeX
                     uint crc = Crc32CAlgorithm.Compute(file.Source.Md5);
                     i++;
 
+                    bool isDuplicate = md5s.Contains(crc);
+
                     try
                     {
-                        file.WriteTo(writer, headerWriter, md5s.Contains(crc));
+                        file.WriteTo(writer, headerWriter, isDuplicate);
                     }
                     catch
                     {
@@ -90,7 +92,7 @@ namespace PPeX
                     }
 
                     progress.Report(new Tuple<string, int>(
-                                    "[" + i + " / " + Files.Count + "] Written " + file.Name + "... (" + file.Source.Size + " bytes)\n",
+                                    "[" + i + " / " + Files.Count + "] Written " + file.Name + "... (" + file.Source.Size + " bytes)" + (isDuplicate ? " [duplicate]\n" : "\n"),
                                     100 * i / Files.Count));
 
                     md5s.Add(crc);
