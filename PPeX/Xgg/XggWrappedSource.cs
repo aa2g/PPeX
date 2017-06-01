@@ -39,44 +39,54 @@ namespace PPeX.Xgg
         private Stream Compile(Stream basestream)
         {
             var mem = new MemoryStream();
-            using (var writer = new BinaryWriter(mem, Encoding.ASCII, true))
-            using (var wav = new WaveFileReader(basestream))
-            using (var res = new MediaFoundationResampler(wav, new WaveFormat(
-                wav.WaveFormat.SampleRate < 24000 ? 24000 : 48000
-                , 1)))
+            try
             {
-                var opus = OpusEncoder.Create(res.WaveFormat.SampleRate, 1, FragLabs.Audio.Codecs.Opus.Application.Voip);
-                opus.Bitrate = PPeXCore.Settings.XggBitrate;
-                int packetsize = (int)(res.WaveFormat.SampleRate * 2 * PPeXCore.Settings.XggFrameSize);
-
-                writer.Write(Encoding.ASCII.GetBytes("XGG"));
-                writer.Write(Version);
-                writer.Write(packetsize);
-                writer.Write(opus.Bitrate);
-
-                long oldpos = mem.Position;
-                ushort count = 0;
-                writer.Write(count);
-
-                byte[] buffer = new byte[packetsize];
-                int result = res.Read(buffer, 0, packetsize);
-                while (result > 0)
+                using (var writer = new BinaryWriter(mem, Encoding.ASCII, true))
+                using (var wav = new WaveFileReader(basestream))
+                using (var res = new MediaFoundationResampler(wav, new WaveFormat(
+                    wav.WaveFormat.SampleRate < 24000 ? 24000 : 48000
+                    , 1)))
                 {
-                    count++;
-                    int outlen = 0;
-                    byte[] output = opus.Encode(buffer, result / 2, out outlen);
-                    writer.Write((uint)outlen);
-                    writer.Write(output, 0, outlen);
+                    var opus = OpusEncoder.Create(res.WaveFormat.SampleRate, 1, FragLabs.Audio.Codecs.Opus.Application.Voip);
+                    opus.Bitrate = PPeXCore.Settings.XggBitrate;
+                    int packetsize = (int)(res.WaveFormat.SampleRate * 2 * PPeXCore.Settings.XggFrameSize);
 
-                    result = res.Read(buffer, 0, packetsize);
+                    writer.Write(Encoding.ASCII.GetBytes("XGG"));
+                    writer.Write(Version);
+                    writer.Write(packetsize);
+                    writer.Write(opus.Bitrate);
+
+                    long oldpos = mem.Position;
+                    ushort count = 0;
+                    writer.Write(count);
+
+                    byte[] buffer = new byte[packetsize];
+                    int result = res.Read(buffer, 0, packetsize);
+                    while (result > 0)
+                    {
+                        count++;
+                        int outlen = 0;
+                        byte[] output = opus.Encode(buffer, result / 2, out outlen);
+                        writer.Write((uint)outlen);
+                        writer.Write(output, 0, outlen);
+
+                        result = res.Read(buffer, 0, packetsize);
+                    }
+
+                    mem.Position = oldpos;
+                    writer.Write(count);
                 }
-
-                mem.Position = oldpos;
-                writer.Write(count);
+            }
+            catch (Exception ex) when (ex is EndOfStreamException)
+            {
+                mem.SetLength(0);
+            }
+            finally
+            {
+                mem.Position = 0;
+                _size = (uint)mem.Length;
             }
 
-            mem.Position = 0;
-            _size = (uint)mem.Length;
             return mem;
         }
 
