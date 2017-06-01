@@ -77,7 +77,7 @@ namespace PPeX.Xgg
                     writer.Write(count);
                 }
             }
-            catch (Exception ex) when (ex is EndOfStreamException || ex is ArgumentException)
+            catch (Exception ex) when (ex is EndOfStreamException || ex is ArgumentException || ex is FormatException)
             {
                 mem.SetLength(0);
             }
