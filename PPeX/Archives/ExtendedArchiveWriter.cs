@@ -85,14 +85,14 @@ namespace PPeX
                     catch
                     {
                         progress.Report(new Tuple<string, int>(
-                                    "[" + i + " / " + Files.Count + "] Stopped writing " + file.Name + "\n",
+                                    "[" + i + " / " + Files.Count + "] Stopped writing " + file.Name + "\r\n",
                                     100 * i / Files.Count));
 
                         throw;
                     }
 
                     progress.Report(new Tuple<string, int>(
-                                    "[" + i + " / " + Files.Count + "] Written " + file.Name + "... (" + file.Source.Size + " bytes)" + (isDuplicate ? " [duplicate]\n" : "\n"),
+                                    "[" + i + " / " + Files.Count + "] Written " + file.Name + "... (" + file.Source.Size + " bytes)" + (isDuplicate ? " [duplicate]\r\n" : "\r\n"),
                                     100 * i / Files.Count));
 
                     md5s.Add(crc);
