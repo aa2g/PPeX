@@ -12,7 +12,7 @@ namespace PPeX.Xgg
 {
     public class XggWrappedSource : IDataSource
     {
-        public readonly byte Version = 2;
+        public readonly byte Version = 3;
         protected IDataSource basesource;
 
         public XggWrappedSource(IDataSource source)
@@ -45,11 +45,11 @@ namespace PPeX.Xgg
                 using (var wav = new WaveFileReader(basestream))
                 using (var res = new MediaFoundationResampler(wav, new WaveFormat(
                     wav.WaveFormat.SampleRate < 24000 ? 24000 : 48000
-                    , 1)))
+                    , 2)))
                 {
-                    var opus = OpusEncoder.Create(res.WaveFormat.SampleRate, 1, FragLabs.Audio.Codecs.Opus.Application.Voip);
-                    opus.Bitrate = PPeXCore.Settings.XggBitrate;
-                    int packetsize = (int)(res.WaveFormat.SampleRate * 2 * PPeXCore.Settings.XggFrameSize);
+                    var opus = OpusEncoder.Create(res.WaveFormat.SampleRate, 1, FragLabs.Audio.Codecs.Opus.Application.Audio);
+                    opus.Bitrate = PPeXCore.Settings.XggBitrate * 2;
+                    int packetsize = (int)(res.WaveFormat.SampleRate * PPeXCore.Settings.XggFrameSize * 2);
 
                     writer.Write(Encoding.ASCII.GetBytes("XGG"));
                     writer.Write(Version);

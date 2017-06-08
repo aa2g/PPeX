@@ -35,10 +35,16 @@ namespace FragLabs.Audio.Codecs.Opus
 
     public enum Ctl : int
     {
-        SetBitrateRequest = 4002,
-        GetBitrateRequest = 4003,
-        SetInbandFECRequest = 4012,
-        GetInbandFECRequest = 4013
+        OPUS_SET_BITRATE_REQUEST = 4002,
+        OPUS_GET_BITRATE_REQUEST = 4003,
+        OPUS_SET_INBAND_FEC_REQUEST = 4012,
+        OPUS_GET_INBAND_FEC_REQUEST = 4013,
+        OPUS_SET_VBR_CONSTRAINT_REQUEST = 4020,
+        OPUS_GET_VBR_CONSTRAINT_REQUEST = 4021,
+        OPUS_SET_FORCE_CHANNELS_REQUEST = 4022,
+        OPUS_GET_FORCE_CHANNELS_REQUEST = 4023,
+        OPUS_SET_COMPLEXITY_REQUEST = 4010,
+        OPUS_GET_COMPLEXITY_REQUEST = 4011
     }
 
     /// <summary>
