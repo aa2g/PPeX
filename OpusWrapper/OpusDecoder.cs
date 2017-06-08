@@ -21,9 +21,9 @@ namespace FragLabs.Audio.Codecs
                 outputSampleRate != 16000 &&
                 outputSampleRate != 24000 &&
                 outputSampleRate != 48000)
-                throw new ArgumentOutOfRangeException("inputSamplingRate");
+                throw new ArgumentOutOfRangeException("outputSampleRate");
             if (outputChannels != 1 && outputChannels != 2)
-                throw new ArgumentOutOfRangeException("inputChannels");
+                throw new ArgumentOutOfRangeException("outputChannels");
 
             IntPtr error;
             IntPtr decoder = API.opus_decoder_create(outputSampleRate, outputChannels, out error);

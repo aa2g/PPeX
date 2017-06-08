@@ -108,12 +108,32 @@ namespace FragLabs.Audio.Codecs
         /// <summary>
         /// Gets the number of channels of the encoder.
         /// </summary>
-        public int InputChannels { get; private set; }
+        public int InputChannels
+        {
+            get
+            {
+                if (disposed)
+                    throw new ObjectDisposedException("OpusEncoder");
+                int bitrate;
+                var ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_GET_FORCE_CHANNELS_REQUEST, out bitrate);
+                if (ret < 0)
+                    throw new Exception("Encoder error - " + ((Errors)ret).ToString());
+                return bitrate;
+            }
+            set
+            {
+                if (disposed)
+                    throw new ObjectDisposedException("OpusEncoder");
+                var ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_SET_FORCE_CHANNELS_REQUEST, value);
+                if (ret < 0)
+                    throw new Exception("Encoder error - " + ((Errors)ret).ToString());
+            }
+        }
 
-        /// <summary>
-        /// Gets the coding mode of the encoder.
-        /// </summary>
-        public Application Application { get; private set; }
+/// <summary>
+/// Gets the coding mode of the encoder.
+/// </summary>
+public Application Application { get; private set; }
 
         /// <summary>
         /// Gets or sets the size of memory allocated for reading encoded data.
@@ -131,7 +151,7 @@ namespace FragLabs.Audio.Codecs
                 if (disposed)
                     throw new ObjectDisposedException("OpusEncoder");
                 int bitrate;
-                var ret = API.opus_encoder_ctl(_encoder, Ctl.GetBitrateRequest, out bitrate);
+                var ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_GET_BITRATE_REQUEST, out bitrate);
                 if (ret < 0)
                     throw new Exception("Encoder error - " + ((Errors)ret).ToString());
                 return bitrate;
@@ -140,7 +160,7 @@ namespace FragLabs.Audio.Codecs
             {
                 if (disposed)
                     throw new ObjectDisposedException("OpusEncoder");
-                var ret = API.opus_encoder_ctl(_encoder, Ctl.SetBitrateRequest, value);
+                var ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_SET_BITRATE_REQUEST, value);
                 if (ret < 0)
                     throw new Exception("Encoder error - " + ((Errors)ret).ToString());
             }
@@ -157,7 +177,7 @@ namespace FragLabs.Audio.Codecs
                     throw new ObjectDisposedException("OpusEncoder");
 
                 int fec;
-                int ret = API.opus_encoder_ctl(_encoder, Ctl.GetInbandFECRequest, out fec);
+                int ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_GET_INBAND_FEC_REQUEST, out fec);
                 if (ret < 0)
                     throw new Exception("Encoder error - " + ((Errors) ret).ToString());
 
@@ -169,7 +189,7 @@ namespace FragLabs.Audio.Codecs
                 if (_encoder == IntPtr.Zero)
                     throw new ObjectDisposedException("OpusEncoder");
 
-                var ret = API.opus_encoder_ctl(_encoder, Ctl.SetInbandFECRequest, value ? 1 : 0);
+                var ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_SET_INBAND_FEC_REQUEST, value ? 1 : 0);
                 if (ret < 0)
                     throw new Exception("Encoder error - " + ((Errors) ret).ToString());
             }

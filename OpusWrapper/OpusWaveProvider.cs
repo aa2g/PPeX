@@ -14,7 +14,7 @@ namespace FragLabs.Audio.Codecs
 
         public OpusWaveProvider(Stream stream, uint length)
         {
-            using (MemoryStream temp = new MemoryStream())
+           using (MemoryStream temp = new MemoryStream())
             using (BinaryWriter writer = new BinaryWriter(temp))
             using (OpusDecoder decoder = OpusDecoder.Create(48000, 1))
             using (BinaryReader reader = new BinaryReader(stream))
@@ -35,7 +35,7 @@ namespace FragLabs.Audio.Codecs
             }
         }
 
-        public WaveFormat WaveFormat => new WaveFormat(48000, 1);
+        public WaveFormat WaveFormat => new WaveFormat(48000, 16, 2);
 
         public void Dispose()
         {

@@ -12,7 +12,7 @@ namespace PPeX.Xgg
     public class XggSubfile : BaseSubfile
     {
         public readonly string Magic = "XGG";
-        public readonly byte Version = 2;
+        public readonly byte Version = 3;
 
         protected uint _size;
         public override uint Size => _size;
