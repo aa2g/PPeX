@@ -83,12 +83,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions.cs" />
-    <Compile Include="formDebug.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="formDebug.Designer.cs">
-      <DependentUpon>formDebug.cs</DependentUpon>
-    </Compile>
     <Compile Include="formImporting.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -103,9 +97,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="formDebug.resx">
-      <DependentUpon>formDebug.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="formImporting.resx">
       <DependentUpon>formImporting.cs</DependentUpon>
     </EmbeddedResource>
