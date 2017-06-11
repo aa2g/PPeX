@@ -12,11 +12,13 @@ namespace FragLabs.Audio.Codecs
     {
         protected MemoryStream internalstream;
 
-        public OpusWaveProvider(Stream stream, uint length)
+        public OpusWaveProvider(Stream stream, uint length, int channels)
         {
-           using (MemoryStream temp = new MemoryStream())
+            WaveFormat = new WaveFormat(48000, 16, channels);
+
+            using (MemoryStream temp = new MemoryStream())
             using (BinaryWriter writer = new BinaryWriter(temp))
-            using (OpusDecoder decoder = OpusDecoder.Create(48000, 1))
+            using (OpusDecoder decoder = OpusDecoder.Create(48000, channels))
             using (BinaryReader reader = new BinaryReader(stream))
             {
                 //long offset = stream.Position;
@@ -25,6 +27,10 @@ namespace FragLabs.Audio.Codecs
                 {
                     int framesize = (int)reader.ReadUInt32();
                     byte[] frame = reader.ReadBytes(framesize);
+
+                    int cchannels = decoder.GetChannels(frame);
+                    int frames = decoder.GetFrames(frame);
+                    int samples = decoder.GetSamples(frame);
 
                     int outputlen;
                     byte[] output = decoder.Decode(frame, framesize, out outputlen);
@@ -35,7 +41,7 @@ namespace FragLabs.Audio.Codecs
             }
         }
 
-        public WaveFormat WaveFormat => new WaveFormat(48000, 16, 2);
+        public WaveFormat WaveFormat { get; protected set; }
 
         public void Dispose()
         {

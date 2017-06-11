@@ -41,7 +41,7 @@ namespace FragLabs.Audio.Codecs
             _decoder = decoder;
             OutputSamplingRate = outputSamplingRate;
             OutputChannels = outputChannels;
-            MaxDataBytes = 4000;
+            MaxDataBytes = 8000;
         }
 
         /// <summary>
@@ -57,8 +57,8 @@ namespace FragLabs.Audio.Codecs
                 throw new ObjectDisposedException("OpusDecoder");
 
             IntPtr decodedPtr;
-            byte[] decoded = new byte[MaxDataBytes];
-            int frameCount = FrameCount(MaxDataBytes);
+            byte[] decoded = new byte[960 * 2 * 2];
+            int frameCount = 960 ;// FrameCount(MaxDataBytes * 2);
             int length = 0;
             fixed (byte* bdec = decoded)
             {
@@ -69,7 +69,7 @@ namespace FragLabs.Audio.Codecs
                 else
                     length = API.opus_decode(_decoder, null, 0, decodedPtr, frameCount, (ForwardErrorCorrection) ? 1 : 0);
             }
-            decodedLength = length * 2;
+            decodedLength = length * 2 * OutputChannels;
             if (length < 0)
                 throw new Exception("Decoding failed - " + ((Errors)length).ToString());
 
@@ -87,6 +87,21 @@ namespace FragLabs.Audio.Codecs
             int bitrate = 16;
             int bytesPerSample = (bitrate / 8) * OutputChannels;
             return bufferSize / bytesPerSample;
+        }
+
+        public int GetChannels(byte[] data)
+        {
+            return API.opus_packet_get_nb_channels(data);
+        }
+
+        public int GetFrames(byte[] data)
+        {
+            return API.opus_packet_get_nb_frames(data, data.Length);
+        }
+
+        public int GetSamples(byte[] data)
+        {
+            return API.opus_packet_get_nb_samples(data, data.Length, OutputSamplingRate);
         }
 
         /// <summary>
