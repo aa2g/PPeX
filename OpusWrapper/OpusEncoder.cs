@@ -66,7 +66,7 @@ namespace FragLabs.Audio.Codecs
             fixed (byte* benc = encoded)
             {
                 encodedPtr = new IntPtr((void*)benc);
-                length = API.opus_encode(_encoder, inputPcmSamples, frames, encodedPtr, sampleLength);
+                length = API.opus_encode(_encoder, inputPcmSamples, sampleLength, encodedPtr, MaxDataBytes);
             }
             encodedLength = length;
             if (length < 0)

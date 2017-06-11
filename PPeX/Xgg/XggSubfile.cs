@@ -26,6 +26,7 @@ namespace PPeX.Xgg
 
         public int Bitrate;
         public int FrameSize;
+        public int Channels;
 
         public override void WriteToStream(Stream stream)
         {
@@ -44,9 +45,10 @@ namespace PPeX.Xgg
 
                 FrameSize = reader.ReadInt32();
                 Bitrate = reader.ReadInt32();
+                Channels = reader.ReadByte();
                 uint count = reader.ReadUInt16();
 
-                using (OpusWaveProvider wav = new OpusWaveProvider(source, count))
+                using (OpusWaveProvider wav = new OpusWaveProvider(source, count, Channels))
                     WaveFileWriter.WriteWavFileToStream(stream, wav);
             }
         }
