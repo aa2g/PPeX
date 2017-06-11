@@ -18,8 +18,6 @@ namespace PPeX
 
         public static List<ExtendedArchive> archives = new List<ExtendedArchive>();
 
-        private static Settings Settings;
-
 
         static Manager()
         {
@@ -41,27 +39,13 @@ namespace PPeX
 
                 }
             }
-            /*
-            foreach (string path in new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory).GetFiles("*.dll").Select(x => x.FullName))
-            {
-                try
-                {
-                    assemblies.Add(Assembly.LoadFile(path));
-                }
-                catch (Exception ex)
-                {
-
-                }
-            }*/
 
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
                 return assemblies.First(x => args.Name == x.FullName);
             };
 
-            Settings = Settings.Load();
-
-            foreach (string dir in Directory.EnumerateFiles(Settings.PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
+            foreach (string dir in Directory.EnumerateFiles(Core.Settings.PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
             {
                 var archive = new ExtendedArchive(dir);
 
@@ -95,7 +79,7 @@ namespace PPeX
 
             foreach (var arc in ppf)
             {
-                File.WriteAllBytes(Settings.PlaceholdersLocation + "\\" + arc.Key + ".pp", Utility.CreateHeader(arc.Value));
+                File.WriteAllBytes(Core.Settings.PlaceholdersLocation + "\\" + arc.Key + ".pp", Utility.CreateHeader(arc.Value));
             }
             
         }

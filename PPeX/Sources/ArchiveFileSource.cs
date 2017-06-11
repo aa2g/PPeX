@@ -64,9 +64,9 @@ namespace PPeX
 
             using (Stream source = GetStream())
             {
-                byte[] buffer = new byte[PPeXCore.Settings.BufferSize];
+                byte[] buffer = new byte[Core.Settings.BufferSize];
                 int length = 0;
-                while ((length = source.Read(buffer, 0, (int)PPeXCore.Settings.BufferSize)) > 0)
+                while ((length = source.Read(buffer, 0, (int)Core.Settings.BufferSize)) > 0)
                 {
                     crc = Crc32CAlgorithm.Append(crc, buffer, 0, length);
                 }

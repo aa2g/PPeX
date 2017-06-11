@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PPeX
 {
-    public static class PPeXCore
+    public static class Core
     {
         public static Settings Settings = Settings.Load();
     }
