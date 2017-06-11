@@ -91,7 +91,7 @@
   <ItemGroup>
     <Compile Include="Archives\ArchiveEnum.cs" />
     <Compile Include="Archives\ExtendedHeader.cs" />
-    <Compile Include="PPeXCore.cs" />
+    <Compile Include="Core.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Sources\ArchiveFileSource.cs" />
     <Compile Include="Sources\CompressedDataSource.cs" />

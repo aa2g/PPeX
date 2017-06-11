@@ -103,8 +103,8 @@ namespace PPeX.Xgg
             using (MemoryStream decomp = new MemoryStream())
             {
                 var opus = OpusEncoder.Create(res.WaveFormat.SampleRate, 1, FragLabs.Audio.Codecs.Opus.Application.Voip);
-                opus.Bitrate = PPeXCore.Settings.XggBitrate;
-                int packetsize = (int)(res.WaveFormat.SampleRate * 2 * PPeXCore.Settings.XggFrameSize);
+                opus.Bitrate = Core.Settings.XggBitrate;
+                int packetsize = (int)(res.WaveFormat.SampleRate * 2 * Core.Settings.XggFrameSize);
 
                 writer.Write(Encoding.ASCII.GetBytes("XGG"));
                 writer.Write(Version);
@@ -182,8 +182,8 @@ namespace PPeX.Xgg
                 , 1)))
             {
                 var opus = OpusEncoder.Create(res.WaveFormat.SampleRate, 1, FragLabs.Audio.Codecs.Opus.Application.Voip);
-                opus.Bitrate = PPeXCore.Settings.XggBitrate;
-                int packetsize = (int)(res.WaveFormat.SampleRate * 2 * PPeXCore.Settings.XggFrameSize);
+                opus.Bitrate = Core.Settings.XggBitrate;
+                int packetsize = (int)(res.WaveFormat.SampleRate * 2 * Core.Settings.XggFrameSize);
 
                 writer.Write(Encoding.ASCII.GetBytes("XGG"));
                 writer.Write(Version);
