@@ -15,9 +15,9 @@ namespace PPeX
         protected uint _size;
         public uint Size => _size;
 
-        protected ulong offset;
-        protected uint length;
-        
+        public ulong Offset { get; protected set; }
+        public uint Length { get; protected set; }
+
         public string ArchiveFilename { get; protected set; }
 
         public ArchiveFileType Type;
@@ -51,9 +51,9 @@ namespace PPeX
             ArchiveName = names[0];
             Name = names[1];
 
-            offset = reader.ReadUInt64();
+            Offset = reader.ReadUInt64();
             _size = reader.ReadUInt32();
-            length = reader.ReadUInt32();
+            Length = reader.ReadUInt32();
 
             ArchiveFilename = (reader.BaseStream as FileStream).Name;
         }
@@ -80,8 +80,8 @@ namespace PPeX
             dupe._crc = _crc;
             dupe._md5 = _md5;
             dupe._size = _size;
-            dupe.length = length;
-            dupe.offset = offset;
+            dupe.Length = Length;
+            dupe.Offset = Offset;
             dupe.ArchiveFilename = ArchiveFilename;
             dupe.Compression = Compression;
             dupe.Type = Type;
@@ -94,8 +94,8 @@ namespace PPeX
         {
             Stream stream = new Substream(
                 new FileStream(ArchiveFilename, FileMode.Open, FileAccess.Read, FileShare.Read),
-                (long)offset,
-                length);
+                (long)Offset,
+                Length);
 
             switch (Compression)
             {
@@ -116,7 +116,6 @@ namespace PPeX
                 default:
                     throw new InvalidOperationException("Compression type is invalid.");
             }
-                
         }
     }
 }

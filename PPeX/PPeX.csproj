@@ -96,6 +96,7 @@
     <Compile Include="Sources\ArchiveFileSource.cs" />
     <Compile Include="Sources\CompressedDataSource.cs" />
     <Compile Include="Archives\ExtendedArchiveWriter.cs" />
+    <Compile Include="Sources\MemoryMappedSource.cs" />
     <Compile Include="Subfiles\BaseSubfile.cs" />
     <Compile Include="Archives\ExtendedArchive.cs" />
     <Compile Include="Sources\FileSource.cs" />
