@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "PPeXIL.h"
-#using <..\PPeX\PPeX\bin\x86\Release\PPeX.dll>
-#using <..\PPeX\PPeX\bin\x86\Debug\PPeX.dll>
+#using <..\PPeX\PPeX\bin\Release\PPeX.dll>
+#using <..\PPeX\PPeX\bin\Debug\PPeX.dll>
 
 PPeXIL::PPeXIL()
 {
