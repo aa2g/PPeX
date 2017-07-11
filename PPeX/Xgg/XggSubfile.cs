@@ -21,7 +21,28 @@ namespace PPeX.Xgg
         {
             _name = Name.Replace(".xgg", ".wav");
 #warning change to a bitrate scaled estimate
-            _size = Source.Size * 30; //fast estimate
+            using (Stream source = Source.GetStream())
+            using (BinaryReader reader = new BinaryReader(source, Encoding.ASCII, true))
+            {
+                string magic = Encoding.ASCII.GetString(reader.ReadBytes(3));
+
+                if (Magic != magic)
+                    throw new InvalidDataException("Supplied file is not an XGG wrapped file.");
+
+                byte version = reader.ReadByte();
+
+                if (version != Version)
+                    throw new InvalidDataException("Supplied XGG wrapped file is of an incompatible version.");
+
+                FrameSize = reader.ReadInt32();
+                Bitrate = reader.ReadInt32();
+                Channels = reader.ReadByte();
+                uint count = reader.ReadUInt16();
+
+                _size = (uint)(FrameSize * (count + 4) * 2); //add 4 to keep a good buffer in case
+            }
+
+            //_size = Source.Size * 30; //fast estimate
         }
 
         public int Bitrate;

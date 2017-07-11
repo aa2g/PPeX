@@ -56,7 +56,7 @@ namespace PPeX.Xgg
                         , channels)))
                     {
                         var opus = OpusEncoder.Create(res.WaveFormat.SampleRate, channels, FragLabs.Audio.Codecs.Opus.Application.Audio);
-                        opus.Bitrate = Core.Settings.XggBitrate * 4;
+                        opus.Bitrate = Core.Settings.XggBitrate;
                         int packetsize = (int)(res.WaveFormat.SampleRate * Core.Settings.XggFrameSize * 2 * channels);
 
                         writer.Write(Encoding.ASCII.GetBytes("XGG"));
