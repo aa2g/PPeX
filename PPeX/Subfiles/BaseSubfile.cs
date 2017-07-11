@@ -45,5 +45,20 @@ namespace PPeX
                     return null;
             }
         }
+
+        public static ISubfile Create(IDataSource source, ArchiveFileType type)
+        {
+            switch (type)
+            {
+                case ArchiveFileType.Audio:
+                    return new Xgg.XggSubfile(source, "", "");
+                case ArchiveFileType.Image:
+                    return new ImageSubfile(source, "", "");
+                case ArchiveFileType.Raw:
+                    return new RawSubfile(source, "", "");
+                default:
+                    return null;
+            }
+        }
     }
 }
