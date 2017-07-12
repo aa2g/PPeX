@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO.MemoryMappedFiles;
 using PPeX;
 using System.IO;
+using System.Runtime;
 
 namespace PPeXM64
 {
@@ -14,7 +15,8 @@ namespace PPeXM64
 
         public static Dictionary<FileEntry, ISubfile> FileCache = new Dictionary<FileEntry, ISubfile>();
         public static List<ExtendedArchive> LoadedArchives = new List<ExtendedArchive>();
-        public static Dictionary<string, byte[]> DataCache = new Dictionary<string, byte[]>();
+        //public static Dictionary<string, byte[]> DataCache = new Dictionary<string, byte[]>();
+        public static List<CachedObject> DataCache = new List<CachedObject>();
 
         public static bool LogFiles = false;
 
@@ -54,19 +56,64 @@ namespace PPeXM64
             server.OnRequest += Server_OnRequest;
             string line;
 
-            while ((line = Console.ReadLine()) != "exit")
+            while (true)
             {
-                switch (line)
+                line = Console.ReadLine();
+
+                string[] arguments = line.Split(' ');
+
+                switch (arguments[0])
                 {
+                    case "exit":
+                        return;
                     case "log":
                         LogFiles = !LogFiles;
                         break;
                     case "size":
-                        int size = DataCache.Sum(x => x.Value.Length);
-                        Console.WriteLine(GetBytesReadable(size));
+                        Console.WriteLine(GetBytesReadable(LoadedMemorySize));
+                        break;
+                    case "trim":
+                        Console.WriteLine(GetBytesReadable(LoadedMemorySize));
+                        TrimMemory((long)(float.Parse(arguments[1]) * 1024 * 1024));
+                        Console.WriteLine(GetBytesReadable(LoadedMemorySize));
                         break;
                 }
             }
+        }
+
+        public static long LoadedMemorySize => DataCache.Sum(x => x.Data.LongLength);
+
+        static byte[] Thresholds = new byte[] { 75, 145, 180, 225, 255 };
+        public static void TrimMemory(long MaxSize)
+        {
+            lock (loadLock)
+            {
+                for (int i = 0; i < Thresholds.Length; i++)
+                {
+                    if (LoadedMemorySize < MaxSize)
+                        break;
+
+                    long loadedDiff = LoadedMemorySize;
+
+                    byte currentThreshold = Thresholds[i];
+                    Console.Write("Pass " + (i + 1) + " at threshold " + currentThreshold + "...  ");
+
+                    List<CachedObject> temp = new List<CachedObject>(DataCache);
+
+                    foreach (var item in temp)
+                    {
+                        if (item.Priority <= currentThreshold)
+                            DataCache.Remove(item);
+                    }
+
+                    loadedDiff -= LoadedMemorySize;
+
+                    Console.WriteLine("(" + GetBytesReadable(loadedDiff) + ")");
+                }
+            }
+
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect();
         }
 
         // Returns the human-readable file size for an arbitrary, 64-bit file size 
@@ -128,7 +175,7 @@ namespace PPeXM64
 
 #warning handle dupes somehow
 
-            if (!DataCache.ContainsKey(combinedName))
+            if (!DataCache.Any(x => x.Name == combinedName))
             {
                 ArchiveFileSource source = result.Source as ArchiveFileSource;
                 ArchiveFileCompression oldCompression = source.Compression;
@@ -138,7 +185,15 @@ namespace PPeXM64
                 using (MemoryStream mem = new MemoryStream())
                 {
                     stream.CopyTo(mem);
-                    DataCache.Add(combinedName, mem.ToArray());
+                    CachedObject obj = new CachedObject()
+                    {
+                        Data = mem.ToArray(),
+                        MD5 = source.Md5,
+                        Priority = source.Priority,
+                        Name = combinedName,
+                    };
+
+                    DataCache.Add(obj);
                 }
 
                 source.Compression = oldCompression;
@@ -146,6 +201,8 @@ namespace PPeXM64
 
             return true;
         }
+        
+        public static object loadLock = new object();
 
         private static void Server_OnRequest(string request, string argument, StreamHandler handler)
         {
@@ -172,15 +229,22 @@ namespace PPeXM64
             }
             if (request == "load")
             {
-                if (LogFiles)
-                    Console.WriteLine(argument);
-
-                using (BinaryWriter writer = new BinaryWriter(handler.BaseStream, Encoding.Unicode, true))
+                lock (loadLock)
                 {
-                    byte[] data = DataCache[argument];
-                    writer.Write(data.Length);
-                    writer.Write(data);
+                    TryLoad(argument);
+
+                    if (LogFiles)
+                        Console.WriteLine(argument);
+
+                    using (BinaryWriter writer = new BinaryWriter(handler.BaseStream, Encoding.Unicode, true))
+                    {
+                        byte[] data = DataCache.First(x => x.Name == argument).Data;
+                        writer.Write(data.Length);
+                        writer.Write(data);
+                    }
                 }
+
+                
             }
             else
             {
