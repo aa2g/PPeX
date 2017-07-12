@@ -17,6 +17,7 @@ namespace PPeX
 
         public ulong Offset { get; protected set; }
         public uint Length { get; protected set; }
+        public byte Priority { get; protected set; }
 
         public string ArchiveFilename { get; protected set; }
 
@@ -40,7 +41,7 @@ namespace PPeX
             Flags = (ArchiveFileFlags)reader.ReadByte();
             Compression = (ArchiveFileCompression)reader.ReadByte();
 
-            reader.BaseStream.Seek(1, SeekOrigin.Current);
+            Priority = reader.ReadByte();
             _crc = reader.ReadUInt32();
             _md5 = reader.ReadBytes(16);
             reader.BaseStream.Seek(48, SeekOrigin.Current);
