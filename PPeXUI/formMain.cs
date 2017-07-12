@@ -104,6 +104,7 @@ namespace PPeXUI
                 txtFileSize.Text = "";
                 txtFileType.Text = "";
                 txtFileMD5.Text = "";
+                numPriority.ForeColor = numPriority.BackColor;
             }
             else if (trvFiles.SelectedNode.Tag != null)
             {
@@ -114,6 +115,9 @@ namespace PPeXUI
                 txtFileSize.Text = current.Size.ToString();
                 txtFileType.Text = current.Type;
                 txtFileMD5.Text = current.MD5;
+
+                numPriority.Value = current.Priority;
+                numPriority.ForeColor = SystemColors.WindowText;
             }
             else
             {
@@ -124,6 +128,28 @@ namespace PPeXUI
                 txtFileSize.Text = "";
                 txtFileType.Text = "";
                 txtFileMD5.Text = "";
+
+                int priority = 150;
+                numPriority.Value = priority;
+
+                if (trvFiles.SelectedNode.Nodes.Count > 0)
+                {
+                    TreeNode parent = trvFiles.SelectedNode;
+                    priority = (parent.FirstNode.Tag as SubfileHolder).Priority;
+
+                    numPriority.Value = priority;
+
+                    bool similar = parent.Nodes.Cast<TreeNode>().All(x => (x.Tag as SubfileHolder).Priority == priority);
+
+                    if (similar)
+                    {
+                        numPriority.ForeColor = SystemColors.WindowText;
+                    }
+                    else
+                    {
+                        numPriority.ForeColor = numPriority.BackColor;
+                    }
+                }
             }
 
             isreloading = false;
@@ -272,6 +298,7 @@ namespace PPeXUI
 
                 if (trvFiles.SelectedNode.Tag == null)
                 {
+                    //Is a PP file node
                     List<SubfileHolder> items = trvFiles.SelectedNode.Nodes
                         .Cast<TreeNode>()
                         .Select(x => x.Tag as SubfileHolder)
@@ -325,6 +352,7 @@ namespace PPeXUI
                 }
                 else
                 {
+                    //Is a PP subfile node
                     SubfileHolder sh = trvFiles.SelectedNode.Tag as SubfileHolder;
                     CommonSaveFileDialog dialog = new CommonSaveFileDialog()
                     {
@@ -344,14 +372,109 @@ namespace PPeXUI
                     txtFileProg.AppendText("Exported " + Path.GetFileName(dialog.FileName) + " (" + sh.Source.Size + " bytes)\n");
                 }
 
-                
 
+
+            }
+        }
+
+        public void TestCompression()
+        {
+            if (trvFiles.SelectedNode != null)
+            {
+                IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>((x) =>
+                {
+                    prgFileProgress.Value = x.Item2;
+                    txtFileProg.AppendText(x.Item1);
+                });
+                ArchiveFileCompression method = (ArchiveFileCompression)cmbCompression.SelectedIndex;
+
+                if (trvFiles.SelectedNode.Tag == null)
+                {
+                    //Is a PP file node
+                    List<SubfileHolder> items = trvFiles.SelectedNode.Nodes
+                        .Cast<TreeNode>()
+                        .Select(x => x.Tag as SubfileHolder)
+                        .ToList();
+
+                    prgFileProgress.Value = 0;
+
+                    int i = 0;
+
+                    Task.Run(() =>
+                    {
+                        long ucb = 0;
+                        long cb = 0;
+
+                        foreach (var item in items)
+                        {
+                            ucb += item.Size;
+
+                            using (Stream data = item.Source.GetStream())
+                                cb += PPeX.Utility.TestCompression(data, method);
+
+                            progress.Report(new Tuple<string, int>(
+                                    "",
+                                    100 * i / items.Count));
+                        }
+
+                        string uncompressedSize = PPeX.Utility.GetBytesReadable(ucb);
+                        
+                        string size = PPeX.Utility.GetBytesReadable(cb);
+
+                        string ratio = ((double)cb / ucb).ToString("P2");
+                        switch (method)
+                        {
+                            case ArchiveFileCompression.Uncompressed:
+                                progress.Report(new Tuple<string, int>("No compression: " + uncompressedSize + " => " + size + " (" + ratio + ")\n", 100));
+                                break;
+                            case ArchiveFileCompression.LZ4:
+                                progress.Report(new Tuple<string, int>("LZ4 compression: " + uncompressedSize + " => " + size + " (" + ratio + ")\n", 100));
+                                break;
+                            case ArchiveFileCompression.Zstandard:
+                                progress.Report(new Tuple<string, int>("Zstandard compression: " + uncompressedSize + " => " + size + " (" + ratio + ")\n", 100));
+                                break;
+                        }
+                    });
+                }
+                else
+                {
+                    //Is a PP subfile node
+                    SubfileHolder sh = trvFiles.SelectedNode.Tag as SubfileHolder;
+
+                    using (Stream stream = sh.Source.GetStream())
+                    {
+                        string uncompressedSize = PPeX.Utility.GetBytesReadable(stream.Length);
+
+                        long bytes = PPeX.Utility.TestCompression(stream, method);
+                        string size = PPeX.Utility.GetBytesReadable(bytes);
+
+                        string ratio = ((double)bytes / stream.Length).ToString("P2");
+                        switch (method)
+                        {
+                            case ArchiveFileCompression.Uncompressed:
+                                progress.Report(new Tuple<string, int>("No compression: " + uncompressedSize + " => " + size + " (" + ratio + ")\n", 100));
+                                break;
+                            case ArchiveFileCompression.LZ4:
+                                progress.Report(new Tuple<string, int>("LZ4 compression: " + uncompressedSize + " => " + size + " (" + ratio + ")\n", 100));
+                                break;
+                            case ArchiveFileCompression.Zstandard:
+                                progress.Report(new Tuple<string, int>("Zstandard compression: " + uncompressedSize + " => " + size + " (" + ratio + ")\n", 100));
+                                break;
+                        }
+                    }
+                        
+                }
             }
         }
 
         private void btnExport_Click(object sender, EventArgs e)
         {
             ExportItem();
+        }
+
+        private void btnTestCompr_Click(object sender, EventArgs e)
+        {
+            TestCompression();
         }
 
         private IEnumerable<TreeNode> GetNodeBranch(TreeNode node)
@@ -400,7 +523,7 @@ namespace PPeXUI
 
                         var holder = node.Tag as SubfileHolder;
 
-                        writer.Files.Add(new ArchiveFile(holder.Source, node.FullPath, writer.DefaultCompression));
+                        writer.Files.Add(new ArchiveFile(holder.Source, node.FullPath, writer.DefaultCompression, holder.Priority));
 
                         progress.Report(new Tuple<string, int>(
                         "",
@@ -470,30 +593,72 @@ namespace PPeXUI
             Open();
         }
 
+        public byte DeterminePriority(string PPname)
+        {
+            if (PPname.Substring(4, 2) == "06")
+                //UI
+                return 210;
+            else if (PPname.Substring(4, 2) == "08")
+                //backgrounds
+                return 200;
+            else if (
+                PPname.Substring(3, 3) == "e01" ||
+                PPname.Substring(3, 3) == "e03")
+                //character models
+                return 190;
+            else if (
+                PPname.Substring(3, 3) == "p01" ||
+                PPname.Substring(3, 3) == "p03" ||
+                PPname.Substring(3, 3) == "e04")
+                //clothing
+                return 180;
+            else if (PPname.Substring(4, 2) == "07")
+                //music
+                return 170;
+            else if (
+                PPname.Substring(3, 3) == "e02" ||
+                PPname.Substring(3, 4) == "el02")
+                //hairs
+                return 120;
+            else if (PPname.Substring(4, 2) == "05")
+                //personality
+                return 50;
+
+            //default/unknown
+            return 150;
+        }
+
         public void ImportPP(string filename, IProgress<int> progress)
         {
             ppParser pp = new ppParser(filename);
 
             TreeNode parent = null;
 
+            string name = Path.GetFileName(filename);
+
             trvFiles.DynamicInvoke(() =>
             {
-                parent = trvFiles.Nodes.Add(Path.GetFileName(filename));
+                parent = trvFiles.Nodes.Add(name);
             });
+
+            byte priority = DeterminePriority(name);
 
             int counter = 0;
             foreach (IReadFile file in pp.Subfiles)
             {
-                object tag = new SubfileHolder(new PPSource(file), file.Name);
+                SubfileHolder tag = new SubfileHolder(new PPSource(file), file.Name);
                 progress.Report(100 * counter++ / pp.Subfiles.Count);
 
                 trvFiles.DynamicInvoke(() =>
                 {
                     TreeNode node = parent.Nodes.Add(file.Name);
+                    tag.Priority = priority;
                     node.Tag = tag;
                     SetAutoIcon(node);
                 });
             }
+
+
 
             this.DynamicInvoke(() =>
             {
@@ -545,10 +710,16 @@ namespace PPeXUI
 
             var parent = trvFiles.Nodes.Add(Path.GetFileName(path));
 
+            string name = Path.GetFileName(path);
+            byte priority = DeterminePriority(name);
+
             foreach (string file in files)
             {
                 TreeNode node = parent.Nodes.Add(Path.GetFileName(file));
-                node.Tag = new SubfileHolder(new FileSource(file), Path.GetFileName(file));
+
+                var tag = new SubfileHolder(new FileSource(file), Path.GetFileName(file));
+                tag.Priority = priority;
+                node.Tag = tag;
                 SetAutoIcon(node);
             }
 
@@ -701,6 +872,34 @@ namespace PPeXUI
 
             progform.ShowDialog(this);
         }
+
+        private void numPriority_ValueChanged(object sender, EventArgs e)
+        {
+            if (!isreloading && trvFiles.SelectedNode != null)
+            {
+                var node = trvFiles.SelectedNode;
+
+                if (node.Tag == null)
+                {
+                    foreach (TreeNode child in node.Nodes)
+                    {
+                        var current = child.Tag as SubfileHolder;
+
+                        current.Priority = (byte)numPriority.Value;
+                    }
+                }
+                else
+                {
+                    var current = node.Tag as SubfileHolder;
+
+                    current.Priority = (byte)numPriority.Value;
+                }
+
+                IsModified = true;
+
+                ReloadInfo();
+            }
+        }
     }
 
     public class SubfileHolder
@@ -709,6 +908,7 @@ namespace PPeXUI
         {
             Source = source;
             Name = name;
+            Priority = 150;
         }
 
         public IDataSource Source;
@@ -733,6 +933,8 @@ namespace PPeXUI
         }
 
         public string InternalName { get; protected set; }
+
+        public byte Priority { get; set; }
 
         public string Type
         {

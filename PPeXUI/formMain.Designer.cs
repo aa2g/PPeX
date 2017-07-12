@@ -52,6 +52,8 @@
             this.convertxggTowavToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.numPriority = new System.Windows.Forms.NumericUpDown();
+            this.label10 = new System.Windows.Forms.Label();
             this.lsvSource = new System.Windows.Forms.ListView();
             this.btnTestCompr = new System.Windows.Forms.Button();
             this.txtFileProg = new System.Windows.Forms.TextBox();
@@ -91,6 +93,7 @@
             this.toolStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numPriority)).BeginInit();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numBitrate)).BeginInit();
@@ -314,6 +317,8 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.numPriority);
+            this.tabPage1.Controls.Add(this.label10);
             this.tabPage1.Controls.Add(this.lsvSource);
             this.tabPage1.Controls.Add(this.btnTestCompr);
             this.tabPage1.Controls.Add(this.txtFileProg);
@@ -337,6 +342,33 @@
             this.tabPage1.Text = "Properties";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // numPriority
+            // 
+            this.numPriority.Increment = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            this.numPriority.Location = new System.Drawing.Point(53, 139);
+            this.numPriority.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+            this.numPriority.Name = "numPriority";
+            this.numPriority.Size = new System.Drawing.Size(57, 20);
+            this.numPriority.TabIndex = 16;
+            this.numPriority.ValueChanged += new System.EventHandler(this.numPriority_ValueChanged);
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(6, 141);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(41, 13);
+            this.label10.TabIndex = 15;
+            this.label10.Text = "Priority:";
+            // 
             // lsvSource
             // 
             this.lsvSource.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -344,19 +376,20 @@
             this.lsvSource.GridLines = true;
             this.lsvSource.Location = new System.Drawing.Point(318, 6);
             this.lsvSource.Name = "lsvSource";
-            this.lsvSource.Size = new System.Drawing.Size(228, 153);
+            this.lsvSource.Size = new System.Drawing.Size(228, 124);
             this.lsvSource.TabIndex = 14;
             this.lsvSource.UseCompatibleStateImageBehavior = false;
             this.lsvSource.View = System.Windows.Forms.View.Details;
             // 
             // btnTestCompr
             // 
-            this.btnTestCompr.Location = new System.Drawing.Point(163, 136);
+            this.btnTestCompr.Location = new System.Drawing.Point(397, 136);
             this.btnTestCompr.Name = "btnTestCompr";
             this.btnTestCompr.Size = new System.Drawing.Size(149, 23);
             this.btnTestCompr.TabIndex = 13;
             this.btnTestCompr.Text = "Test Compression";
             this.btnTestCompr.UseVisualStyleBackColor = true;
+            this.btnTestCompr.Click += new System.EventHandler(this.btnTestCompr_Click);
             // 
             // txtFileProg
             // 
@@ -383,7 +416,7 @@
             // 
             // btnExport
             // 
-            this.btnExport.Location = new System.Drawing.Point(9, 136);
+            this.btnExport.Location = new System.Drawing.Point(243, 136);
             this.btnExport.Name = "btnExport";
             this.btnExport.Size = new System.Drawing.Size(149, 23);
             this.btnExport.TabIndex = 10;
@@ -681,6 +714,7 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numPriority)).EndInit();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
             this.tabPage3.ResumeLayout(false);
@@ -744,5 +778,7 @@
         private System.Windows.Forms.ListView lsvSource;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem convertxggTowavToolStripMenuItem;
+        private System.Windows.Forms.NumericUpDown numPriority;
+        private System.Windows.Forms.Label label10;
     }
 }

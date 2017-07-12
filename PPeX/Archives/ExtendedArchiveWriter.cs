@@ -138,8 +138,9 @@ namespace PPeX
         public ArchiveFileType Type = ArchiveFileType.Raw;
         public ArchiveFileFlags Flags = ArchiveFileFlags.None;
         public ArchiveFileCompression Compression = ArchiveFileCompression.Uncompressed;
+        public byte Priority;
 
-        public ArchiveFile(IDataSource Source, string Name, ArchiveFileCompression Compression)
+        public ArchiveFile(IDataSource Source, string Name, ArchiveFileCompression Compression, byte Priority)
         {
             if (Name.EndsWith(".wav"))
             {
@@ -160,6 +161,8 @@ namespace PPeX
                 Type = ArchiveFileType.Image;
             else
                 this.Compression = Compression;
+
+            this.Priority = Priority;
         }
 
         public void WriteTo(BinaryWriter dataWriter, BinaryWriter metadataWriter, bool asDuplicate)
@@ -215,7 +218,7 @@ namespace PPeX
             else
                 metadataWriter.Write((byte)Compression);
 
-            metadataWriter.Write((byte)0); //reserved
+            metadataWriter.Write(Priority);
 
             metadataWriter.Write(crc);
             metadataWriter.Write(Source.Md5);
