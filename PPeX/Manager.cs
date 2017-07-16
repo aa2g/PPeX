@@ -16,8 +16,7 @@ namespace PPeX
     public static class Manager
     {
         public static Dictionary<FileEntry, ISubfile> FileCache = new Dictionary<FileEntry, ISubfile>();
-        //public static List<ExtendedArchive> LoadedArchives = new List<ExtendedArchive>();
-        public static PipeClient Client; // = new PipeClient("PPEX");
+        public static PipeClient Client;
 
         static Manager()
         {
@@ -25,7 +24,7 @@ namespace PPeX
             System.Diagnostics.Debugger.Launch();
 #endif
 
-            string dllsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"x86");//Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+            string dllsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"x86");
             var assemblies = new List<Assembly>();
 
             foreach (string path in new DirectoryInfo(dllsPath).GetFiles("*.dll").Select(x => x.FullName))
@@ -45,11 +44,11 @@ namespace PPeX
                 return assemblies.First(x => args.Name == x.FullName);
             };
 
+
+
             Process p = new Process();
             p.StartInfo = new ProcessStartInfo(Path.Combine(dllsPath, "PPeXM64.exe"));
             p.Start();
-
-            //System.Threading.Thread.Sleep(1000);
 
             Client = new PipeClient("PPEX");
             var connection = Client.CreateConnection();
@@ -62,46 +61,16 @@ namespace PPeX
                 connection.WriteString("");
                 ready = connection.ReadString();
             }
-            
+        }
 
-            /*
-            foreach (string dir in Directory.EnumerateFiles(Core.Settings.PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
+        public static void AppendLog(string message)
+        {
+            using (FileStream fs = new FileStream("ppex.log", FileMode.OpenOrCreate))
+            using (StreamWriter writer = new StreamWriter(fs))
             {
-                var archive = new ExtendedArchive(dir);
-
-                foreach (var file in archive.ArchiveFiles)
-                {
-                    ISubfile subfile = SubfileFactory.Create(file, file.ArchiveName);
-                    FileCache[new FileEntry(subfile.ArchiveName.Replace(".pp", "").ToLower(), subfile.Name.ToLower())] = subfile;
-                }
-
-                using (FileStream fs = new FileStream(dir, FileMode.Open, FileAccess.Read, FileShare.Read))
-                using (BinaryReader br = new BinaryReader(fs))
-                {
-                    byte[] buffer = new byte[4096];
-                    while (0 < br.Read(buffer, 0, 4096))
-                    { }
-                }
-
-                LoadedArchives.Add(archive);
+                fs.Position = fs.Length;
+                writer.WriteLine(message);
             }
-
-            
-            Dictionary<string, List<string>> ppf = new Dictionary<string, List<string>>();
-            foreach (var kv in FileCache)
-            {
-                if (!ppf.ContainsKey(kv.Key.Archive))
-                {
-                    ppf.Add(kv.Key.Archive, new List<string>());
-                }
-                ppf[kv.Key.Archive].Add(kv.Key.File);
-            }
-
-            foreach (var arc in ppf)
-            {
-                File.WriteAllBytes(Core.Settings.PlaceholdersLocation + "\\" + arc.Key + ".pp", Utility.CreateHeader(arc.Value));
-            }
-            */
         }
 
 
@@ -117,53 +86,41 @@ namespace PPeX
             else
             {
                 var connection = Client.CreateConnection();
-                //using ()
-                //{
-                    connection.WriteString("preload");
-                    connection.WriteString(filename.ToLower() + "/" + paramFile.ToLower());
+                connection.WriteString("preload");
+                connection.WriteString(filename.ToLower() + "/" + paramFile.ToLower());
 
-                    string address = connection.ReadString();
-                    if (address == "NotAvailable")
-                    {
-                        /*FileCache.Add(new FileEntry(filename.ToLower(), paramFile.ToLower()),
-                            SubfileFactory.Create(
-                                new PipedFileSource(null, 0, 0, ArchiveFileCompression.Uncompressed, ArchiveFileType.Raw)));*/
+                string address = connection.ReadString();
+                if (address == "NotAvailable")
+                {
+                    AppendLog("N/A " + filename + ": " + paramFile);
 
-                        using (FileStream fs = new FileStream("ppex.log", FileMode.OpenOrCreate))
-                        using (StreamWriter writer = new StreamWriter(fs))
-                        {
-                            fs.Position = fs.Length;
-                            writer.WriteLine("N/A " + filename + ": " + paramFile);
-                        }
+                    return 0;
+                }
 
-                        return 0;
-                    }
+                uint compressedSize = uint.Parse(connection.ReadString());
+                uint decompressedSize = uint.Parse(connection.ReadString());
+                ArchiveFileCompression compression = (ArchiveFileCompression)Enum.Parse(typeof(ArchiveFileCompression), connection.ReadString());
+                ArchiveFileType type = (ArchiveFileType)Enum.Parse(typeof(ArchiveFileType), connection.ReadString());
 
-                    uint compressedSize = uint.Parse(connection.ReadString());
-                    uint decompressedSize = uint.Parse(connection.ReadString());
-                    ArchiveFileCompression compression = (ArchiveFileCompression)Enum.Parse(typeof(ArchiveFileCompression), connection.ReadString());
-                    ArchiveFileType type = (ArchiveFileType)Enum.Parse(typeof(ArchiveFileType), connection.ReadString());
+                FileCache.Add(new FileEntry(filename.ToLower(), paramFile.ToLower()),
+                        SubfileFactory.Create(
+                            new PipedFileSource(address, compressedSize, decompressedSize, compression, type), 
+                            type));
 
-                    FileCache.Add(new FileEntry(filename.ToLower(), paramFile.ToLower()),
-                            SubfileFactory.Create(
-                                new PipedFileSource(address, compressedSize, decompressedSize, compression, type), 
-                                type));
+                using (FileStream fs = new FileStream("ppex.log", FileMode.OpenOrCreate))
+                using (StreamWriter writer = new StreamWriter(fs))
+                {
+                    fs.Position = fs.Length;
+                    writer.WriteLine("PREALLOC " + filename + ": " + paramFile);
+                }
 
-                    using (FileStream fs = new FileStream("ppex.log", FileMode.OpenOrCreate))
-                    using (StreamWriter writer = new StreamWriter(fs))
-                    {
-                        fs.Position = fs.Length;
-                        writer.WriteLine("PREALLOC " + filename + ": " + paramFile);
-                    }
-
-                    return FileCache[new FileEntry(filename.ToLower(), paramFile.ToLower())].Size;
-                //}
+                return FileCache[new FileEntry(filename.ToLower(), paramFile.ToLower())].Size;
             }
         }
 
         public static object lockObject = new object();
 
-        public unsafe static void Decompress(string paramArchive, string paramFile, byte* outBuffer) //IntPtr outBuffer
+        public unsafe static void Decompress(string paramArchive, string paramFile, byte* outBuffer)
         {
             lock (lockObject)
             {
@@ -269,9 +226,7 @@ namespace PPeX
                 var handler = Manager.Client.CreateConnection();
                 handler.WriteString("load");
                 handler.WriteString(Address);
-
-                //MemoryMappedFile MMFile = MemoryMappedFile.OpenExisting(Address, MemoryMappedFileRights.Read);
-                //Stream stream = MMFile.CreateViewStream(0, CompressedSize, MemoryMappedFileAccess.Read);
+                
                 using (BinaryReader reader = new BinaryReader(handler.BaseStream, Encoding.Unicode, true))
                 {
                     int length = reader.ReadInt32();
@@ -295,7 +250,7 @@ namespace PPeX
                         output = buffer.ToArray();
                     }
                     using (ZstdNet.Decompressor zstd = new ZstdNet.Decompressor())
-                        return new MemoryStream(zstd.Unwrap(output), false); //, (int)_size
+                        return new MemoryStream(zstd.Unwrap(output), false);
                 case ArchiveFileCompression.Uncompressed:
                     return stream;
                 default:
@@ -321,10 +276,6 @@ namespace PPeX
         {
             return temp;
         }
-
-        /*
-        public delegate void PipeMessageRecievedHandler(int instance, string message);
-        public event PipeMessageRecievedHandler PipeMessageRecieved;*/
     }
 
     public class StreamHandler : IDisposable
