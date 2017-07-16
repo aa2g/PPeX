@@ -49,9 +49,20 @@ namespace PPeX
             p.StartInfo = new ProcessStartInfo(Path.Combine(dllsPath, "PPeXM64.exe"));
             p.Start();
 
-            System.Threading.Thread.Sleep(7500);
+            //System.Threading.Thread.Sleep(1000);
 
             Client = new PipeClient("PPEX");
+            var connection = Client.CreateConnection();
+
+            string ready = "False";
+            while (ready != "True")
+            {
+                System.Threading.Thread.Sleep(500);
+                connection.WriteString("ready");
+                connection.WriteString("");
+                ready = connection.ReadString();
+            }
+            
 
             /*
             foreach (string dir in Directory.EnumerateFiles(Core.Settings.PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
