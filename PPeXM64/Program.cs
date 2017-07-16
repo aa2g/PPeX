@@ -19,12 +19,15 @@ namespace PPeXM64
         public static List<CachedObject> DataCache = new List<CachedObject>();
 
         public static bool LogFiles = false;
+        public static bool IsLoaded = false;
 
         static PipeServer server;
 
         static void Main(string[] args)
         {
             server = new PipeServer("PPEX");
+
+            server.OnRequest += Server_OnRequest;
 
             foreach (string dir in Directory.EnumerateFiles(Core.Settings.PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
             {
@@ -51,11 +54,13 @@ namespace PPeXM64
                 LoadedArchives.Add(archive);
             }
 
+            Console.WriteLine("Finished loading");
+
+            IsLoaded = true;
+
             //System.Diagnostics.Debugger.Launch();
-
-            server.OnRequest += Server_OnRequest;
             string line;
-
+            
             while (true)
             {
                 line = Console.ReadLine();
@@ -206,7 +211,14 @@ namespace PPeXM64
 
         private static void Server_OnRequest(string request, string argument, StreamHandler handler)
         {
-            if (request == "preload")
+            if (request == "ready")
+            {
+                if (IsLoaded)
+                    Console.WriteLine("Connected to pipe");
+
+                handler.WriteString(IsLoaded.ToString());
+            }
+            else if (request == "preload")
             {
                 if (!TryLoad(argument))
                 {
@@ -227,7 +239,7 @@ namespace PPeXM64
                 handler.WriteString(compression);
                 handler.WriteString(type);
             }
-            if (request == "load")
+            else if (request == "load")
             {
                 lock (loadLock)
                 {
