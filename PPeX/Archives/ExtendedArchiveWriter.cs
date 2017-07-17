@@ -68,7 +68,7 @@ namespace PPeX
                 writer.Write((uint)headerLength);
 
                 long headerPos = writer.BaseStream.Position;
-                writer.BaseStream.Position = headerLength + 1024; //a 1kb space is left incase the header needs to be shifted later
+                writer.BaseStream.Position = headerLength + (512 * 1024); //512kb empty space
 
                 int i = 0;
                 foreach (var file in Files)
@@ -112,7 +112,7 @@ namespace PPeX
         0 - File type [byte]
         1 - File flags [byte]
         2 - Compression type [byte]
-        3 - [Reserved] {1 byte long}
+        3 - File priority [byte]
         4 - CRC32C of packed data [uint]
         8 - MD5 of uncompressed file {16 bytes long}
         24 - [Reserved] {48 bytes long}
