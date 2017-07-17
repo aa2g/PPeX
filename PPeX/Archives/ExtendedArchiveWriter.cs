@@ -9,6 +9,9 @@ using Crc32C;
 
 namespace PPeX
 {
+    /// <summary>
+    /// A writer for extended archives, to .ppx files.
+    /// </summary>
     public class ExtendedArchiveWriter
     {
         /*
@@ -21,13 +24,34 @@ namespace PPeX
         14 + n - header length [uint]
         18 + n - header
         */
+
+        /// <summary>
+        /// The display name of the archive.
+        /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// The list of files that the archive contains.
+        /// </summary>
         public List<ArchiveFile> Files = new List<ArchiveFile>();
+        /// <summary>
+        /// The filename that the archive will be written to.
+        /// </summary>
         public string Filename { get; protected set; }
+        /// <summary>
+        /// The type of archive that will be created.
+        /// </summary>
         public ArchiveType Type { get; set; }
+        /// <summary>
+        /// The compression type that the writer will default to.
+        /// </summary>
         public ArchiveFileCompression DefaultCompression { get; set; }
 
+        /// <summary>
+        /// Creates a new extended archive writer.
+        /// </summary>
+        /// <param name="Filename">The filename of the .ppx file to be created.</param>
+        /// <param name="Name">The display name for the archive.</param>
         public ExtendedArchiveWriter(string Filename, string Name)
         {
             this.Filename = Filename;
@@ -36,6 +60,9 @@ namespace PPeX
             DefaultCompression = ArchiveFileCompression.LZ4;
         }
 
+        /// <summary>
+        /// Writes the archive to the .ppx file.
+        /// </summary>
         public void Write()
         {
             IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>();
@@ -43,6 +70,10 @@ namespace PPeX
             Write(progress);
         }
 
+        /// <summary>
+        /// Writes the archive to the .ppx file.
+        /// </summary>
+        /// <param name="progress">The progress callback object.</param>
         public void Write(IProgress<Tuple<string, int>> progress)
         {
             List<uint> md5s = new List<uint>();
@@ -52,6 +83,7 @@ namespace PPeX
             using (BinaryWriter writer = new BinaryWriter(arc))
             using (BinaryWriter headerWriter = new BinaryWriter(header))
             {
+                //Write container header data
                 writer.Write(Encoding.ASCII.GetBytes(ExtendedArchive.Magic));
 
                 writer.Write(ExtendedArchive.Version);
@@ -63,6 +95,7 @@ namespace PPeX
 
                 writer.Write((uint)Files.Count);
 
+                //Write individual file header + data
                 int headerLength = Files.Sum(x => x.HeaderLength);
 
                 writer.Write((uint)headerLength);
@@ -73,6 +106,7 @@ namespace PPeX
                 int i = 0;
                 foreach (var file in Files)
                 {
+                    //Reduce the MD5 to a single int
                     uint crc = Crc32CAlgorithm.Compute(file.Source.Md5);
                     i++;
 
@@ -80,10 +114,12 @@ namespace PPeX
 
                     try
                     {
+                        //Write the file
                         file.WriteTo(writer, headerWriter, isDuplicate);
                     }
                     catch
                     {
+                        //Cancel the write process on error
                         progress.Report(new Tuple<string, int>(
                                     "[" + i + " / " + Files.Count + "] Stopped writing " + file.Name + "\r\n",
                                     100 * i / Files.Count));
@@ -91,6 +127,7 @@ namespace PPeX
                         throw;
                     }
 
+                    //Update progress
                     progress.Report(new Tuple<string, int>(
                                     "[" + i + " / " + Files.Count + "] Written " + file.Name + "... (" + file.Source.Size + " bytes)" + (isDuplicate ? " [duplicate]\r\n" : "\r\n"),
                                     100 * i / Files.Count));
@@ -98,6 +135,7 @@ namespace PPeX
                     md5s.Add(crc);
                 }
 
+                //Go back and write the file header
                 writer.BaseStream.Position = headerPos;
                 writer.Write(header.ToArray());
             }
@@ -106,6 +144,9 @@ namespace PPeX
         }
     }
 
+    /// <summary>
+    /// A subfile that is to be written to an archive.
+    /// </summary>
     public class ArchiveFile
     {
         /*
@@ -123,10 +164,19 @@ namespace PPeX
         86 - File compressed length [uint]
         */
 
+        /// <summary>
+        /// The data source of the archive.
+        /// </summary>
         public IDataSource Source;
 
+        /// <summary>
+        /// The name of the file.
+        /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// The size of the header of the file.
+        /// </summary>
         internal int HeaderLength
         {
             get
@@ -135,16 +185,36 @@ namespace PPeX
             }
         }
 
+        /// <summary>
+        /// The type of the file.
+        /// </summary>
         public ArchiveFileType Type = ArchiveFileType.Raw;
+        /// <summary>
+        /// The metadata flags associated with the subfile.
+        /// </summary>
         public ArchiveFileFlags Flags = ArchiveFileFlags.None;
+        /// <summary>
+        /// The compression that will be used on the subfile.
+        /// </summary>
         public ArchiveFileCompression Compression = ArchiveFileCompression.Uncompressed;
+        /// <summary>
+        /// The memory priority of the subfile.
+        /// </summary>
         public byte Priority;
 
+        /// <summary>
+        /// Creates a subfile to be written.
+        /// </summary>
+        /// <param name="Source">The source of the data to be written.</param>
+        /// <param name="Name">The name of the subfile.</param>
+        /// <param name="Compression">The compression to use on the subfile.</param>
+        /// <param name="Priority">The memory priority of the subfile.</param>
         public ArchiveFile(IDataSource Source, string Name, ArchiveFileCompression Compression, byte Priority)
         {
+            //Determine type and compression
             if (Name.EndsWith(".wav"))
             {
-                //this.Source = new CompressedDataSource(Source, ArchiveFileType.Audio);
+                //Wrap the source into an opus stream
                 this.Source = new Xgg.XggWrappedSource(Source);
                 this.Name = Name.Replace(".wav", ".xgg");
             }
@@ -165,6 +235,12 @@ namespace PPeX
             this.Priority = Priority;
         }
 
+        /// <summary>
+        /// Write the subfile to the archive writer.
+        /// </summary>
+        /// <param name="dataWriter">The archive writer to write the subfile data to.</param>
+        /// <param name="metadataWriter">The archive writer to write the header data to.</param>
+        /// <param name="asDuplicate">True if the file is a duplicate.</param>
         public void WriteTo(BinaryWriter dataWriter, BinaryWriter metadataWriter, bool asDuplicate)
         {
             uint actualsize = 0;
@@ -177,6 +253,7 @@ namespace PPeX
                 using (MemoryStream buffer = new MemoryStream()) 
                 using (Stream source = Source.GetStream())
                 {
+                    //Compress the data
                     switch (Compression)
                     {
                         case ArchiveFileCompression.LZ4:
@@ -199,17 +276,19 @@ namespace PPeX
                             throw new InvalidOperationException("Compression type is invalid.");
                     }
 
+                    //Write the data and get a crc
                     buffer.Position = 0;
                     byte[] bBuffer = buffer.ToArray();
                     crc = Crc32CAlgorithm.Compute(bBuffer);
                     dataWriter.Write(bBuffer);
                 }
                 
-
+                //Calculate the position of the data
                 long newsize = dataWriter.BaseStream.Position;
                 actualsize = (uint)(newsize - (long)offset);
             }
 
+            //Write the header data
             metadataWriter.Write((byte)Type);
             metadataWriter.Write((byte)Flags);
 
