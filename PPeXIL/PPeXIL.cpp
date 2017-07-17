@@ -1,10 +1,16 @@
 #include "stdafx.h"
 #include "PPeXIL.h"
-#using <..\PPeX\PPeX\bin\Release\PPeX.dll>
-#using <..\PPeX\PPeX\bin\Debug\PPeX.dll>
+#ifdef _DEBUG
+#using <..\PPeX.Manager\bin\Debug\PPeX.Manager.dll>
+#else
+//#using <..\PPeX.Manager\bin\Release\PPeX.Manager.dll>
+#using <..\PPeX.Manager\bin\Debug\PPeX.Manager.dll>
+#endif
+
 
 PPeXIL::PPeXIL()
 {
+	PPeX::Manager::Initializer::BindDependencies();
 }
 
 bool PPeXIL::ArchiveDecompress(wchar_t** paramArchive, wchar_t** paramFile, DWORD* readBytes, BYTE** outBuffer, void *(__stdcall*alloc)(size_t))
@@ -12,22 +18,18 @@ bool PPeXIL::ArchiveDecompress(wchar_t** paramArchive, wchar_t** paramFile, DWOR
 	System::String^ archive = gcnew System::String(*paramArchive);
 	System::String^ file = gcnew System::String(*paramFile);
 	
-	size_t sz = PPeX::Manager::PreAlloc(archive, file);
+	size_t sz = PPeX::Manager::Manager::PreAlloc(archive, file);
 	
 	if (sz > 0) {
 		*outBuffer = (BYTE*)alloc(sz);
 		*readBytes = sz;
 
-		//PPeX::Manager::Decompress(archive, file, System::IntPtr(*outBuffer));
-		PPeX::Manager::Decompress(archive, file, *outBuffer);
+		PPeX::Manager::Manager::Decompress(archive, file, *outBuffer);
 		
 		delete archive;
 		delete file;
 		return true;
 	}
-	
-	
-	//void* fileBuffer = Shared::IllusionMemAlloc(match->GetFileSize());
 	
 	delete archive;
 	delete file;

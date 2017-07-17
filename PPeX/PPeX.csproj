@@ -103,7 +103,6 @@
     <Compile Include="IDataSource.cs" />
     <Compile Include="Subfiles\ImageSubfile.cs" />
     <Compile Include="ISubfile.cs" />
-    <Compile Include="Manager.cs" />
     <Compile Include="Sources\PPSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Substream.cs" />

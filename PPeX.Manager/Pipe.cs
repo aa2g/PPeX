@@ -1,47 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.IO.Pipes;
-using System.Threading;
-using System.IO;
 
-namespace PPeXM64
+namespace PPeX.Manager
 {
-    public class PipeServer
+    public class PipeClient
     {
-        protected NamedPipeServerStream internalPipe;
-        protected Thread serverThread;
+        protected string Name;
+        protected StreamHandler temp;
 
-        public delegate void OnRequestEventHandler(string request, string argument, StreamHandler handler);
-        public event OnRequestEventHandler OnRequest;
-
-        public PipeServer(string name)
+        public PipeClient(string name)
         {
-            internalPipe = new NamedPipeServerStream(name, PipeDirection.InOut);
-            serverThread = new Thread(new ThreadStart(ServerMethod));
-
-            serverThread.Start();
+            Name = name;
+            NamedPipeClientStream client = new NamedPipeClientStream(Name);
+            client.Connect();
+            temp = new StreamHandler(client);
         }
 
-        protected void ServerMethod()
+        public StreamHandler CreateConnection()
         {
-            internalPipe.WaitForConnection();
-            StreamHandler handler = new StreamHandler(internalPipe);
-
-            while (true)
-            {
-                string request = handler.ReadString();
-
-                string argument = handler.ReadString();
-
-                OnRequest?.Invoke(request, argument, handler);
-            }
+            return temp;
         }
     }
 
-    public class StreamHandler
+    public class StreamHandler : IDisposable
     {
         private Stream ioStream;
         public Stream BaseStream => ioStream;
@@ -51,6 +37,11 @@ namespace PPeXM64
             this.ioStream = ioStream;
         }
 
+        public void Dispose()
+        {
+            ((IDisposable)ioStream).Dispose();
+        }
+
         public string ReadString()
         {
             int len;
@@ -58,10 +49,10 @@ namespace PPeXM64
             len |= ioStream.ReadByte();
             byte[] inBuffer = new byte[len];
             ioStream.Read(inBuffer, 0, len);
-            
+
             return Encoding.Unicode.GetString(inBuffer);
         }
-        
+
         public int WriteString(string outString)
         {
             byte[] outBuffer = Encoding.Unicode.GetBytes(outString);
