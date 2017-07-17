@@ -1,17 +1,11 @@
-﻿using LZ4;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.MemoryMappedFiles;
-using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace PPeX
+namespace PPeX.Manager
 {
     public static class Manager
     {
@@ -20,11 +14,10 @@ namespace PPeX
 
         static Manager()
         {
-#if DEBUG
-            System.Diagnostics.Debugger.Launch();
-#endif
+
 
             string dllsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"x86");
+            /*
             var assemblies = new List<Assembly>();
 
             foreach (string path in new DirectoryInfo(dllsPath).GetFiles("*.dll").Select(x => x.FullName))
@@ -35,16 +28,14 @@ namespace PPeX
                 }
                 catch (Exception ex)
                 {
-                    
+
                 }
             }
 
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
                 return assemblies.First(x => args.Name == x.FullName);
-            };
-
-
+            };*/
 
             Process p = new Process();
             p.StartInfo = new ProcessStartInfo(Path.Combine(dllsPath, "PPeXM64.exe"));
@@ -186,138 +177,6 @@ namespace PPeX
         public override int GetHashCode()
         {
             return (Archive + File).GetHashCode();
-        }
-    }
-
-    public class PipedFileSource : IDataSource
-    {
-        public string Address;
-        protected uint CompressedSize;
-        public uint DecompressedSize;
-        public ArchiveFileCompression Compression;
-        public ArchiveFileType Type;
-
-        public uint Size => DecompressedSize;
-
-        public byte[] Md5
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public PipedFileSource(string address, uint compressedSize, uint size, ArchiveFileCompression compression, ArchiveFileType type)
-        {
-            Address = address;
-            DecompressedSize = size;
-            CompressedSize = compressedSize;
-            Compression = compression;
-            Type = type;
-        }
-
-        static object lockObject = new object();
-
-        public Stream GetStream()
-        {
-            Stream stream;
-            lock (lockObject)
-            {
-                var handler = Manager.Client.CreateConnection();
-                handler.WriteString("load");
-                handler.WriteString(Address);
-                
-                using (BinaryReader reader = new BinaryReader(handler.BaseStream, Encoding.Unicode, true))
-                {
-                    int length = reader.ReadInt32();
-                    stream = new MemoryStream(
-                        reader.ReadBytes(length), 
-                        false);
-                }
-            }
-
-
-            switch (Compression)
-            {
-                case ArchiveFileCompression.LZ4:
-                    return new LZ4Stream(stream,
-                        LZ4StreamMode.Decompress);
-                case ArchiveFileCompression.Zstandard:
-                    byte[] output;
-                    using (MemoryStream buffer = new MemoryStream())
-                    {
-                        stream.CopyTo(buffer);
-                        output = buffer.ToArray();
-                    }
-                    using (ZstdNet.Decompressor zstd = new ZstdNet.Decompressor())
-                        return new MemoryStream(zstd.Unwrap(output), false);
-                case ArchiveFileCompression.Uncompressed:
-                    return stream;
-                default:
-                    throw new InvalidOperationException("Compression type is invalid.");
-            };
-        }
-    }
-
-    public class PipeClient
-    {
-        protected string Name;
-        protected StreamHandler temp;
-
-        public PipeClient(string name)
-        {
-            Name = name;
-            NamedPipeClientStream client = new NamedPipeClientStream(Name);
-            client.Connect();
-            temp = new StreamHandler(client);
-        }
-
-        public StreamHandler CreateConnection()
-        {
-            return temp;
-        }
-    }
-
-    public class StreamHandler : IDisposable
-    {
-        private Stream ioStream;
-        public Stream BaseStream => ioStream;
-
-        public StreamHandler(Stream ioStream)
-        {
-            this.ioStream = ioStream;
-        }
-
-        public void Dispose()
-        {
-            ((IDisposable)ioStream).Dispose();
-        }
-
-        public string ReadString()
-        {
-            int len;
-            len = ioStream.ReadByte() << 8;
-            len |= ioStream.ReadByte();
-            byte[] inBuffer = new byte[len];
-            ioStream.Read(inBuffer, 0, len);
-
-            return Encoding.Unicode.GetString(inBuffer);
-        }
-
-        public int WriteString(string outString)
-        {
-            byte[] outBuffer = Encoding.Unicode.GetBytes(outString);
-            int len = outBuffer.Length;
-            if (len > ushort.MaxValue)
-            {
-                len = ushort.MaxValue;
-            }
-            ioStream.WriteByte((byte)(len >> 8));
-            ioStream.WriteByte((byte)(len & 0xFF));
-            ioStream.Write(outBuffer, 0, len);
-            ioStream.Flush();
-
-            return outBuffer.Length + 2;
         }
     }
 }
