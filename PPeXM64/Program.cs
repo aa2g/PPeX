@@ -26,15 +26,17 @@ namespace PPeXM64
         {
             server = new PipeServer("PPEX");
 
+            //Attach the handler to the server
             server.OnRequest += Server_OnRequest;
 
+            //Index all .ppx files in the location
             foreach (string dir in Directory.EnumerateFiles(Core.Settings.PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
             {
                 var archive = new ExtendedArchive(dir);
 
                 foreach (var file in archive.ArchiveFiles)
                 {
-                    ISubfile subfile = SubfileFactory.Create(file, file.ArchiveName);
+                    ISubfile subfile = SubfileFactory.Create(file);
                     FileCache[new FileEntry(subfile.ArchiveName.Replace(".pp", "").ToLower(), subfile.Name.ToLower())] = subfile;
                 }
 
@@ -49,6 +51,7 @@ namespace PPeXM64
             
             string line;
             
+            //Handle arguments from the user
             while (true)
             {
                 line = Console.ReadLine();
@@ -74,13 +77,25 @@ namespace PPeXM64
             }
         }
 
+        /// <summary>
+        /// The total amount of memory used by cached data.
+        /// </summary>
         public static long LoadedMemorySize => DataCache.Sum(x => x.Data.LongLength);
 
+        /// <summary>
+        /// The memory pressure thresholds to use when trimming memory.
+        /// </summary>
         static byte[] Thresholds = new byte[] { 75, 145, 180, 225, 255 };
+
+        /// <summary>
+        /// Trims memory using a generation-based prioritizer.
+        /// </summary>
+        /// <param name="MaxSize">The maximum allowed size of cached data.</param>
         public static void TrimMemory(long MaxSize)
         {
             lock (loadLock)
             {
+                //Iterate on the static thresholds
                 for (int i = 0; i < Thresholds.Length; i++)
                 {
                     if (LoadedMemorySize < MaxSize)
@@ -93,6 +108,7 @@ namespace PPeXM64
 
                     List<CachedObject> temp = new List<CachedObject>(DataCache);
 
+                    //Deallocate each file based on its priority
                     foreach (var item in temp)
                     {
                         if (item.Priority <= currentThreshold)
@@ -105,31 +121,41 @@ namespace PPeXM64
                 }
             }
 
+            //Collect garbage and compact the heap
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
         }
 
         
-
+        /// <summary>
+        /// Attempt to cache a file in memory.
+        /// </summary>
+        /// <param name="combinedName">The combined name (or address) of the file to cache.</param>
+        /// <returns></returns>
         public static bool TryLoad(string combinedName)
         {
             string[] splitNames = combinedName.Split('/');
 
             ISubfile result;
             if (!FileCache.TryGetValue(new FileEntry(splitNames[0], splitNames[1]), out result))
+                //We don't have the file
                 return false;
 
 #warning handle dupes somehow
 
             if (!DataCache.Any(x => x.Name == combinedName))
             {
+                //We haven't cached the file yet
                 ArchiveFileSource source = result.Source as ArchiveFileSource;
                 ArchiveFileCompression oldCompression = source.Compression;
-                source.Compression = ArchiveFileCompression.Uncompressed; //trying to bypass any decompression
+
+                //We don't want to decompress the data (to keep memory footprint small) so we mark it as uncompressed
+                source.Compression = ArchiveFileCompression.Uncompressed;
                 
                 using (Stream stream = source.GetStream())
                 using (MemoryStream mem = new MemoryStream())
                 {
+                    //Copy it to a cached object
                     stream.CopyTo(mem);
                     CachedObject obj = new CachedObject()
                     {
@@ -142,6 +168,7 @@ namespace PPeXM64
                     DataCache.Add(obj);
                 }
 
+                //Restore the original compression value
                 source.Compression = oldCompression;
             }
 
@@ -150,10 +177,17 @@ namespace PPeXM64
         
         public static object loadLock = new object();
 
+        /// <summary>
+        /// Handler for any pipe requests.
+        /// </summary>
+        /// <param name="request">The command to execute.</param>
+        /// <param name="argument">Any additional arguments.</param>
+        /// <param name="handler">The streamhandler to use.</param>
         private static void Server_OnRequest(string request, string argument, StreamHandler handler)
         {
             if (request == "ready")
             {
+                //Notify the AA2 instance that we are ready
                 if (IsLoaded)
                     Console.WriteLine("Connected to pipe");
 
@@ -161,12 +195,15 @@ namespace PPeXM64
             }
             else if (request == "preload")
             {
+                //Cache the file into memory
                 if (!TryLoad(argument))
                 {
+                    //We don't have the file
                     handler.WriteString("NotAvailable");
                     return;
                 }
 
+                //Send the AA2 instance metadata on the file
                 string[] splitNames = argument.Split('/');
                 ISubfile subfile = FileCache[new FileEntry(splitNames[0], splitNames[1])];
                 ArchiveFileSource source = subfile.Source as ArchiveFileSource;
@@ -182,13 +219,16 @@ namespace PPeXM64
             }
             else if (request == "load")
             {
+                //Transfer the file
                 lock (loadLock)
                 {
+                    //Ensure we have the file in memory
                     TryLoad(argument);
 
                     if (LogFiles)
                         Console.WriteLine(argument);
 
+                    //Write the data to the pipe
                     using (BinaryWriter writer = new BinaryWriter(handler.BaseStream, Encoding.Unicode, true))
                     {
                         byte[] data = DataCache.First(x => x.Name == argument).Data;
@@ -201,7 +241,8 @@ namespace PPeXM64
             }
             else
             {
-                //ignore instead of throwing exception
+                //Unknown command
+                //Ignore instead of throwing exception
             }
         }
     }

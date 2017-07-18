@@ -9,6 +9,10 @@ using System.Drawing;
 namespace PPeX
 {
 #warning remove
+    /// <summary>
+    /// A subfile that is specialized for images (.bmp).
+    /// </summary>
+    [Obsolete]
     public class ImageSubfile : BaseSubfile
     {
         protected uint _size = 0;

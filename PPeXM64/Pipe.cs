@@ -9,6 +9,9 @@ using System.IO;
 
 namespace PPeXM64
 {
+    /// <summary>
+    /// A pipe server that handles request from the PPeX client.
+    /// </summary>
     public class PipeServer
     {
         protected NamedPipeServerStream internalPipe;
@@ -41,7 +44,10 @@ namespace PPeXM64
         }
     }
 
-    public class StreamHandler
+    /// <summary>
+    /// A wrapper for a pipe to be able to communicate over it.
+    /// </summary>
+    public class StreamHandler : IDisposable
     {
         private Stream ioStream;
         public Stream BaseStream => ioStream;
@@ -51,20 +57,29 @@ namespace PPeXM64
             this.ioStream = ioStream;
         }
 
+        public void Dispose()
+        {
+            ((IDisposable)ioStream).Dispose();
+        }
+
         public string ReadString()
         {
             int len;
+            //Read the length
             len = ioStream.ReadByte() << 8;
             len |= ioStream.ReadByte();
+
+            //Read the string
             byte[] inBuffer = new byte[len];
             ioStream.Read(inBuffer, 0, len);
-            
+
             return Encoding.Unicode.GetString(inBuffer);
         }
-        
+
         public int WriteString(string outString)
         {
             byte[] outBuffer = Encoding.Unicode.GetBytes(outString);
+            //Write the length
             int len = outBuffer.Length;
             if (len > ushort.MaxValue)
             {
@@ -72,6 +87,8 @@ namespace PPeXM64
             }
             ioStream.WriteByte((byte)(len >> 8));
             ioStream.WriteByte((byte)(len & 0xFF));
+
+            //Write the string
             ioStream.Write(outBuffer, 0, len);
             ioStream.Flush();
 

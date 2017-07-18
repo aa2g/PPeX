@@ -8,10 +8,17 @@ using SB3Utility;
 
 namespace PPeX
 {
+    /// <summary>
+    /// A data source from a .pp file.
+    /// </summary>
     public class PPSource : IDataSource
     {
         protected IReadFile subfile;
 
+        /// <summary>
+        /// Creates a data source from a subfile in a .pp file.
+        /// </summary>
+        /// <param name="subfile">The subfile to read.</param>
         public PPSource(IReadFile subfile)
         {
             this.subfile = subfile;
@@ -25,11 +32,21 @@ namespace PPeX
         }
 
         protected byte[] _md5;
+        /// <summary>
+        /// The MD5 hash of the uncompressed data.
+        /// </summary>
         public byte[] Md5 => _md5;
 
         protected uint _size;
+        /// <summary>
+        /// The uncompressed size of the data.
+        /// </summary>
         public uint Size => _size;
 
+        /// <summary>
+        /// Returns a stream of uncompressed data.
+        /// </summary>
+        /// <returns></returns>
         public Stream GetStream()
         {
             return subfile.CreateReadStream();
