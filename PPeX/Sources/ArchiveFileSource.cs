@@ -76,21 +76,6 @@ namespace PPeX
             return crc == Crc;
         }
 
-        internal ArchiveFileSource Dedupe(ArchiveFileSource dupe)
-        {
-            dupe._crc = _crc;
-            dupe._md5 = _md5;
-            dupe._size = _size;
-            dupe.Length = Length;
-            dupe.Offset = Offset;
-            dupe.ArchiveFilename = ArchiveFilename;
-            dupe.Compression = Compression;
-            dupe.Type = Type;
-            dupe.Flags |= ArchiveFileFlags.Duplicate; //was originally a duplicate
-
-            return dupe;
-        }
-
         public Stream GetStream()
         {
             Stream stream = new Substream(
