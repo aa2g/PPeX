@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace PPeX.Manager
 {
+    /// <summary>
+    /// A client for the named pipe transfers.
+    /// </summary>
     public class PipeClient
     {
         protected string Name;
@@ -27,6 +30,9 @@ namespace PPeX.Manager
         }
     }
 
+    /// <summary>
+    /// A wrapper for a pipe to be able to communicate over it.
+    /// </summary>
     public class StreamHandler : IDisposable
     {
         private Stream ioStream;
@@ -45,8 +51,11 @@ namespace PPeX.Manager
         public string ReadString()
         {
             int len;
+            //Read the length
             len = ioStream.ReadByte() << 8;
             len |= ioStream.ReadByte();
+
+            //Read the string
             byte[] inBuffer = new byte[len];
             ioStream.Read(inBuffer, 0, len);
 
@@ -56,6 +65,7 @@ namespace PPeX.Manager
         public int WriteString(string outString)
         {
             byte[] outBuffer = Encoding.Unicode.GetBytes(outString);
+            //Write the length
             int len = outBuffer.Length;
             if (len > ushort.MaxValue)
             {
@@ -63,6 +73,8 @@ namespace PPeX.Manager
             }
             ioStream.WriteByte((byte)(len >> 8));
             ioStream.WriteByte((byte)(len & 0xFF));
+
+            //Write the string
             ioStream.Write(outBuffer, 0, len);
             ioStream.Flush();
 

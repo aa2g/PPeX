@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace PPeXM64
 {
+    /// <summary>
+    /// A cached version of a file to be kept in memory.
+    /// </summary>
     public class CachedObject
     {
         public byte[] Data;

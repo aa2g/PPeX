@@ -9,18 +9,31 @@ using System.Threading.Tasks;
 
 namespace PPeX.Xgg
 {
+    /// <summary>
+    /// A subfile that is specialized for audio (uses specialized opus wrapper .xgg).
+    /// </summary>
     public class XggSubfile : BaseSubfile
     {
         public readonly string Magic = "XGG";
         public readonly byte Version = 3;
 
         protected uint _size;
+        /// <summary>
+        /// The uncompressed size of the data.
+        /// </summary>
         public override uint Size => _size;
 
+        /// <summary>
+        /// Creates a new .xgg subfile from audio data.
+        /// </summary>
+        /// <param name="Source">The source of the data.</param>
+        /// <param name="Name">The name of the subfile.</param>
+        /// <param name="Archive">The name of the .pp archive to associate with.</param>
         public XggSubfile(IDataSource Source, string Name, string Archive) : base(Source, Name, Archive)
         {
+            //We want to make it look like a .wav file to the game
             _name = Name.Replace(".xgg", ".wav");
-#warning change to a bitrate scaled estimate
+
             using (Stream source = Source.GetStream())
             using (BinaryReader reader = new BinaryReader(source, Encoding.ASCII, true))
             {
@@ -41,14 +54,25 @@ namespace PPeX.Xgg
 
                 _size = (uint)(FrameSize * (count + 4) * 2); //add 4 to keep a good buffer in case
             }
-
-            //_size = Source.Size * 30; //fast estimate
         }
 
-        public int Bitrate;
+        /// <summary>
+        /// The maximum size of each individual opus frames.
+        /// </summary>
         public int FrameSize;
+        /// <summary>
+        /// The (approximate) bitrate of the opus stream.
+        /// </summary>
+        public int Bitrate;
+        /// <summary>
+        /// The amount of channels contained in the opus stream.
+        /// </summary>
         public int Channels;
 
+        /// <summary>
+        /// Writes a compressed version of the data to a stream.
+        /// </summary>
+        /// <param name="stream">The stream to write the compressed data to.</param>
         public override void WriteToStream(Stream stream)
         {
             using (Stream source = Source.GetStream())

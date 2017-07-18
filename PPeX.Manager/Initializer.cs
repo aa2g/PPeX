@@ -8,8 +8,14 @@ using System.Threading.Tasks;
 
 namespace PPeX.Manager
 {
+    /// <summary>
+    /// Used to initialize the PPeX instance when hooked into AA2.
+    /// </summary>
     public static class Initializer
     {
+        /// <summary>
+        /// Binds the assembly resolve method to search in the x86 folder for dependencies.
+        /// </summary>
         public static void BindDependencies()
         {
 #if DEBUG
