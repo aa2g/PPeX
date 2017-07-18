@@ -32,19 +32,8 @@ namespace PPeX
             {
                 var file = new ArchiveFileSource(reader);
 
-                if (file.Compression == ArchiveFileCompression.Duplicate)
-                    dupes.Add(file);
-                else
-                    files.Add(file);
-            }
 
-            foreach (var file in dupes)
-            {
-                var original = files.First(x =>
-                    Enumerable.SequenceEqual(x.Md5, file.Md5) &&
-                    !x.Flags.HasFlag(ArchiveFileFlags.Duplicate));
-
-                files.Add(original.Dedupe(file));
+                files.Add(file);
             }
         }
     }

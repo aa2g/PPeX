@@ -68,14 +68,7 @@ namespace PPeX
         /// <summary>
         /// Zstd compression is used (see <see cref="ZstdNet.Compressor"/>)
         /// </summary>
-        Zstandard = 2,
-
-
-
-        /// <summary>
-        /// The file is psuedo-compressed as it is a duplicate of another already compressed file.
-        /// </summary>
-        Duplicate = 255
+        Zstandard = 2
     }
 
     /// <summary>
@@ -94,12 +87,8 @@ namespace PPeX
         /// </summary>
         Meta = 1,
         /// <summary>
-        /// The file is a duplicate (note: the ArchiveFileCompression property is checked instead of this)
-        /// </summary>
-        Duplicate = 2,
-        /// <summary>
         /// Indicates that the file should be forced into being kept in memory.
         /// </summary>
-        MemoryCached = 4
+        MemoryCached = 2
     }
 }

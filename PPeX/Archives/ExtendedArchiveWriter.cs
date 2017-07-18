@@ -80,7 +80,7 @@ namespace PPeX
         /// <param name="progress">The progress callback object.</param>
         public void Write(IProgress<Tuple<string, int>> progress)
         {
-            List<uint> md5s = new List<uint>();
+            List<WriteReciept> receipts = new List<WriteReciept>();
             
             using (MemoryStream header = new MemoryStream())
             using (BinaryWriter writer = new BinaryWriter(ArchiveStream, Encoding.ASCII, leaveOpen))
@@ -111,15 +111,15 @@ namespace PPeX
                 foreach (var file in Files)
                 {
                     //Reduce the MD5 to a single int
-                    uint crc = Crc32CAlgorithm.Compute(file.Source.Md5);
                     i++;
 
-                    bool isDuplicate = md5s.Contains(crc);
+                    var WriteReciept = receipts.FirstOrDefault(x => Utility.CompareBytes(x.Md5, file.Source.Md5));
+                    bool isDuplicate = WriteReciept != null;
 
                     try
                     {
                         //Write the file
-                        file.WriteTo(writer, headerWriter, isDuplicate);
+                        WriteReciept = file.WriteTo(writer, headerWriter, WriteReciept);
                     }
                     catch
                     {
@@ -136,7 +136,7 @@ namespace PPeX
                                     "[" + i + " / " + Files.Count + "] Written " + file.Name + "... (" + file.Source.Size + " bytes)" + (isDuplicate ? " [duplicate]\r\n" : "\r\n"),
                                     100 * i / Files.Count));
 
-                    md5s.Add(crc);
+                    receipts.Add(WriteReciept);
                 }
 
                 //Go back and write the file header
@@ -244,14 +244,16 @@ namespace PPeX
         /// </summary>
         /// <param name="dataWriter">The archive writer to write the subfile data to.</param>
         /// <param name="metadataWriter">The archive writer to write the header data to.</param>
-        /// <param name="asDuplicate">True if the file is a duplicate.</param>
-        public void WriteTo(BinaryWriter dataWriter, BinaryWriter metadataWriter, bool asDuplicate)
+        /// <param name="reciept">The write receipt to use if the file is a duplicate. Null if not a duplicate.</param>
+        public WriteReciept WriteTo(BinaryWriter dataWriter, BinaryWriter metadataWriter, WriteReciept reciept = null)
         {
             uint actualsize = 0;
             uint crc = 0;
             ulong offset = (ulong)dataWriter.BaseStream.Position;
 
-            if (!asDuplicate)
+            bool isDupe = reciept != null;
+
+            if (!isDupe)
             {
 
                 using (MemoryStream buffer = new MemoryStream()) 
@@ -291,19 +293,24 @@ namespace PPeX
                 long newsize = dataWriter.BaseStream.Position;
                 actualsize = (uint)(newsize - (long)offset);
             }
+            else
+            {
+                offset = reciept.offset;
+                actualsize = reciept.length;
+                crc = reciept.crc;
+                Compression = reciept.compression;
+            }
 
             //Write the header data
             metadataWriter.Write((byte)Type);
             metadataWriter.Write((byte)Flags);
-
-            if (asDuplicate)
-                metadataWriter.Write((byte)ArchiveFileCompression.Duplicate);
-            else
-                metadataWriter.Write((byte)Compression);
+            
+            metadataWriter.Write((byte)Compression);
 
             metadataWriter.Write(Priority);
 
             metadataWriter.Write(crc);
+
             metadataWriter.Write(Source.Md5);
 
             metadataWriter.BaseStream.Seek(48, SeekOrigin.Current);
@@ -315,6 +322,24 @@ namespace PPeX
             metadataWriter.Write(offset);
             metadataWriter.Write(Source.Size);
             metadataWriter.Write(actualsize);
+
+            return new WriteReciept
+            {
+                Md5 = Source.Md5,
+                offset = offset,
+                length = actualsize,
+                crc = crc,
+                compression = Compression
+            };
         }
+    }
+
+    public class WriteReciept
+    {
+        public byte[] Md5;
+        public ulong offset;
+        public uint length;
+        public uint crc;
+        public ArchiveFileCompression compression;
     }
 }
