@@ -94,9 +94,8 @@
     <Compile Include="Core.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Sources\ArchiveFileSource.cs" />
-    <Compile Include="Sources\CompressedDataSource.cs" />
     <Compile Include="Archives\ExtendedArchiveWriter.cs" />
-    <Compile Include="Sources\MemoryMappedSource.cs" />
+    <Compile Include="Sources\MemorySource.cs" />
     <Compile Include="Subfiles\BaseSubfile.cs" />
     <Compile Include="Archives\ExtendedArchive.cs" />
     <Compile Include="Sources\FileSource.cs" />

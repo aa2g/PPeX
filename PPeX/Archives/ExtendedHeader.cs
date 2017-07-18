@@ -16,11 +16,12 @@ namespace PPeX
 
         internal ExtendedHeader(BinaryReader reader)
         {
-            reader.BaseStream.Position = 1024;
 
             ushort strlen = reader.ReadUInt16();
 
             Title = Encoding.Unicode.GetString(reader.ReadBytes((int)strlen));
+
+            reader.BaseStream.Position = 1024;
 
             uint number = reader.ReadUInt32();
             uint headerlength = reader.ReadUInt32();

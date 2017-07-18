@@ -35,9 +35,9 @@ namespace PPeX
         /// </summary>
         public List<ArchiveFile> Files = new List<ArchiveFile>();
         /// <summary>
-        /// The filename that the archive will be written to.
+        /// The stream that the archive will be written to.
         /// </summary>
-        public string Filename { get; protected set; }
+        public Stream ArchiveStream { get; protected set; }
         /// <summary>
         /// The type of archive that will be created.
         /// </summary>
@@ -47,17 +47,21 @@ namespace PPeX
         /// </summary>
         public ArchiveFileCompression DefaultCompression { get; set; }
 
+        bool leaveOpen;
+
         /// <summary>
         /// Creates a new extended archive writer.
         /// </summary>
-        /// <param name="Filename">The filename of the .ppx file to be created.</param>
+        /// <param name="File">The stream of the .ppx file to be written to.</param>
         /// <param name="Name">The display name for the archive.</param>
-        public ExtendedArchiveWriter(string Filename, string Name)
+        public ExtendedArchiveWriter(Stream File, string Name, bool LeaveOpen = false)
         {
-            this.Filename = Filename;
+            this.ArchiveStream = File;
             this.Name = Name;
             Type = ArchiveType.Archive;
             DefaultCompression = ArchiveFileCompression.LZ4;
+
+            leaveOpen = LeaveOpen;
         }
 
         /// <summary>
@@ -77,10 +81,9 @@ namespace PPeX
         public void Write(IProgress<Tuple<string, int>> progress)
         {
             List<uint> md5s = new List<uint>();
-
-            using (FileStream arc = new FileStream(Filename, FileMode.Create))
+            
             using (MemoryStream header = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(arc))
+            using (BinaryWriter writer = new BinaryWriter(ArchiveStream, Encoding.ASCII, leaveOpen))
             using (BinaryWriter headerWriter = new BinaryWriter(header))
             {
                 //Write container header data
@@ -93,15 +96,16 @@ namespace PPeX
                 writer.Write((ushort)title.Length);
                 writer.Write(title);
 
-                writer.Write((uint)Files.Count);
-
                 //Write individual file header + data
+                writer.BaseStream.Position = 1024;
+
+                writer.Write((uint)Files.Count);
                 int headerLength = Files.Sum(x => x.HeaderLength);
 
                 writer.Write((uint)headerLength);
 
                 long headerPos = writer.BaseStream.Position;
-                writer.BaseStream.Position = headerLength + (512 * 1024); //512kb empty space
+                writer.BaseStream.Position += headerLength + (512 * 1024); //512kb empty space
 
                 int i = 0;
                 foreach (var file in Files)
