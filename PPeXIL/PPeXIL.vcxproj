@@ -127,7 +127,7 @@
       <SDLCheck>true</SDLCheck>
       <CompileAsManaged>true</CompileAsManaged>
       <ExceptionHandling>Async</ExceptionHandling>
-      <AdditionalUsingDirectories>$(SolutionDir)PPeX\bin\x86\Release;$(SolutionDir);%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <AdditionalUsingDirectories>$(SolutionDir)PPeX\bin\x86\Release;$(SolutionDir);$(FrameworkPathOverride);%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
