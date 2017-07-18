@@ -229,5 +229,17 @@ namespace PPeX
             // Return formatted number with suffix
             return readable.ToString("0.### ") + suffix;
         }
+
+        public static bool CompareBytes(byte[] arrayA, byte[] arrayB)
+        {
+            if (arrayA.Length != arrayB.Length)
+                return false;
+
+            for (int i = 0; i < arrayA.Length; i++)
+                if (arrayA[i] != arrayB[i])
+                    return false;
+
+            return true;
+        }
     }
 }

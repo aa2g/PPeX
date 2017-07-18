@@ -45,9 +45,8 @@ namespace PPeX
         /// The display name of the archive.
         /// </summary>
         public string Title => header.Title;
-        protected string filename;
 
-        public static readonly ushort Version = 3;
+        public static readonly ushort Version = 4;
         /// <summary>
         /// The type of the archive.
         /// </summary>
@@ -58,11 +57,6 @@ namespace PPeX
         /// </summary>
         public IReadOnlyCollection<ArchiveFileSource> ArchiveFiles => header.ArchiveFiles;
 
-        public ExtendedArchive()
-        {
-            
-        }
-
         protected ExtendedHeader header;
 
         /// <summary>
@@ -72,7 +66,16 @@ namespace PPeX
         protected void ReadFromFile(string Filename)
         {
             using (FileStream arc = new FileStream(Filename, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (BinaryReader reader = new BinaryReader(arc))
+                ReadFromStream(arc);
+        }
+
+        /// <summary>
+        /// Reads from a .ppx file.
+        /// </summary>
+        /// <param name="File">The stream of the .ppx file.</param>
+        protected void ReadFromStream(Stream File)
+        {
+            using (BinaryReader reader = new BinaryReader(File))
             {
                 string magic = Encoding.ASCII.GetString(reader.ReadBytes(4));
 
@@ -110,7 +113,6 @@ namespace PPeX
         /// <param name="Filename">The filename of the .ppx file.</param>
         public ExtendedArchive(string Filename)
         {
-            filename = Filename;
             ReadFromFile(Filename);
         }
     }

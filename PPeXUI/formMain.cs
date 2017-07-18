@@ -491,7 +491,10 @@ namespace PPeXUI
             if (txtArchiveName.Text == "" || txtSaveLocation.Text == "")
                 return;
 
-            ExtendedArchiveWriter writer = new ExtendedArchiveWriter(txtSaveLocation.Text, txtArchiveName.Text);
+
+            FileStream arc = new FileStream(txtSaveLocation.Text, FileMode.Create);
+            ExtendedArchiveWriter writer = new ExtendedArchiveWriter(arc, txtArchiveName.Text);
+
             writer.DefaultCompression = (ArchiveFileCompression)cmbCompression.SelectedIndex;
             writer.Type = (ArchiveType)cmbArchiveType.SelectedIndex;
 
@@ -540,7 +543,10 @@ namespace PPeXUI
                     "ERROR: " + ex.Message + "\n",
                     100));
                 }
-                
+                finally
+                {
+                    arc.Close();
+                }
             });
 
             currentlyOpenedFile = Path.GetFileName(txtSaveLocation.Text);
