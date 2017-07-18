@@ -232,8 +232,25 @@ namespace PPeXM64
                     using (BinaryWriter writer = new BinaryWriter(handler.BaseStream, Encoding.Unicode, true))
                     {
                         byte[] data = DataCache.First(x => x.Name == argument).Data;
-                        writer.Write(data.Length);
-                        writer.Write(data);
+
+                        string[] splitNames = argument.Split('/');
+                        ISubfile subfile = FileCache[new FileEntry(splitNames[0], splitNames[1])];
+                        ArchiveFileSource source = subfile.Source as ArchiveFileSource;
+
+                        MemorySource mem = new MemorySource(data, source.Compression, source.Type);
+
+                        using (Stream mstr = mem.GetStream())
+                        {
+                            //writer.Write(source.Size);
+
+                            //writer.Write(data.Length);
+                            //writer.Write(data);
+
+                            handler.WriteString(source.Size.ToString());
+
+                            mstr.CopyTo(writer.BaseStream);
+                        }
+                            
                     }
                 }
 

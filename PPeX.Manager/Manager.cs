@@ -12,7 +12,6 @@ namespace PPeX.Manager
     /// </summary>
     public static class Manager
     {
-        public static Dictionary<FileEntry, ISubfile> FileCache = new Dictionary<FileEntry, ISubfile>();
         public static PipeClient Client;
 
         static Manager()
@@ -53,27 +52,26 @@ namespace PPeX.Manager
             }
         }
 
+        public static object lockObject = new object();
+
+        public delegate IntPtr AllocateDelegate(int size);
+
         /// <summary>
-        /// Returns the size of the buffer needed to decompress a subfile.
+        /// Decompresses the file into the specified buffer.
         /// </summary>
         /// <param name="paramArchive">The archive that the subfile belongs to.</param>
         /// <param name="paramFile">The name of the subfile.</param>
-        /// <returns></returns>
-        public static uint PreAlloc(string paramArchive, string paramFile)
+        /// <param name="alloc">The memory allocation method to use.</param>
+        /// <param name="outBuffer">The allocated buffer that contains the decompressed data.</param>
+        public unsafe static bool Decompress(string paramArchive, string paramFile, AllocateDelegate alloc, byte* outBuffer)
         {
-            string filename = Path.GetFileNameWithoutExtension(paramArchive);
+            lock (lockObject)
+            {
+                string filename = Path.GetFileNameWithoutExtension(paramArchive);
 
-            ISubfile value;
-            if (FileCache.TryGetValue(new FileEntry(filename.ToLower(), paramFile.ToLower()), out value))
-            {
-                //Already have it cached
-                return value.Size;
-            }
-            else
-            {
                 //Need to request it
                 var connection = Client.CreateConnection();
-                connection.WriteString("preload");
+                connection.WriteString("load");
                 connection.WriteString(filename.ToLower() + "/" + paramFile.ToLower());
 
                 string address = connection.ReadString();
@@ -82,65 +80,29 @@ namespace PPeX.Manager
                     //We don't have it
                     AppendLog("N/A " + filename + ": " + paramFile);
 
-                    return 0;
+                    return false;
                 }
 
-                //Ask for metadata over the pipe
-                uint compressedSize = uint.Parse(connection.ReadString());
-                uint decompressedSize = uint.Parse(connection.ReadString());
-                ArchiveFileCompression compression = (ArchiveFileCompression)Enum.Parse(typeof(ArchiveFileCompression), connection.ReadString());
-                ArchiveFileType type = (ArchiveFileType)Enum.Parse(typeof(ArchiveFileType), connection.ReadString());
+                int size = int.Parse(address);
 
-                //Index it
-                FileCache.Add(new FileEntry(filename.ToLower(), paramFile.ToLower()),
-                        SubfileFactory.Create(
-                            new PipedFileSource(address, compressedSize, decompressedSize, compression, type), 
-                            type));
+                outBuffer = (byte*)alloc(size);
 
-                using (FileStream fs = new FileStream("ppex.log", FileMode.OpenOrCreate))
-                using (StreamWriter writer = new StreamWriter(fs))
+                AppendLog("DECOMP " + filename + ": " + paramFile);
+
+                
+
+                using (UnmanagedMemoryStream pt = new UnmanagedMemoryStream(outBuffer, 0, size, FileAccess.Write))
                 {
-                    fs.Position = fs.Length;
-                    writer.WriteLine("PREALLOC " + filename + ": " + paramFile);
-                }
+                    //Decompress the file to the specified buffer
 
-                return FileCache[new FileEntry(filename.ToLower(), paramFile.ToLower())].Size;
-            }
-        }
-
-        public static object lockObject = new object();
-
-        /// <summary>
-        /// Decompresses the file into the specified buffer.
-        /// </summary>
-        /// <param name="paramArchive">The archive that the subfile belongs to.</param>
-        /// <param name="paramFile">The name of the subfile.</param>
-        /// <param name="outBuffer">The buffer to copy the decompressed data to.</param>
-        public unsafe static void Decompress(string paramArchive, string paramFile, byte* outBuffer)
-        {
-            lock (lockObject)
-            {
-                ISubfile value;
-
-                string filename = Path.GetFileNameWithoutExtension(paramArchive);
-
-                if (FileCache.TryGetValue(new FileEntry(filename.ToLower(), paramFile.ToLower()), out value))
-                {
-                    AppendLog("DECOMP " + filename + ": " + paramFile);
-
-                    using (UnmanagedMemoryStream pt = new UnmanagedMemoryStream(outBuffer, 0, value.Size, FileAccess.Write))
-                    {
-                        //Decompress the file to the specified buffer
-                        value.WriteToStream(pt);
-                    }
-                }
-                else
-                {
-                    //We don't have the file cached anymore
-                    //This means something cleared it between the prealloc and this method which should never happen
-                    AppendLog("DEALLOCATED " + filename + ": " + paramFile);
+                    //value.WriteToStream(pt);
+                    byte[] buffer = new byte[size];
+                    connection.BaseStream.Read(buffer, 0, size);
+                    pt.Write(buffer, 0, size);
                 }
             }
+
+            return true;
             
         }
     }

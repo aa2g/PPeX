@@ -267,7 +267,7 @@ namespace PPeX
                                 source.CopyTo(lz);
                             break;
                         case ArchiveFileCompression.Zstandard:
-                            using (ZstdNet.Compressor zstd = new ZstdNet.Compressor(new ZstdNet.CompressionOptions(3)))
+                            using (ZstdNet.Compressor zstd = new ZstdNet.Compressor(new ZstdNet.CompressionOptions(6)))
                             using (MemoryStream temp = new MemoryStream())
                             {
                                 source.CopyTo(temp);
