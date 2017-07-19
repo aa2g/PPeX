@@ -10,7 +10,9 @@ namespace FragLabs.Audio.Codecs
 {
     public class OpusWaveProvider : IWaveProvider, IDisposable
     {
-        protected MemoryStream internalstream;
+        public MemoryStream InternalStream { get; protected set; }
+
+        public long WAVLength => InternalStream.Length + 44;
 
         public OpusWaveProvider(Stream stream, uint length, int channels)
         {
@@ -37,7 +39,7 @@ namespace FragLabs.Audio.Codecs
                     writer.Write(output, 0, outputlen);
                 }
 
-                internalstream = new MemoryStream(temp.ToArray());
+                InternalStream = new MemoryStream(temp.ToArray());
             }
         }
 
@@ -45,12 +47,40 @@ namespace FragLabs.Audio.Codecs
 
         public void Dispose()
         {
-            ((IDisposable)internalstream).Dispose();
+            ((IDisposable)InternalStream).Dispose();
         }
 
         public int Read(byte[] buffer, int offset, int count)
         {
-            return internalstream.Read(buffer, offset, count);
+            return InternalStream.Read(buffer, offset, count);
+        }
+
+        public void ExportWAVToStream(Stream stream)
+        {
+            BinaryWriter writer = new BinaryWriter(stream, Encoding.ASCII);
+            //descriptor
+            writer.WriteString("RIFF");
+            writer.Write((uint)(36 + InternalStream.Length));
+            writer.WriteString("WAVE");
+
+            //fmt subchunk
+            writer.WriteString("fmt ");
+            writer.Write((uint)16);
+            writer.Write((ushort)1);
+            writer.Write((ushort)WaveFormat.Channels);
+            writer.Write((uint)(WaveFormat.SampleRate));
+            writer.Write((uint)(WaveFormat.SampleRate * WaveFormat.Channels * (WaveFormat.BitsPerSample / 2)));
+            writer.Write((ushort)(WaveFormat.Channels * (WaveFormat.BitsPerSample / 2)));
+            writer.Write((ushort)(WaveFormat.BitsPerSample));
+
+            //data subchunk
+            writer.WriteString("data");
+            writer.Write((uint)InternalStream.Length);
+
+            writer.Flush();
+
+            InternalStream.Position = 0;
+            InternalStream.CopyTo(stream);
         }
     }
 }

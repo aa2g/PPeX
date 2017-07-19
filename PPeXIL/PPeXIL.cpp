@@ -12,34 +12,33 @@ PPeXIL::PPeXIL()
 {
 }
 
-void *(__stdcall*IllusionAlloc)(size_t);
+void *(__stdcall* PPeXIL::IllusionAlloc)(size_t);
 
-System::IntPtr ManagedAlloc(int size) {
-	return System::IntPtr(IllusionAlloc(size));
-}
-
-bool PPeXIL::ArchiveDecompress(wchar_t** paramArchive, wchar_t** paramFile, DWORD* readBytes, BYTE** outBuffer, void *(__stdcall*alloc)(size_t))
+bool PPeXIL::ArchiveDecompress(wchar_t** paramArchive, wchar_t** paramFile, DWORD* readBytes, BYTE** outBuffer, void *(__stdcall* alloc)(size_t))
 {
 	System::String^ archive = gcnew System::String(*paramArchive);
 	System::String^ file = gcnew System::String(*paramFile);
-
+	
 	IllusionAlloc = alloc;
 
-	PPeX::Manager::Manager::AllocateDelegate^ delgatedAlloc = gcnew PPeX::Manager::Manager::AllocateDelegate(ManagedAlloc);
+	//Lambdas don't work with delegates so this is the best we can manage
+	//Can't put the method in the header since it'll complain about AAUnlimited needing CLI
+	//so it has to be a local function
+	class Dummy {
+		public :
+			static System::IntPtr ManagedAlloc(size_t size)
+			{
+				return System::IntPtr(IllusionAlloc(size));
+			}
+	};
 
-	bool result =  PPeX::Manager::Manager::Decompress(archive, file, delgatedAlloc, *outBuffer);
-	
-	/*
-	if (sz > 0) {
-		*outBuffer = (BYTE*)alloc(sz);
-		*readBytes = sz;
+	PPeX::Manager::Manager::AllocateDelegate^ delgatedAlloc = gcnew PPeX::Manager::Manager::AllocateDelegate(Dummy::ManagedAlloc);
 
-		//PPeX::Manager::Manager::Decompress(archive, file, *outBuffer);
-		
-		delete archive;
-		delete file;
-		return true;
-	}*/
+	unsigned int uReadBytes = 0;
+
+	bool result =  PPeX::Manager::Manager::Decompress(archive, file, delgatedAlloc, outBuffer, &uReadBytes);
+
+	*readBytes = uReadBytes;
 	
 	delete archive;
 	delete file;

@@ -13,9 +13,14 @@ namespace PPeX.Manager
     public static class Manager
     {
         public static PipeClient Client;
+        public static readonly int BufferSize = 4096;
 
         static Manager()
         {
+#if DEBUG
+            System.Diagnostics.Debugger.Launch();
+#endif
+
             string dllsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"x86");
 
             //Start the 64bit process
@@ -54,7 +59,7 @@ namespace PPeX.Manager
 
         public static object lockObject = new object();
 
-        public delegate IntPtr AllocateDelegate(int size);
+        public delegate IntPtr AllocateDelegate(uint size);
 
         /// <summary>
         /// Decompresses the file into the specified buffer.
@@ -63,7 +68,7 @@ namespace PPeX.Manager
         /// <param name="paramFile">The name of the subfile.</param>
         /// <param name="alloc">The memory allocation method to use.</param>
         /// <param name="outBuffer">The allocated buffer that contains the decompressed data.</param>
-        public unsafe static bool Decompress(string paramArchive, string paramFile, AllocateDelegate alloc, byte* outBuffer)
+        public unsafe static bool Decompress(string paramArchive, string paramFile, AllocateDelegate alloc, byte** outBuffer, uint* readBytes)
         {
             lock (lockObject)
             {
@@ -83,23 +88,33 @@ namespace PPeX.Manager
                     return false;
                 }
 
-                int size = int.Parse(address);
+                uint size = uint.Parse(address);
 
-                outBuffer = (byte*)alloc(size);
+                //Allocate the unmanaged memory
+                *outBuffer = (byte*)alloc(size);
 
                 AppendLog("DECOMP " + filename + ": " + paramFile);
 
-                
-
-                using (UnmanagedMemoryStream pt = new UnmanagedMemoryStream(outBuffer, 0, size, FileAccess.Write))
+                using (UnmanagedMemoryStream pt = new UnmanagedMemoryStream(*outBuffer, size, size, FileAccess.Write))
                 {
-                    //Decompress the file to the specified buffer
+                    //Copy the data to the unmanaged memory
 
-                    //value.WriteToStream(pt);
-                    byte[] buffer = new byte[size];
-                    connection.BaseStream.Read(buffer, 0, size);
-                    pt.Write(buffer, 0, size);
+                    byte[] buffer = new byte[BufferSize];
+                    uint remaining = size;
+
+                    do
+                    {
+                        int readSize = (int)Math.Min(remaining, BufferSize);
+
+                        connection.BaseStream.Read(buffer, 0, readSize);
+                        pt.Write(buffer, 0, readSize);
+
+                        remaining -= (uint)readSize;
+                    }
+                    while (remaining > 0);
                 }
+
+                *readBytes = size;
             }
 
             return true;

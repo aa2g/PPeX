@@ -24,25 +24,7 @@ namespace PPeX
         /// <param name="type">The type of the data.</param>
         public MemorySource(byte[] data, ArchiveFileCompression compression, ArchiveFileType type)
         {
-            DataStream = new MemoryStream(data);
-            Compression = compression;
-            Type = type;
-
-            Md5 = Utility.GetMd5(DataStream);
-            DataStream.Position = 0;
-        }
-
-        /// <summary>
-        /// Creates a new data source from a stream, and copies it into memory.
-        /// </summary>
-        /// <param name="stream">The stream to use.</param>
-        /// <param name="compression">The compression that the byte array has used.</param>
-        /// <param name="type">The type of the data.</param>
-        public MemorySource(Stream stream, ArchiveFileCompression compression, ArchiveFileType type)
-        {
-            DataStream = new MemoryStream();
-            stream.CopyTo(DataStream);
-
+            DataStream = new MemoryStream(data, 0, data.Length, false, true);
             Compression = compression;
             Type = type;
 
@@ -82,16 +64,19 @@ namespace PPeX
         /// <returns></returns>
         public Stream GetStream()
         {
+            MemoryStream buffer = new MemoryStream(DataStream.GetBuffer(), false);
+
             switch (Compression)
             {
                 case ArchiveFileCompression.LZ4:
-                    return new LZ4Stream(DataStream,
+                    return new LZ4Stream(buffer,
                         LZ4StreamMode.Decompress);
                 case ArchiveFileCompression.Zstandard:
+                    buffer.Close();
                     using (ZstdNet.Decompressor zstd = new ZstdNet.Decompressor())
                         return new MemoryStream(zstd.Unwrap(DataStream.GetBuffer()), false); //, (int)_size
                 case ArchiveFileCompression.Uncompressed:
-                    return DataStream;
+                    return buffer;
                 default:
                     throw new InvalidOperationException("Compression type is invalid.");
             }

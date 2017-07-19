@@ -26,6 +26,10 @@ namespace PPeXM64
         {
             server = new PipeServer("PPEX");
 
+#if DEBUG
+            LogFiles = true;
+#endif
+
             //Attach the handler to the server
             server.OnRequest += Server_OnRequest;
 
@@ -193,37 +197,19 @@ namespace PPeXM64
 
                 handler.WriteString(IsLoaded.ToString());
             }
-            else if (request == "preload")
-            {
-                //Cache the file into memory
-                if (!TryLoad(argument))
-                {
-                    //We don't have the file
-                    handler.WriteString("NotAvailable");
-                    return;
-                }
-
-                //Send the AA2 instance metadata on the file
-                string[] splitNames = argument.Split('/');
-                ISubfile subfile = FileCache[new FileEntry(splitNames[0], splitNames[1])];
-                ArchiveFileSource source = subfile.Source as ArchiveFileSource;
-
-                string compression = Enum.GetName(source.Compression.GetType(), source.Compression);
-                string type = Enum.GetName(source.Type.GetType(), source.Type);
-
-                handler.WriteString(argument);
-                handler.WriteString(source.Length.ToString());
-                handler.WriteString(subfile.Size.ToString());
-                handler.WriteString(compression);
-                handler.WriteString(type);
-            }
             else if (request == "load")
             {
                 //Transfer the file
                 lock (loadLock)
                 {
                     //Ensure we have the file in memory
-                    TryLoad(argument);
+                    //Cache the file into memory
+                    if (!TryLoad(argument))
+                    {
+                        //We don't have the file
+                        handler.WriteString("NotAvailable");
+                        return;
+                    }
 
                     if (LogFiles)
                         Console.WriteLine(argument);
@@ -239,22 +225,22 @@ namespace PPeXM64
 
                         MemorySource mem = new MemorySource(data, source.Compression, source.Type);
 
-                        using (Stream mstr = mem.GetStream())
+                        var output = SubfileFactory.Create(mem, source.Type);
+
+#warning need to remove this buffer
+                        //We can't trust the subfile size reading
+                        using (MemoryStream temp = new MemoryStream())
                         {
-                            //writer.Write(source.Size);
+                            output.WriteToStream(temp);
+                            temp.Position = 0;
 
-                            //writer.Write(data.Length);
-                            //writer.Write(data);
+                            handler.WriteString(temp.Length.ToString());
 
-                            handler.WriteString(source.Size.ToString());
-
-                            mstr.CopyTo(writer.BaseStream);
+                            temp.CopyTo(handler.BaseStream);
                         }
                             
                     }
                 }
-
-                
             }
             else
             {
