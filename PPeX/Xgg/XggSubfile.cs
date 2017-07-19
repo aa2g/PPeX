@@ -95,6 +95,7 @@ namespace PPeX.Xgg
 
                 using (OpusWaveProvider wav = new OpusWaveProvider(source, count, Channels))
                     WaveFileWriter.WriteWavFileToStream(stream, wav);
+                    //wav.ExportWAVToStream(stream);
             }
         }
     }
