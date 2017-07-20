@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using PPeX.Compressors;
 using Crc32C;
-using LZ4;
 
 namespace PPeX
 {
@@ -14,7 +14,7 @@ namespace PPeX
     /// A data source from an extended archive (.ppx file).
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{Name}", Name = "{Name}")]
-    public class ArchiveFileSource : IDataSource
+    public class ArchiveFileSource : IDataSource, ISubfile
     {
         protected uint _size;
         /// <summary>
@@ -74,6 +74,14 @@ namespace PPeX
         /// The MD5 hash of the uncompressed data.
         /// </summary>
         public byte[] Md5 => _md5;
+
+        public IDataSource Source
+        {
+            get
+            {
+                return this;
+            }
+        }
 
         /// <summary>
         /// Reads a subfile from a .ppx file reader.
@@ -136,25 +144,15 @@ namespace PPeX
                 (long)Offset,
                 Length);
 
-            switch (Compression)
-            {
-                case ArchiveFileCompression.LZ4:
-                    return new LZ4Stream(stream,
-                        LZ4StreamMode.Decompress);
-                case ArchiveFileCompression.Zstandard:
-                    byte[] output;
-                    using (MemoryStream buffer = new MemoryStream())
-                    {
-                        stream.CopyTo(buffer);
-                        output = buffer.ToArray();
-                    }
-                    using (ZstdNet.Decompressor zstd = new ZstdNet.Decompressor())
-                        return new MemoryStream(zstd.Unwrap(output), false); //, (int)_size
-                case ArchiveFileCompression.Uncompressed:
-                    return stream;
-                default:
-                    throw new InvalidOperationException("Compression type is invalid.");
-            }
+            IDecompressor decompressor = CompressorFactory.GetDecompressor(stream, Compression);
+
+            return decompressor.Decompress();
+        }
+
+        public void WriteToStream(Stream stream)
+        {
+            using (Stream input = GetStream())
+                input.CopyTo(stream);
         }
     }
 }

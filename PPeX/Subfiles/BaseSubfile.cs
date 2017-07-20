@@ -15,8 +15,8 @@ namespace PPeX
         public BaseSubfile(IDataSource Source, string Name, string Archive)
         {
             ArchiveName = Archive;
-            _name = Name;
-            _source = Source;
+            this.Name = Name;
+            this.Source = Source;
         }
 
         /// <summary>
@@ -27,19 +27,17 @@ namespace PPeX
         /// <summary>
         /// The name of the .pp file the subfile is associated with.
         /// </summary>
-        public string ArchiveName { get; set; }
-
-        protected string _name;
+        public string ArchiveName { get; protected set; }
+        
         /// <summary>
         /// The name of the subfile as it is stored in a .pp file.
         /// </summary>
-        public string Name => _name;
-
-        protected IDataSource _source;
+        public string Name { get; protected set; }
+        
         /// <summary>
         /// The data source of the subfile.
         /// </summary>
-        public IDataSource Source => _source;
+        public IDataSource Source { get; protected set; }
 
         /// <summary>
         /// Writes an uncompressed version of the data to a stream.

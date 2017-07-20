@@ -19,17 +19,29 @@ namespace PPeX.Tests
             FileStream arc = new FileStream("test.ppx", FileMode.Create);
             var writer = new ExtendedArchiveWriter(arc, "test", true);
 
-            byte[] data = Encoding.UTF8.GetBytes("dfdfdfdfdfdfdfdf");
+            byte[] data = Encoding.UTF8.GetBytes("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ac purus id diam consectetur fermentum. Etiam nulla nisi, tincidunt sed sagittis nec, finibus vel elit. Pellentesque sodales massa eget tortor eleifend dictum. Ut finibus tellus efficitur nulla hendrerit convallis. Cras sed neque sed tellus luctus vehicula sed in sapien.");
 
             writer.Files.Add(new ArchiveFile(
-                new MemorySource(data, ArchiveFileCompression.Uncompressed, ArchiveFileType.Raw),
+                new MemorySource(data),
                 "t/test1",
-                ArchiveFileCompression.Zstandard,
+                ArchiveFileCompression.Uncompressed,
                 150));
 
             writer.Files.Add(new ArchiveFile(
-                new MemorySource(data, ArchiveFileCompression.Uncompressed, ArchiveFileType.Raw),
+                new MemorySource(data),
                 "t/test2",
+                ArchiveFileCompression.Uncompressed,
+                150));
+
+            writer.Files.Add(new ArchiveFile(
+                new MemorySource(data),
+                "t/test3",
+                ArchiveFileCompression.LZ4,
+                150));
+
+            writer.Files.Add(new ArchiveFile(
+                new MemorySource(data),
+                "t/test4",
                 ArchiveFileCompression.Zstandard,
                 150));
 
@@ -58,8 +70,8 @@ namespace PPeX.Tests
                 {
                     source.CopyTo(mem);
                     sw.Stop();
-                    double mbs =  (file.Size / (1024 * 1024 * ((sw.Elapsed.TotalMilliseconds - old.TotalMilliseconds) / 1000)));
-                    Trace.WriteLine(file.Name + ": " + Math.Round(mbs, 1) + "mb/s");
+                    double mbs = ((double)file.Size / (1024 * 1024 * ((sw.Elapsed.TotalMilliseconds - old.TotalMilliseconds) / 1000.0)));
+                    Trace.WriteLine(file.Name + ": " + Math.Round(mbs, 5) + "mb/s");
                     old = sw.Elapsed;
 
                     Assert.IsTrue(Utility.CompareBytes(data, mem.ToArray()));

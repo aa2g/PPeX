@@ -21,7 +21,7 @@ namespace PPeX
         /// <summary>
         /// The name of the archive that the subfile belongs to.
         /// </summary>
-        string ArchiveName { get; set; }
+        string ArchiveName { get; }
         /// <summary>
         /// The internal filename of the subfile.
         /// </summary>
