@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using PPeX.Compressors;
 
 namespace PPeX
 {
@@ -26,30 +27,11 @@ namespace PPeX
 
         public static long TestCompression(Stream data, ArchiveFileCompression method)
         {
-            long output = -1;
-
-            switch (method)
+            using (ICompressor compressor = CompressorFactory.GetCompressor(data, method))
             {
-                case ArchiveFileCompression.Uncompressed:
-                    return data.Length;
-                case ArchiveFileCompression.LZ4:
-                    using (MemoryStream buffer = new MemoryStream())
-                    using (LZ4.LZ4Stream lz4 = new LZ4.LZ4Stream(buffer, LZ4.LZ4StreamMode.Compress, LZ4.LZ4StreamFlags.HighCompression | LZ4.LZ4StreamFlags.IsolateInnerStream, 4 * 1024 * 1024))
-                    {
-                        data.CopyTo(lz4);
-                        lz4.Close();
-                        return buffer.Length;
-                    }
-                case ArchiveFileCompression.Zstandard:
-                    using (ZstdNet.Compressor zstd = new ZstdNet.Compressor(new ZstdNet.CompressionOptions(6)))
-                    using (MemoryStream temp = new MemoryStream())
-                    {
-                        data.CopyTo(temp);
-                        return zstd.Wrap(temp.ToArray()).LongLength;
-                    }
+                compressor.WriteToStream(Stream.Null);
+                return compressor.CompressedSize;
             }
-
-            return output;
         }
 
         // Returns the human-readable file size for an arbitrary, 64-bit file size 

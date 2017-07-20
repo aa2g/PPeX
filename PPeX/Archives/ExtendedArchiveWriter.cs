@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using LZ4;
+using PPeX.Compressors;
 using Crc32C;
 
 namespace PPeX
@@ -260,27 +260,8 @@ namespace PPeX
                 using (Stream source = Source.GetStream())
                 {
                     //Compress the data
-                    switch (Compression)
-                    {
-                        case ArchiveFileCompression.LZ4:
-                            using (LZ4Stream lz = new LZ4Stream(buffer, LZ4StreamMode.Compress, LZ4StreamFlags.HighCompression | LZ4StreamFlags.IsolateInnerStream, 4 * 1048576))
-                                source.CopyTo(lz);
-                            break;
-                        case ArchiveFileCompression.Zstandard:
-                            using (ZstdNet.Compressor zstd = new ZstdNet.Compressor(new ZstdNet.CompressionOptions(6)))
-                            using (MemoryStream temp = new MemoryStream())
-                            {
-                                source.CopyTo(temp);
-                                byte[] output = zstd.Wrap(temp.ToArray());
-                                buffer.Write(output, 0, output.Length);
-                            }
-                            break;
-                        case ArchiveFileCompression.Uncompressed:
-                            source.CopyTo(buffer);
-                            break;
-                        default:
-                            throw new InvalidOperationException("Compression type is invalid.");
-                    }
+                    using (ICompressor compressor = CompressorFactory.GetCompressor(source, Compression))
+                        compressor.WriteToStream(buffer);
 
                     //Write the data and get a crc
                     buffer.Position = 0;

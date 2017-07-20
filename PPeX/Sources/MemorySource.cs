@@ -1,11 +1,11 @@
-﻿using LZ4;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using PPeX.Compressors;
 
 namespace PPeX
 {
@@ -17,7 +17,16 @@ namespace PPeX
         protected uint size;
 
         /// <summary>
-        /// Creates a new data source from a byte array.
+        /// Creates a new data source from an unprocessed byte array.
+        /// </summary>
+        /// <param name="data">The byte array to use.</param>
+        public MemorySource(byte[] data) : this(data, ArchiveFileCompression.Uncompressed, ArchiveFileType.Raw)
+        {
+
+        }
+
+        /// <summary>
+        /// Creates a new data source from a processed byte array.
         /// </summary>
         /// <param name="data">The byte array to use.</param>
         /// <param name="compression">The compression that the byte array has used.</param>
@@ -25,6 +34,7 @@ namespace PPeX
         public MemorySource(byte[] data, ArchiveFileCompression compression, ArchiveFileType type)
         {
             DataStream = new MemoryStream(data, 0, data.Length, false, true);
+            Size = (uint)data.Length;
             Compression = compression;
             Type = type;
 
@@ -41,7 +51,7 @@ namespace PPeX
         /// The uncompressed size of the data.
         /// </summary>
 #warning implement
-        public uint Size => 0;
+        public uint Size { get; protected set; }
 
         /// <summary>
         /// The compression method used on the data.
@@ -66,20 +76,9 @@ namespace PPeX
         {
             MemoryStream buffer = new MemoryStream(DataStream.GetBuffer(), false);
 
-            switch (Compression)
-            {
-                case ArchiveFileCompression.LZ4:
-                    return new LZ4Stream(buffer,
-                        LZ4StreamMode.Decompress);
-                case ArchiveFileCompression.Zstandard:
-                    buffer.Close();
-                    using (ZstdNet.Decompressor zstd = new ZstdNet.Decompressor())
-                        return new MemoryStream(zstd.Unwrap(DataStream.GetBuffer()), false); //, (int)_size
-                case ArchiveFileCompression.Uncompressed:
-                    return buffer;
-                default:
-                    throw new InvalidOperationException("Compression type is invalid.");
-            }
+            IDecompressor decompressor = CompressorFactory.GetDecompressor(buffer, Compression);
+
+            return decompressor.Decompress();
         }
     }
 }
