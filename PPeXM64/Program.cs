@@ -44,6 +44,7 @@ namespace PPeXM64
 
             //Attach the handler to the server
             server.OnRequest += Server_OnRequest;
+            server.OnDisconnect += Server_OnDisconnect;
 
             if (Directory.Exists(Core.Settings.PPXLocation))
             {
@@ -247,7 +248,7 @@ namespace PPeXM64
 
 #warning need to remove this buffer
                         //We can't trust the subfile size reading
-                        using (Stream temp = new MemoryStream())
+                        using (Stream temp = mem.GetStream())
                         {
                             handler.WriteString(temp.Length.ToString());
 
@@ -262,6 +263,16 @@ namespace PPeXM64
                 //Unknown command
                 //Ignore instead of throwing exception
             }
+        }
+
+        private static void Server_OnDisconnect(object sender, EventArgs e)
+        {
+            TrimMemory(0); //deallocate everything
+
+            Console.WriteLine("Pipe disconnected, game has closed");
+
+            System.Threading.Thread.Sleep(1500);
+            Environment.Exit(0);
         }
     }
 }

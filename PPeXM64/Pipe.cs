@@ -20,6 +20,8 @@ namespace PPeXM64
         public delegate void OnRequestEventHandler(string request, string argument, StreamHandler handler);
         public event OnRequestEventHandler OnRequest;
 
+        public event EventHandler OnDisconnect;
+
         public PipeServer(string name)
         {
             internalPipe = new NamedPipeServerStream(name, PipeDirection.InOut);
@@ -38,6 +40,9 @@ namespace PPeXM64
                 string request = handler.ReadString();
 
                 string argument = handler.ReadString();
+
+                if (!internalPipe.IsConnected)
+                    OnDisconnect?.Invoke(this, null);
 
                 OnRequest?.Invoke(request, argument, handler);
             }
@@ -68,6 +73,9 @@ namespace PPeXM64
             //Read the length
             len = ioStream.ReadByte() << 8;
             len |= ioStream.ReadByte();
+
+            if (len < 0)
+                return "";
 
             //Read the string
             byte[] inBuffer = new byte[len];
