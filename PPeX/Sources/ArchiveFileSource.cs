@@ -5,22 +5,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using PPeX.Compressors;
+using PPeX.Encoders;
 using Crc32C;
 
 namespace PPeX
 {
-#warning possibly inherit ISubfile as well
     /// <summary>
     /// A data source from an extended archive (.ppx file).
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{Name}", Name = "{Name}")]
-    public class ArchiveFileSource : IDataSource, ISubfile
+    public class ArchiveFileSource : IDataSource
     {
-        protected uint _size;
         /// <summary>
         /// The uncompressed size of the data.
         /// </summary>
-        public uint Size => _size;
+        public uint Size { get; protected set; }
 
         /// <summary>
         /// The offset of the compressed data in the file.
@@ -41,9 +40,9 @@ namespace PPeX
         public string ArchiveFilename { get; protected set; }
 
         /// <summary>
-        /// The type of the data.
+        /// The encoding of the data.
         /// </summary>
-        public ArchiveFileType Type;
+        public ArchiveFileEncoding Encoding;
         /// <summary>
         /// The metadata flags associated with the file.
         /// </summary>
@@ -62,61 +61,56 @@ namespace PPeX
         /// The name of the subfile as it is stored in a .pp file.
         /// </summary>
         public string Name { get; protected set; }
-
-        protected uint _crc;
+        
         /// <summary>
         /// The CRC32C checksum of the compressed data.
         /// </summary>
-        public uint Crc => _crc;
+        public uint Crc { get; protected set; }
 
-        protected byte[] _md5;
         /// <summary>
         /// The MD5 hash of the uncompressed data.
         /// </summary>
-        public byte[] Md5 => _md5;
+        public byte[] Md5 { get; protected set; }
 
-        public IDataSource Source
-        {
-            get
-            {
-                return this;
-            }
-        }
+        /// <summary>
+        /// Metadata related to the encoding of the file.
+        /// </summary>
+        public byte[] Metadata { get; protected set; }
 
         /// <summary>
         /// Reads a subfile from a .ppx file reader.
         /// </summary>
         /// <param name="reader">The .ppx file reader.</param>
-        internal ArchiveFileSource(BinaryReader reader)
+        internal ArchiveFileSource(BinaryReader reader, string filename)
         {
-            Type = (ArchiveFileType)reader.ReadByte();
+            Encoding = (ArchiveFileEncoding)reader.ReadByte();
             Flags = (ArchiveFileFlags)reader.ReadByte();
             Compression = (ArchiveFileCompression)reader.ReadByte();
 
             Priority = reader.ReadByte();
-            _crc = reader.ReadUInt32();
-            _md5 = reader.ReadBytes(16);
-            reader.BaseStream.Seek(48, SeekOrigin.Current);
+            Crc = reader.ReadUInt32();
+            Md5 = reader.ReadBytes(16);
+            Metadata = reader.ReadBytes(48);
 
             //Names are stored as "{PPfile}/{subfile}"
             ushort len = reader.ReadUInt16();
-            string[] names = Encoding.Unicode.GetString(reader.ReadBytes(len)).Split('/');
+            string[] names = System.Text.Encoding.Unicode.GetString(reader.ReadBytes(len)).Split('/');
 
             ArchiveName = names[0];
             Name = names[1];
 
             Offset = reader.ReadUInt64();
-            _size = reader.ReadUInt32();
+            Size = reader.ReadUInt32();
             Length = reader.ReadUInt32();
 
-            ArchiveFilename = (reader.BaseStream as FileStream).Name;
+            ArchiveFilename = filename;
         }
 
         /// <summary>
         /// Verifies the compressed data to the CRC32C checksum.
         /// </summary>
         /// <returns></returns>
-        internal bool VerifyChecksum()
+        public bool VerifyChecksum()
         {
             uint crc = 0;
 
@@ -134,25 +128,35 @@ namespace PPeX
         }
 
         /// <summary>
-        /// Returns a stream of uncompressed data.
+        /// Returns a stream of uncompressed and unencoded data.
         /// </summary>
         /// <returns></returns>
         public Stream GetStream()
         {
-            Stream stream = new Substream(
+            using (Stream stream = new Substream(
                 new FileStream(ArchiveFilename, FileMode.Open, FileAccess.Read, FileShare.Read),
                 (long)Offset,
-                Length);
-
-            IDecompressor decompressor = CompressorFactory.GetDecompressor(stream, Compression);
-
-            return decompressor.Decompress();
+                Length))
+            using (var decompressor = CompressorFactory.GetDecompressor(stream, Compression))
+            using (var decoder = EncoderFactory.GetDecoder(decompressor.Decompress(), Encoding, Metadata))
+            using (Stream output = decoder.Decode())
+            {
+                MemoryStream temp = new MemoryStream();
+                output.CopyTo(temp);
+                temp.Position = 0;
+                return temp;
+            }
         }
 
         public void WriteToStream(Stream stream)
         {
             using (Stream input = GetStream())
                 input.CopyTo(stream);
+        }
+
+        public void Dispose()
+        {
+            
         }
     }
 }

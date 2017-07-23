@@ -30,7 +30,7 @@ namespace PPeX
     /// <summary>
     /// The data type of the archived file.
     /// </summary>
-    public enum ArchiveFileType : byte
+    public enum ArchiveFileEncoding : byte
     {
         /// <summary>
         /// The file is generic data and can be compressed normally.
@@ -38,16 +38,9 @@ namespace PPeX
         Raw = 0,
 
         /// <summary>
-        /// The file is audio data and needs to be compressed with an audio codec, such as <see cref="Xgg.XggWrappedSource"/>.
+        /// The file is audio data, encoded via <see cref="Encoders.XggEncoder"/>.
         /// </summary>
-        Audio = 1,
-
-        /// <summary>
-        /// <para>The file is audio data and needs to be compressed with an audio codec. </para>
-        /// NOTE: Is no longer in use, use normal compression for .bmp files instead
-        /// </summary>
-        [Obsolete]
-        Image = 2
+        XggAudio = 1
     }
 
     /// <summary>
@@ -61,12 +54,12 @@ namespace PPeX
         Uncompressed = 0,
 
         /// <summary>
-        /// LZ4 compression is used (see <see cref="LZ4ps.LZ4Codec"/>)
+        /// LZ4 compression is used (see <see cref="Compressors.Lz4Compressor"/>)
         /// </summary>
         LZ4 = 1,
 
         /// <summary>
-        /// Zstd compression is used (see <see cref="ZstdNet.Compressor"/>)
+        /// Zstd compression is used (see <see cref="Compressors.ZstdCompressor"/>)
         /// </summary>
         Zstandard = 2
     }

@@ -9,6 +9,8 @@ namespace PPeX.Compressors
 {
     public class PassthroughCompressor : BaseCompressor, IDecompressor
     {
+        public override ArchiveFileCompression Compression => ArchiveFileCompression.Uncompressed;
+
         public PassthroughCompressor(Stream stream) : base(stream, (uint)stream.Length)
         {
             CompressedSize = (uint)BaseStream.Length;
@@ -23,6 +25,7 @@ namespace PPeX.Compressors
 
         public override void WriteToStream(Stream stream)
         {
+            BaseStream.Position = 0;
             BaseStream.CopyTo(stream);
         }
     }

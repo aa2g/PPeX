@@ -9,6 +9,8 @@ namespace PPeX.Compressors
 {
     public class Lz4Compressor : BaseCompressor
     {
+        public override ArchiveFileCompression Compression => ArchiveFileCompression.LZ4;
+
         protected bool highCompression;
 
         public static int BlockSize = 4 * 1024 * 1024;
@@ -38,6 +40,8 @@ namespace PPeX.Compressors
 
     public class Lz4Decompressor : IDecompressor
     {
+        public ArchiveFileCompression Compression => ArchiveFileCompression.LZ4;
+
         public Stream BaseStream { get; protected set; }
 
         public Lz4Decompressor(Stream stream)

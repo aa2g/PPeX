@@ -25,7 +25,7 @@ namespace PPeX
 
             if (baseStream.CanSeek)
             {
-                baseStream.Seek(offset, SeekOrigin.Current);
+                baseStream.Seek(offset, SeekOrigin.Begin);
             }
             else
             { // read it manually...
@@ -66,7 +66,7 @@ namespace PPeX
         }
         public override bool CanSeek
         {
-            get { CheckDisposed(); return false; }
+            get { CheckDisposed(); return baseStream.CanSeek; }
         }
         public override long Position
         {
@@ -75,11 +75,21 @@ namespace PPeX
                 CheckDisposed();
                 return position;
             }
-            set { throw new NotSupportedException(); }
+            set {
+                if (!CanSeek)
+                    throw new NotSupportedException();
+
+                long oldpos = position;
+                position = value;
+                Seek(value - oldpos, SeekOrigin.Current);
+            }
         }
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new NotSupportedException();
+            if (!CanSeek)
+                throw new NotSupportedException();
+
+            return baseStream.Seek(offset, origin);
         }
         public override void SetLength(long value)
         {

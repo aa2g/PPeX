@@ -22,26 +22,24 @@ namespace PPeX
         public PPSource(IReadFile subfile)
         {
             this.subfile = subfile;
-
+            
             using (Stream stream = GetStream())
             {
-                _md5 = Utility.GetMd5(stream);
+                Md5 = Utility.GetMd5(stream);
 
-                _size = (uint)stream.Position;
+                Size = (uint)stream.Position;
             }
         }
-
-        protected byte[] _md5;
+        
         /// <summary>
         /// The MD5 hash of the uncompressed data.
         /// </summary>
-        public byte[] Md5 => _md5;
-
-        protected uint _size;
+        public byte[] Md5 { get; protected set; }
+        
         /// <summary>
         /// The uncompressed size of the data.
         /// </summary>
-        public uint Size => _size;
+        public uint Size { get; protected set; }
 
         /// <summary>
         /// Returns a stream of uncompressed data.
@@ -50,6 +48,11 @@ namespace PPeX
         public Stream GetStream()
         {
             return subfile.CreateReadStream();
+        }
+
+        public void Dispose()
+        {
+            
         }
     }
 }

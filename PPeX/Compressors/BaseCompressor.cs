@@ -21,6 +21,8 @@ namespace PPeX.Compressors
 
         public uint UncompressedSize { get; protected set; }
 
+        public abstract ArchiveFileCompression Compression { get; }
+
         public abstract void WriteToStream(Stream stream);
 
         public virtual void Dispose()

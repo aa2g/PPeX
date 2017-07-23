@@ -40,8 +40,7 @@ namespace PPeXM64
 
                 foreach (var file in archive.ArchiveFiles)
                 {
-                    ISubfile subfile = SubfileFactory.Create(file);
-                    FileCache[new FileEntry(subfile.ArchiveName.Replace(".pp", "").ToLower(), subfile.Name.ToLower())] = subfile;
+                    FileCache[new FileEntry(file.ArchiveName.Replace(".pp", "").ToLower(), file.Name.ToLower())] = file;
                 }
 
                 Console.WriteLine("Loaded " + dir);
@@ -164,6 +163,7 @@ namespace PPeXM64
                     CachedObject obj = new CachedObject()
                     {
                         Data = mem.ToArray(),
+                        Metadata = source.Metadata,
                         MD5 = source.Md5,
                         Priority = source.Priority,
                         Name = combinedName,
@@ -217,23 +217,18 @@ namespace PPeXM64
                     //Write the data to the pipe
                     using (BinaryWriter writer = new BinaryWriter(handler.BaseStream, Encoding.Unicode, true))
                     {
-                        byte[] data = DataCache.First(x => x.Name == argument).Data;
+                        CachedObject cached = DataCache.First(x => x.Name == argument);
 
                         string[] splitNames = argument.Split('/');
                         ISubfile subfile = FileCache[new FileEntry(splitNames[0], splitNames[1])];
                         ArchiveFileSource source = subfile.Source as ArchiveFileSource;
 
-                        MemorySource mem = new MemorySource(data, source.Compression, source.Type);
-
-                        var output = SubfileFactory.Create(mem, source.Type);
+                        MemorySource mem = new MemorySource(cached.Data, cached.Metadata, source.Compression, source.Encoding);
 
 #warning need to remove this buffer
                         //We can't trust the subfile size reading
-                        using (MemoryStream temp = new MemoryStream())
+                        using (Stream temp = new MemoryStream())
                         {
-                            output.WriteToStream(temp);
-                            temp.Position = 0;
-
                             handler.WriteString(temp.Length.ToString());
 
                             temp.CopyTo(handler.BaseStream);

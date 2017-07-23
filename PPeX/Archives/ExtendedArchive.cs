@@ -44,21 +44,20 @@ namespace PPeX
         /// <summary>
         /// The display name of the archive.
         /// </summary>
-        public string Title => header.Title;
+        public string Title { get; protected set; }
 
         public static readonly ushort Version = 4;
         /// <summary>
         /// The type of the archive.
         /// </summary>
         public static ArchiveType Type = ArchiveType.Archive;
-
+        
+        protected List<ISubfile> files = new List<ISubfile>();
         /// <summary>
         /// Subfiles that are contained within the extended archive.
         /// </summary>
-        public IReadOnlyCollection<ArchiveFileSource> ArchiveFiles => header.ArchiveFiles;
-
-        protected ExtendedHeader header;
-
+        public IReadOnlyCollection<ISubfile> ArchiveFiles => files.AsReadOnly();
+        
         /// <summary>
         /// Reads from a .ppx file.
         /// </summary>
@@ -66,16 +65,7 @@ namespace PPeX
         protected void ReadFromFile(string Filename)
         {
             using (FileStream arc = new FileStream(Filename, FileMode.Open, FileAccess.Read, FileShare.Read))
-                ReadFromStream(arc);
-        }
-
-        /// <summary>
-        /// Reads from a .ppx file.
-        /// </summary>
-        /// <param name="File">The stream of the .ppx file.</param>
-        protected void ReadFromStream(Stream File)
-        {
-            using (BinaryReader reader = new BinaryReader(File))
+            using (BinaryReader reader = new BinaryReader(arc))
             {
                 string magic = Encoding.ASCII.GetString(reader.ReadBytes(4));
 
@@ -103,7 +93,24 @@ namespace PPeX
                 }
 
                 //Read the file headers
-                header = new ExtendedHeader(reader);
+                ushort strlen = reader.ReadUInt16();
+
+                Title = Encoding.Unicode.GetString(reader.ReadBytes((int)strlen));
+
+                reader.BaseStream.Position = 1024;
+
+                uint number = reader.ReadUInt32();
+                uint headerlength = reader.ReadUInt32();
+
+                List<ArchiveFileSource> dupes = new List<ArchiveFileSource>();
+
+                for (int i = 0; i < number; i++)
+                {
+                    var source = new ArchiveFileSource(reader, Filename);
+                    var file = new IsolatedSubfile(source);
+
+                    files.Add(file);
+                }
             }
         }
 

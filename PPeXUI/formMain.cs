@@ -526,7 +526,25 @@ namespace PPeXUI
 
                         var holder = node.Tag as SubfileHolder;
 
-                        writer.Files.Add(new ArchiveFile(holder.Source, node.FullPath, writer.DefaultCompression, holder.Priority));
+                        ISubfile subfile;
+
+                        if (holder.Source is ArchiveFileSource)
+                        {
+                            var arcsource = holder.Source as ArchiveFileSource;
+
+                            subfile = new IsolatedSubfile(arcsource);
+                        }
+                        else
+                        {
+                            subfile = new PPeX.Subfile(
+                                holder.Source,
+                                node.Text,
+                                node.Parent.Text,
+                                writer.DefaultCompression,
+                                ArchiveFileEncoding.Raw);
+                        }
+
+                        writer.Files.Add(new ArchiveFile(subfile, writer.DefaultCompression, holder.Priority));
 
                         progress.Report(new Tuple<string, int>(
                         "",
@@ -589,7 +607,7 @@ namespace PPeXUI
                     parent = trvFiles.Nodes.Add(file.ArchiveName);
 
                 TreeNode node = parent.Nodes.Add(file.Name);
-                node.Tag = new SubfileHolder(file, file.Name);
+                node.Tag = new SubfileHolder(file.Source, file.Name);
                 SetAutoIcon(node);
             }
         }
@@ -864,11 +882,10 @@ namespace PPeXUI
             {
                 foreach (string file in dialog.FileNames)
                 {
-                    FileSource f = new FileSource(file);
-                    PPeX.Xgg.XggSubfile xgg = new PPeX.Xgg.XggSubfile(f, "", "");
-
+                    using (FileSource f = new FileSource(file))
+                    using (PPeX.Encoders.XggDecoder decoder = new PPeX.Encoders.XggDecoder(f.GetStream(), new byte[] { }))
                     using (FileStream fs = new FileStream(file.Replace(".xgg", ".wav"), FileMode.Create))
-                        xgg.WriteToStream(fs);
+                        decoder.Decode().CopyTo(fs);
                 }
 
                 progform.DynamicInvoke(() =>
