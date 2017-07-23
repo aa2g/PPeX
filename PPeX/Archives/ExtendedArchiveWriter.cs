@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using PPeX.Compressors;
 using Crc32C;
+using PPeX.Encoders;
 
 namespace PPeX
 {
@@ -113,7 +114,7 @@ namespace PPeX
                     //Reduce the MD5 to a single int
                     i++;
 
-                    var WriteReciept = receipts.FirstOrDefault(x => Utility.CompareBytes(x.Md5, file.Source.Md5));
+                    var WriteReciept = receipts.FirstOrDefault(x => Utility.CompareBytes(x.Md5, file.Subfile.Source.Md5));
                     bool isDuplicate = WriteReciept != null;
 
                     try
@@ -133,7 +134,7 @@ namespace PPeX
 
                     //Update progress
                     progress.Report(new Tuple<string, int>(
-                                    "[" + i + " / " + Files.Count + "] Written " + file.Name + "... (" + file.Source.Size + " bytes)" + (isDuplicate ? " [duplicate]\r\n" : "\r\n"),
+                                    "[" + i + " / " + Files.Count + "] Written " + file.Name + "... (" + file.Subfile.Source.Size + " bytes)" + (isDuplicate ? " [duplicate]\r\n" : "\r\n"),
                                     100 * i / Files.Count));
 
                     receipts.Add(WriteReciept);
@@ -160,7 +161,7 @@ namespace PPeX
         3 - File priority [byte]
         4 - CRC32C of packed data [uint]
         8 - MD5 of uncompressed file {16 bytes long}
-        24 - [Reserved] {48 bytes long}
+        24 - Metadata related to encoding {48 bytes long}
         72 - File name in bytes [ushort]
         74 - File name [unicode]
         74 + name - File offset [ulong]
@@ -169,9 +170,9 @@ namespace PPeX
         */
 
         /// <summary>
-        /// The data source of the archive.
+        /// The data source of the file.
         /// </summary>
-        public IDataSource Source;
+        public ISubfile Subfile;
 
         /// <summary>
         /// The name of the file.
@@ -185,14 +186,14 @@ namespace PPeX
         {
             get
             {
-                return 90 + Encoding.Unicode.GetByteCount(Name);
+                return 90 + System.Text.Encoding.Unicode.GetByteCount(Name);
             }
         }
 
         /// <summary>
         /// The type of the file.
         /// </summary>
-        public ArchiveFileType Type = ArchiveFileType.Raw;
+        public ArchiveFileEncoding Encoding = ArchiveFileEncoding.Raw;
         /// <summary>
         /// The metadata flags associated with the subfile.
         /// </summary>
@@ -206,6 +207,9 @@ namespace PPeX
         /// </summary>
         public byte Priority;
 
+        protected bool IsEncoding = true;
+        protected bool IsCopying = true;
+
         /// <summary>
         /// Creates a subfile to be written.
         /// </summary>
@@ -213,30 +217,37 @@ namespace PPeX
         /// <param name="Name">The name of the subfile.</param>
         /// <param name="Compression">The compression to use on the subfile.</param>
         /// <param name="Priority">The memory priority of the subfile.</param>
-        public ArchiveFile(IDataSource Source, string Name, ArchiveFileCompression Compression, byte Priority)
+        public ArchiveFile(ISubfile Subfile, ArchiveFileCompression Compression, byte Priority)
         {
+            this.Subfile = Subfile;
+            Name = Subfile.ArchiveName + "/" + Subfile.Name;
+
+            this.Compression = Compression;
+            this.Priority = Priority;
+
             //Determine type and compression
             if (Name.EndsWith(".wav"))
             {
-                //Wrap the source into an opus stream
-                this.Source = new Xgg.XggWrappedSource(Source);
-                this.Name = Name.Replace(".wav", ".xgg");
+                Encoding = ArchiveFileEncoding.XggAudio;
+                Compression = ArchiveFileCompression.Uncompressed;
+                Name = Name.Replace(".wav", ".xgg");
+            }
+            else if (Name.EndsWith(".xgg"))
+            {
+                Encoding = ArchiveFileEncoding.XggAudio;
+                Compression = ArchiveFileCompression.Uncompressed;
+                IsEncoding = false;
             }
             else
             {
-                this.Source = Source;
-                this.Name = Name;
+                Encoding = ArchiveFileEncoding.Raw;
             }
 
-
-            if (this.Name.EndsWith(".xgg"))
-                Type = ArchiveFileType.Audio;
-            else if (this.Name.EndsWith(".png"))
-                Type = ArchiveFileType.Image;
-            else
-                this.Compression = Compression;
-
-            this.Priority = Priority;
+            if (Subfile is IsolatedSubfile &&
+                Compression == (Subfile.Source as ArchiveFileSource).Compression)
+            {
+                IsCopying = true;
+            }
         }
 
         /// <summary>
@@ -247,7 +258,7 @@ namespace PPeX
         /// <param name="reciept">The write receipt to use if the file is a duplicate. Null if not a duplicate.</param>
         public WriteReciept WriteTo(BinaryWriter dataWriter, BinaryWriter metadataWriter, WriteReciept reciept = null)
         {
-            uint actualsize = 0;
+            uint compressedSize = 0;
             uint crc = 0;
             ulong offset = (ulong)dataWriter.BaseStream.Position;
 
@@ -255,35 +266,57 @@ namespace PPeX
 
             if (!isDupe)
             {
-
-                using (MemoryStream buffer = new MemoryStream()) 
-                using (Stream source = Source.GetStream())
+                if (IsCopying)
                 {
-                    //Compress the data
-                    using (ICompressor compressor = CompressorFactory.GetCompressor(source, Compression))
-                        compressor.WriteToStream(buffer);
+                    using (MemoryStream buffer = new MemoryStream())
+                    {
+                        Subfile.WriteToStream(buffer);
+                        compressedSize = Subfile.Size;
 
-                    //Write the data and get a crc
-                    buffer.Position = 0;
-                    byte[] bBuffer = buffer.ToArray();
-                    crc = Crc32CAlgorithm.Compute(bBuffer);
-                    dataWriter.Write(bBuffer);
+                        //Write the data and get a crc
+                        byte[] bBuffer = buffer.ToArray();
+                        crc = Crc32CAlgorithm.Compute(bBuffer);
+                        buffer.Position = 0;
+                        dataWriter.Write(bBuffer);
+                    }
                 }
-                
-                //Calculate the position of the data
-                long newsize = dataWriter.BaseStream.Position;
-                actualsize = (uint)(newsize - (long)offset);
+                else
+                {
+                    using (MemoryStream buffer = new MemoryStream())
+                    {
+                        IEncoder encoder;
+
+                        if (IsEncoding)
+                            encoder = EncoderFactory.GetEncoder(Subfile.Source, Encoding);
+                        else
+                            encoder = new PassthroughEncoder(Subfile.Source.GetStream());
+
+                        //Compress and encode the data
+                        using (encoder)
+                        using (ICompressor compressor = CompressorFactory.GetCompressor(encoder.Encode(), Compression))
+                        {
+                            compressor.WriteToStream(buffer);
+                            compressedSize = compressor.CompressedSize;
+                        }
+                        
+                        //Write the data and get a crc
+                        byte[] bBuffer = buffer.ToArray();
+                        crc = Crc32CAlgorithm.Compute(bBuffer);
+                        buffer.Position = 0;
+                        dataWriter.Write(bBuffer);
+                    }
+                }
             }
             else
             {
                 offset = reciept.offset;
-                actualsize = reciept.length;
+                compressedSize = reciept.length;
                 crc = reciept.crc;
                 Compression = reciept.compression;
             }
 
             //Write the header data
-            metadataWriter.Write((byte)Type);
+            metadataWriter.Write((byte)Encoding);
             metadataWriter.Write((byte)Flags);
             
             metadataWriter.Write((byte)Compression);
@@ -292,23 +325,23 @@ namespace PPeX
 
             metadataWriter.Write(crc);
 
-            metadataWriter.Write(Source.Md5);
+            metadataWriter.Write(Subfile.Source.Md5);
 
             metadataWriter.BaseStream.Seek(48, SeekOrigin.Current);
 
-            byte[] uName = Encoding.Unicode.GetBytes(Name);
+            byte[] uName = System.Text.Encoding.Unicode.GetBytes(Name);
             metadataWriter.Write((ushort)uName.Length);
             metadataWriter.Write(uName);
 
             metadataWriter.Write(offset);
-            metadataWriter.Write(Source.Size);
-            metadataWriter.Write(actualsize);
+            metadataWriter.Write(Subfile.Source.Size);
+            metadataWriter.Write(compressedSize);
 
             return new WriteReciept
             {
-                Md5 = Source.Md5,
+                Md5 = Subfile.Source.Md5,
                 offset = offset,
-                length = actualsize,
+                length = compressedSize,
                 crc = crc,
                 compression = Compression
             };

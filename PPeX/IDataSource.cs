@@ -8,10 +8,9 @@ using System.Threading.Tasks;
 namespace PPeX
 {
     /// <summary>
-    /// The interface for data that is to be used in writing archives.
-    /// As such, data sources usually only ouput compressed data.
+    /// The interface for data that is to be used in retrieving uncompressed data.
     /// </summary>
-    public interface IDataSource
+    public interface IDataSource : IDisposable
     {
         /// <summary>
         /// The size of the uncompressed data.
@@ -24,7 +23,7 @@ namespace PPeX
         byte[] Md5 { get; }
 
         /// <summary>
-        /// Returns a stream that reads (compressed) data.
+        /// Returns a stream that reads uncompressed and unencoded data.
         /// </summary>
         /// <returns></returns>
         Stream GetStream();

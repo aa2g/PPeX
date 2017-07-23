@@ -28,14 +28,14 @@ namespace PPeX
         string Name { get; }
 
         /// <summary>
-        /// The filesize of the subfile.
+        /// The compressed file size of the subfile.
         /// </summary>
         uint Size { get; }
 
         /// <summary>
-        /// Writes uncompressed data to the stream.
+        /// Copies raw, compressed and/or encoded data to the stream.
         /// </summary>
-        /// <param name="stream">The stream to uncompress data into.</param>
+        /// <param name="stream">The stream to copy.</param>
         void WriteToStream(Stream stream);
     }
 }

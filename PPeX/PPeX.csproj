@@ -70,12 +70,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Archives\ArchiveEnum.cs" />
-    <Compile Include="Archives\ExtendedHeader.cs" />
     <Compile Include="Compressors\BaseCompressor.cs" />
     <Compile Include="Compressors\Lz4Compressor.cs" />
     <Compile Include="Compressors\PassthroughCompressor.cs" />
     <Compile Include="Compressors\ZstdCompressor.cs" />
     <Compile Include="Core.cs" />
+    <Compile Include="Encoders\BaseEncoder.cs" />
+    <Compile Include="Encoders\PassthroughEncoder.cs" />
+    <Compile Include="Encoders\XggEncoder.cs" />
     <Compile Include="ICompressor.cs" />
     <Compile Include="IEncoder.cs" />
     <Compile Include="Settings.cs" />
@@ -86,15 +88,13 @@
     <Compile Include="Archives\ExtendedArchive.cs" />
     <Compile Include="Sources\FileSource.cs" />
     <Compile Include="IDataSource.cs" />
-    <Compile Include="Subfiles\ImageSubfile.cs" />
     <Compile Include="ISubfile.cs" />
     <Compile Include="Sources\PPSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Subfiles\Subfile.cs" />
     <Compile Include="Substream.cs" />
-    <Compile Include="Subfiles\RawSubfile.cs" />
+    <Compile Include="Subfiles\IsolatedSubfile.cs" />
     <Compile Include="Utility.cs" />
-    <Compile Include="Xgg\XggSubfile.cs" />
-    <Compile Include="Xgg\XggWrappedSource.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

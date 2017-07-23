@@ -12,6 +12,7 @@ namespace PPeXM64
     public class CachedObject
     {
         public byte[] Data;
+        public byte[] Metadata;
         public byte Priority;
         public byte[] MD5;
         public string Name;

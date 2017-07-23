@@ -48,5 +48,10 @@ namespace PPeX
         {
             return new FileStream(Filename, FileMode.Open, FileAccess.Read);
         }
+
+        public void Dispose()
+        {
+
+        }
     }
 }

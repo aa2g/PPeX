@@ -9,6 +9,8 @@ namespace PPeX.Compressors
 {
     public class ZstdCompressor : BaseCompressor, IDisposable
     {
+        public override ArchiveFileCompression Compression => ArchiveFileCompression.Zstandard;
+
         protected ZstdNet.Compressor _compressor;
 
         public ZstdCompressor(Stream stream, int CompressionLevel) : base(stream, (uint)stream.Length)
@@ -42,6 +44,8 @@ namespace PPeX.Compressors
 
     public class ZstdDecompressor : IDecompressor
     {
+        public ArchiveFileCompression Compression => ArchiveFileCompression.Zstandard;
+
         protected ZstdNet.Decompressor _decompressor;
 
         public Stream BaseStream { get; protected set; }

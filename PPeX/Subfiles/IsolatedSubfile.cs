@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 namespace PPeX
 {
     /// <summary>
-    /// A subfile used for generic data.
+    /// A subfile that stores data in a segregated fashion.
     /// </summary>
-    public class RawSubfile : BaseSubfile
+    public class IsolatedSubfile : BaseSubfile
     {
         /// <summary>
-        /// The uncompressed size of the data.
+        /// The compressed size of the data.
         /// </summary>
         public override uint Size => Source.Size;
 
@@ -23,7 +23,7 @@ namespace PPeX
         /// <param name="Source">The source of the data.</param>
         /// <param name="Name">The name of the subfile.</param>
         /// <param name="Archive">The name of the .pp archive to associate with.</param>
-        public RawSubfile(IDataSource Source, string Name, string Archive) : base(Source, Name, Archive)
+        public IsolatedSubfile(ArchiveFileSource Source) : base(Source, Source.Name, Source.ArchiveName)
         {
             
         }
@@ -34,9 +34,14 @@ namespace PPeX
         /// <param name="stream">The stream to write the uncompressed data to.</param>
         public override void WriteToStream(Stream stream)
         {
-            using (Stream source = Source.GetStream())
+            ArchiveFileSource arcsource = Source as ArchiveFileSource;
+
+            using (Stream substream = new Substream(
+                new FileStream(arcsource.ArchiveFilename, FileMode.Open, FileAccess.Read, FileShare.Read),
+                (long)arcsource.Offset,
+                arcsource.Length))
             {
-                source.CopyTo(stream);
+                substream.CopyTo(stream);
             }
         }
     }
