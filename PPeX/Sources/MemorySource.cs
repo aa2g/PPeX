@@ -88,6 +88,7 @@ namespace PPeX
             {
                 MemoryStream temp = new MemoryStream();
                 output.CopyTo(temp);
+                temp.Position = 0;
                 return temp;
             }
                 
