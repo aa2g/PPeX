@@ -30,25 +30,44 @@ namespace PPeXM64
             LogFiles = true;
 #endif
 
+            if (args.Length > 0 &&
+                Directory.Exists(args[0]))
+            {
+                Core.Settings.PPXLocation = args[0];
+            }
+            else
+            {
+                Core.Settings.PPXLocation = Utility.GetGameDir() + "\\data";
+            }
+
+            Core.Settings.PPXLocation = Core.Settings.PPXLocation.Replace("\\\\", "\\");
+
             //Attach the handler to the server
             server.OnRequest += Server_OnRequest;
 
-            //Index all .ppx files in the location
-            foreach (string dir in Directory.EnumerateFiles(Core.Settings.PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
+            if (Directory.Exists(Core.Settings.PPXLocation))
             {
-                var archive = new ExtendedArchive(dir);
+                Console.WriteLine("Loading from " + Core.Settings.PPXLocation);
 
-                foreach (var file in archive.ArchiveFiles)
+                //Index all .ppx files in the location
+                foreach (string arc in Directory.EnumerateFiles(Core.Settings.PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
                 {
-                    FileCache[new FileEntry(file.ArchiveName.Replace(".pp", "").ToLower(), file.Name.ToLower())] = file;
+                    var archive = new ExtendedArchive(arc);
+
+                    foreach (var file in archive.ArchiveFiles)
+                    {
+                        FileCache[new FileEntry(file.ArchiveName.Replace(".pp", "").ToLower(), file.Name.ToLower())] = file;
+                    }
+
+                    Console.WriteLine("Loaded \"" + archive.Title + "\" (" + archive.ArchiveFiles.Count + " files)");
+
+                    LoadedArchives.Add(archive);
                 }
-
-                Console.WriteLine("Loaded " + dir);
-
-                LoadedArchives.Add(archive);
             }
+            else
+                Console.WriteLine("Invalid load directory! (" + Core.Settings.PPXLocation + ")");
 
-            Console.WriteLine("Finished loading");
+            Console.WriteLine("Finished loading " + LoadedArchives.Count + " archive(s)");
 
             IsLoaded = true;
             
@@ -64,6 +83,7 @@ namespace PPeXM64
                 switch (arguments[0])
                 {
                     case "exit":
+                        Environment.Exit(0);
                         return;
                     case "log":
                         LogFiles = !LogFiles;

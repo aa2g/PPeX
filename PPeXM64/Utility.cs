@@ -52,5 +52,13 @@ namespace PPeXM64
 
             return readable.ToString("0.### ") + suffix;
         }
+
+        public static string GetGameDir()
+        {
+            return (string)Microsoft.Win32.Registry.GetValue(
+                @"HKEY_CURRENT_USER\SOFTWARE\illusion\AA2Play",
+                "INSTALLDIR",
+                "");
+        }
     }
 }
