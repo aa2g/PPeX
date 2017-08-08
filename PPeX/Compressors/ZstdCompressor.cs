@@ -24,13 +24,12 @@ namespace PPeX.Compressors
         {
             using (MemoryStream mem = new MemoryStream())
             {
-                stream.CopyTo(mem);
-
-                CompressedSize = (uint)mem.Length;
+                BaseStream.CopyTo(mem);
 
                 using (MemoryStream output = new MemoryStream(_compressor.Wrap(mem.ToArray())))
                 {
                     output.CopyTo(stream);
+                    CompressedSize = (uint)output.Length;
                 }
             }
         }

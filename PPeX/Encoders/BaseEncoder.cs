@@ -16,8 +16,6 @@ namespace PPeX.Encoders
             Source = source;
         }
 
-        public byte[] Metadata { get; protected set; }
-
         public abstract ArchiveFileEncoding Encoding { get; }
 
         public abstract uint EncodedLength { get; protected set; }
@@ -36,10 +34,9 @@ namespace PPeX.Encoders
     {
         public virtual Stream BaseStream { get; protected set; }
 
-        public BaseDecoder(Stream baseStream, byte[] metadata)
+        public BaseDecoder(Stream baseStream)
         {
             BaseStream = baseStream;
-            Metadata = metadata;
         }
 
         public byte[] Metadata { get; protected set; }
@@ -70,12 +67,12 @@ namespace PPeX.Encoders
             }
         }
 
-        public static IDecoder GetDecoder(Stream stream, ArchiveFileEncoding encoding, byte[] metadata)
+        public static IDecoder GetDecoder(Stream stream, ArchiveFileEncoding encoding)
         {
             switch (encoding)
             {
                 case ArchiveFileEncoding.XggAudio:
-                    return new XggDecoder(stream, metadata);
+                    return new XggDecoder(stream);
                 case ArchiveFileEncoding.Raw:
                     return new PassthroughEncoder(stream);
                 default:

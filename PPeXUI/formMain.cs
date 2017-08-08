@@ -883,7 +883,7 @@ namespace PPeXUI
                 foreach (string file in dialog.FileNames)
                 {
                     using (FileSource f = new FileSource(file))
-                    using (PPeX.Encoders.XggDecoder decoder = new PPeX.Encoders.XggDecoder(f.GetStream(), new byte[] { }))
+                    using (PPeX.Encoders.XggDecoder decoder = new PPeX.Encoders.XggDecoder(f.GetStream()))
                     using (FileStream fs = new FileStream(file.Replace(".xgg", ".wav"), FileMode.Create))
                         decoder.Decode().CopyTo(fs);
                 }

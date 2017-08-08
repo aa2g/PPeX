@@ -26,13 +26,16 @@ namespace PPeX.Compressors
         {
             long oldPos = stream.Position;
 
-            var flags = LZ4.LZ4StreamFlags.InteractiveRead;
+            var flags = LZ4.LZ4StreamFlags.IsolateInnerStream;
 
             if (highCompression)
                 flags |= LZ4.LZ4StreamFlags.HighCompression;
 
             using (var lz4 = new LZ4.LZ4Stream(stream, LZ4.LZ4StreamMode.Compress, flags, BlockSize))
+            {
                 BaseStream.CopyTo(lz4);
+                lz4.Close();
+            }
 
             CompressedSize = (uint)(stream.Position - oldPos);
         }

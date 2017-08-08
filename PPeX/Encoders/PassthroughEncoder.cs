@@ -20,8 +20,6 @@ namespace PPeX.Encoders
 
         public ArchiveFileEncoding Encoding => ArchiveFileEncoding.Raw;
 
-        public byte[] Metadata => new byte[] { };
-
         public Stream Decode()
         {
             return BaseStream;
