@@ -28,8 +28,9 @@ namespace PPeX
         public static long TestCompression(Stream data, ArchiveFileCompression method)
         {
             using (ICompressor compressor = CompressorFactory.GetCompressor(data, method))
+            using (MemoryStream temp = new MemoryStream())
             {
-                compressor.WriteToStream(Stream.Null);
+                compressor.WriteToStream(temp);
                 return compressor.CompressedSize;
             }
         }

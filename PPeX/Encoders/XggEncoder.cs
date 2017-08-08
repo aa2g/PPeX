@@ -58,8 +58,9 @@ namespace PPeX.Encoders
                     using (var res = new MediaFoundationResampler(wav, new WaveFormat(
                         wav.WaveFormat.SampleRate < 24000 ? 24000 : 48000
                         , channels)))
+                    using (var opus = OpusEncoder.Create(res.WaveFormat.SampleRate, channels, FragLabs.Audio.Codecs.Opus.Application.Audio))
                     {
-                        var opus = OpusEncoder.Create(res.WaveFormat.SampleRate, channels, FragLabs.Audio.Codecs.Opus.Application.Audio);
+
                         opus.Bitrate = Core.Settings.XggBitrate;
                         int packetsize = (int)(res.WaveFormat.SampleRate * Core.Settings.XggFrameSize * 2 * channels);
 
@@ -147,7 +148,7 @@ namespace PPeX.Encoders
             }
          }
 
-        public XggDecoder(Stream encodedData, byte[] metadata) : base(encodedData, metadata)
+        public XggDecoder(Stream encodedData) : base(encodedData)
         {
             
         }

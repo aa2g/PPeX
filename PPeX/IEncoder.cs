@@ -14,8 +14,6 @@ namespace PPeX
         Stream Encode();
         uint EncodedLength { get; }
 
-        byte[] Metadata { get; }
-
         string NameTransform(string original);
     }
 

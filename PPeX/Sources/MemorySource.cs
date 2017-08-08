@@ -23,7 +23,8 @@ namespace PPeX
         /// <param name="data">The byte array to use.</param>
         public MemorySource(byte[] data) : this(data, new byte[] { }, ArchiveFileCompression.Uncompressed, ArchiveFileEncoding.Raw)
         {
-
+            using (MemoryStream mem = new MemoryStream(data))
+                Md5 = Utility.GetMd5(mem);
         }
 
         /// <summary>
@@ -40,8 +41,8 @@ namespace PPeX
             Compression = compression;
             Encoding = encoding;
 
-            Md5 = Utility.GetMd5(DataStream);
-            DataStream.Position = 0;
+            using (Stream mem = GetStream())
+                Md5 = Utility.GetMd5(mem);
         }
 
         /// <summary>
