@@ -46,17 +46,27 @@ namespace PPeX
         /// </summary>
         public string Title { get; protected set; }
 
-        public static readonly ushort Version = 4;
         /// <summary>
-        /// The type of the archive.
+        /// The filename of the archive.
         /// </summary>
-        public static ArchiveType Type = ArchiveType.Archive;
-        
-        protected List<ISubfile> files = new List<ISubfile>();
+        public string Filename { get; protected set; }
+
+        public static readonly ushort Version = 5;
+
+        protected List<ExtendedArchiveChunk> chunks = new List<ExtendedArchiveChunk>();
         /// <summary>
         /// Subfiles that are contained within the extended archive.
         /// </summary>
-        public IReadOnlyCollection<ISubfile> ArchiveFiles => files.AsReadOnly();
+        public IReadOnlyCollection<ExtendedArchiveChunk> Chunks => chunks.AsReadOnly();
+
+        protected List<ArchiveFileSource> files = new List<ArchiveFileSource>();
+        /// <summary>
+        /// Subfiles that are contained within the extended archive.
+        /// </summary>
+        public IReadOnlyCollection<ArchiveFileSource> Files => files.AsReadOnly();
+
+        protected ulong ChunkTableOffset = 0;
+        protected ulong FileTableOffset = 0;
         
         /// <summary>
         /// Reads from a .ppx file.
