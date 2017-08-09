@@ -41,7 +41,6 @@ namespace PPeXUI
         private void formMain_Load(object sender, EventArgs e)
         {
             cmbCompression.SelectedIndex = 2;
-            cmbArchiveType.SelectedIndex = 0;
         }
 
         public void CloseFile()
@@ -386,7 +385,7 @@ namespace PPeXUI
                     prgFileProgress.Value = x.Item2;
                     txtFileProg.AppendText(x.Item1);
                 });
-                ArchiveFileCompression method = (ArchiveFileCompression)cmbCompression.SelectedIndex;
+                ArchiveChunkCompression method = (ArchiveChunkCompression)cmbCompression.SelectedIndex;
 
                 if (trvFiles.SelectedNode.Tag == null)
                 {
@@ -424,13 +423,13 @@ namespace PPeXUI
                         string ratio = ((double)cb / ucb).ToString("P2");
                         switch (method)
                         {
-                            case ArchiveFileCompression.Uncompressed:
+                            case ArchiveChunkCompression.Uncompressed:
                                 progress.Report(new Tuple<string, int>("No compression: " + uncompressedSize + " => " + size + " (" + ratio + ")\n", 100));
                                 break;
-                            case ArchiveFileCompression.LZ4:
+                            case ArchiveChunkCompression.LZ4:
                                 progress.Report(new Tuple<string, int>("LZ4 compression: " + uncompressedSize + " => " + size + " (" + ratio + ")\n", 100));
                                 break;
-                            case ArchiveFileCompression.Zstandard:
+                            case ArchiveChunkCompression.Zstandard:
                                 progress.Report(new Tuple<string, int>("Zstandard compression: " + uncompressedSize + " => " + size + " (" + ratio + ")\n", 100));
                                 break;
                         }
@@ -451,13 +450,13 @@ namespace PPeXUI
                         string ratio = ((double)bytes / stream.Length).ToString("P2");
                         switch (method)
                         {
-                            case ArchiveFileCompression.Uncompressed:
+                            case ArchiveChunkCompression.Uncompressed:
                                 progress.Report(new Tuple<string, int>("No compression: " + uncompressedSize + " => " + size + " (" + ratio + ")\n", 100));
                                 break;
-                            case ArchiveFileCompression.LZ4:
+                            case ArchiveChunkCompression.LZ4:
                                 progress.Report(new Tuple<string, int>("LZ4 compression: " + uncompressedSize + " => " + size + " (" + ratio + ")\n", 100));
                                 break;
-                            case ArchiveFileCompression.Zstandard:
+                            case ArchiveChunkCompression.Zstandard:
                                 progress.Report(new Tuple<string, int>("Zstandard compression: " + uncompressedSize + " => " + size + " (" + ratio + ")\n", 100));
                                 break;
                         }
@@ -495,8 +494,7 @@ namespace PPeXUI
             FileStream arc = new FileStream(txtSaveLocation.Text, FileMode.Create);
             ExtendedArchiveWriter writer = new ExtendedArchiveWriter(arc, txtArchiveName.Text);
 
-            writer.DefaultCompression = (ArchiveFileCompression)cmbCompression.SelectedIndex;
-            writer.Type = (ArchiveType)cmbArchiveType.SelectedIndex;
+            writer.DefaultCompression = (ArchiveChunkCompression)cmbCompression.SelectedIndex;
 
             IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>((x) =>
             {
@@ -526,25 +524,13 @@ namespace PPeXUI
 
                         var holder = node.Tag as SubfileHolder;
 
-                        ISubfile subfile;
-
-                        if (holder.Source is ArchiveFileSource)
-                        {
-                            var arcsource = holder.Source as ArchiveFileSource;
-
-                            subfile = new IsolatedSubfile(arcsource);
-                        }
-                        else
-                        {
-                            subfile = new PPeX.Subfile(
+                        ISubfile subfile = new PPeX.Subfile(
                                 holder.Source,
                                 node.Text,
                                 node.Parent.Text,
-                                writer.DefaultCompression,
-                                ArchiveFileEncoding.Raw);
-                        }
+                                ArchiveFileType.Raw);
 
-                        writer.Files.Add(new ArchiveFile(subfile, writer.DefaultCompression, holder.Priority));
+                        writer.Files.Add(subfile);
 
                         progress.Report(new Tuple<string, int>(
                         "",
@@ -599,7 +585,7 @@ namespace PPeXUI
 
             ExtendedArchive arc = new ExtendedArchive(dialog.FileName);
 
-            foreach (var file in arc.ArchiveFiles)
+            foreach (var file in arc.Files)
             {
                 TreeNode parent = trvFiles.Nodes.Cast<TreeNode>().FirstOrDefault(x => x.Text == file.ArchiveName);
 
@@ -607,7 +593,7 @@ namespace PPeXUI
                     parent = trvFiles.Nodes.Add(file.ArchiveName);
 
                 TreeNode node = parent.Nodes.Add(file.Name);
-                node.Tag = new SubfileHolder(file.Source, file.Name);
+                node.Tag = new SubfileHolder(file, file.Name);
                 SetAutoIcon(node);
             }
         }

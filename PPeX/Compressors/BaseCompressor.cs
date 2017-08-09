@@ -21,7 +21,7 @@ namespace PPeX.Compressors
 
         public uint UncompressedSize { get; protected set; }
 
-        public abstract ArchiveFileCompression Compression { get; }
+        public abstract ArchiveChunkCompression Compression { get; }
 
         public abstract void WriteToStream(Stream stream);
 
@@ -33,30 +33,30 @@ namespace PPeX.Compressors
 
     public static class CompressorFactory
     {
-        public static ICompressor GetCompressor(Stream stream, ArchiveFileCompression compression)
+        public static ICompressor GetCompressor(Stream stream, ArchiveChunkCompression compression)
         {
             switch (compression)
             {
-                case ArchiveFileCompression.Zstandard:
+                case ArchiveChunkCompression.Zstandard:
                     return new ZstdCompressor(stream, 8);
-                case ArchiveFileCompression.LZ4:
+                case ArchiveChunkCompression.LZ4:
                     return new Lz4Compressor(stream, true);
-                case ArchiveFileCompression.Uncompressed:
+                case ArchiveChunkCompression.Uncompressed:
                     return new PassthroughCompressor(stream);
                 default:
                     throw new InvalidOperationException("Compression type is invalid.");
             }
         }
 
-        public static IDecompressor GetDecompressor(Stream stream, ArchiveFileCompression compression)
+        public static IDecompressor GetDecompressor(Stream stream, ArchiveChunkCompression compression)
         {
             switch (compression)
             {
-                case ArchiveFileCompression.Zstandard:
+                case ArchiveChunkCompression.Zstandard:
                     return new ZstdDecompressor(stream);
-                case ArchiveFileCompression.LZ4:
+                case ArchiveChunkCompression.LZ4:
                     return new Lz4Decompressor(stream);
-                case ArchiveFileCompression.Uncompressed:
+                case ArchiveChunkCompression.Uncompressed:
                     return new PassthroughCompressor(stream);
                 default:
                     throw new InvalidOperationException("Compression type is invalid.");

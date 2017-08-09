@@ -33,6 +33,11 @@ namespace PPeX
         uint Size { get; }
 
         /// <summary>
+        /// The content type of the subfile.
+        /// </summary>
+        ArchiveFileType Type { get; }
+
+        /// <summary>
         /// Copies raw, compressed and/or encoded data to the stream.
         /// </summary>
         /// <param name="stream">The stream to copy.</param>

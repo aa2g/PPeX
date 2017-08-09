@@ -9,7 +9,7 @@ namespace PPeX
     /// <summary>
     /// The data type of the archived file.
     /// </summary>
-    public enum ArchiveFileEncoding : ushort
+    public enum ArchiveFileType : ushort
     {
         /// <summary>
         /// The file is generic data and can be compressed normally.
@@ -25,7 +25,7 @@ namespace PPeX
     /// <summary>
     /// The method of compression used on the archived file.
     /// </summary>
-    public enum ArchiveFileCompression : byte
+    public enum ArchiveChunkCompression : byte
     {
         /// <summary>
         /// No compression is used.

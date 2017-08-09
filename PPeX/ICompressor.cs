@@ -9,7 +9,7 @@ namespace PPeX
 {
     public interface ICompressor : IDisposable
     {
-        ArchiveFileCompression Compression { get; }
+        ArchiveChunkCompression Compression { get; }
 
         uint UncompressedSize { get; }
 
@@ -20,7 +20,7 @@ namespace PPeX
 
     public interface IDecompressor : IDisposable
     {
-        ArchiveFileCompression Compression { get; }
+        ArchiveChunkCompression Compression { get; }
 
         Stream Decompress();
     }

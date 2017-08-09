@@ -21,41 +21,17 @@ namespace PPeX.Tests
 
             byte[] data = Encoding.UTF8.GetBytes("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ac purus id diam consectetur fermentum. Etiam nulla nisi, tincidunt sed sagittis nec, finibus vel elit. Pellentesque sodales massa eget tortor eleifend dictum. Ut finibus tellus efficitur nulla hendrerit convallis. Cras sed neque sed tellus luctus vehicula sed in sapien.");
 
-            writer.Files.Add(new ArchiveFile(
-                new Subfile(new MemorySource(data),
+            writer.Files.Add(new Subfile(
+                new MemorySource(data),
                     "test1",
                     "t",
-                    ArchiveFileCompression.Uncompressed,
-                    ArchiveFileEncoding.Raw),
-                ArchiveFileCompression.Uncompressed,
-                150));
+                    ArchiveFileType.Raw));
 
-            writer.Files.Add(new ArchiveFile(
-                new Subfile(new MemorySource(data),
+            writer.Files.Add(new Subfile(
+                new MemorySource(data),
                     "test2",
                     "t",
-                    ArchiveFileCompression.Uncompressed,
-                    ArchiveFileEncoding.Raw),
-                ArchiveFileCompression.Uncompressed,
-                150));
-
-            writer.Files.Add(new ArchiveFile(
-                new Subfile(new MemorySource(data),
-                    "test3",
-                    "t",
-                    ArchiveFileCompression.LZ4,
-                    ArchiveFileEncoding.Raw),
-                ArchiveFileCompression.LZ4,
-                150));
-
-            writer.Files.Add(new ArchiveFile(
-                new Subfile(new MemorySource(data),
-                    "test4",
-                    "t",
-                    ArchiveFileCompression.Zstandard,
-                    ArchiveFileEncoding.Raw),
-                ArchiveFileCompression.Zstandard,
-                150));
+                    ArchiveFileType.Raw));
 
             writer.Write();
 
@@ -75,10 +51,10 @@ namespace PPeX.Tests
             TimeSpan old = sw.Elapsed;
 
 
-            foreach (var file in archive.ArchiveFiles)
+            foreach (var file in archive.Files)
             {
                 using (MemoryStream mem = new MemoryStream())
-                using (Stream source = file.Source.GetStream())
+                using (Stream source = file.GetStream())
                 {
                     source.CopyTo(mem);
                     sw.Stop();
@@ -88,7 +64,7 @@ namespace PPeX.Tests
 
                     Assert.IsTrue(Utility.CompareBytes(data, mem.ToArray()), "Data is not consistent.");
 
-                    Assert.IsTrue((file.Source as ArchiveFileSource).VerifyChecksum(), "CRC32C does not match data.");
+                    Assert.IsTrue(file.Chunk.VerifyChecksum(), "CRC32C does not match data.");
 
                     sw.Start();
                 }

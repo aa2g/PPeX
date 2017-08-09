@@ -14,26 +14,21 @@ namespace PPeX
         protected uint _size;
         public override uint Size => _size;
 
-        public ArchiveFileCompression Compression { get; protected set; }
-        public ArchiveFileEncoding Encoding { get; protected set; }
-
         protected bool OnlyReport;
 
-        public Subfile(IDataSource source, string name, string archiveName, ArchiveFileCompression compression, ArchiveFileEncoding encoding, bool onlyReport = false) : base(source, name, archiveName)
+        public Subfile(IDataSource source, string name, string archiveName, ArchiveFileType type, bool onlyReport = false) : base(source, name, archiveName)
         {
-            Compression = compression;
-            Encoding = encoding;
+            Type = type;
             OnlyReport = onlyReport;
         }
 
         public override void WriteToStream(Stream stream)
         {
             if (!OnlyReport)
-                using (IEncoder encoder = EncoderFactory.GetEncoder(Source, Encoding))
-                using (ICompressor compressor = CompressorFactory.GetCompressor(encoder.Encode(), Compression))
+                using (IEncoder encoder = EncoderFactory.GetEncoder(Source, Type))
                 {
-                    compressor.WriteToStream(stream);
-                    _size = compressor.CompressedSize;
+                    encoder.Encode().CopyTo(stream);
+                    _size = encoder.EncodedLength;
                 }
             else
                 using (Stream sourceStream = Source.GetStream())

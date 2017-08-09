@@ -52,8 +52,8 @@ Global
 		{EE9698ED-F742-4326-B580-4086DC023F3D}.Debug|x64 Hybrid.Build.0 = Release|Win32
 		{EE9698ED-F742-4326-B580-4086DC023F3D}.Release|x64 Hybrid.ActiveCfg = Release|Win32
 		{EE9698ED-F742-4326-B580-4086DC023F3D}.Release|x64 Hybrid.Build.0 = Release|Win32
-		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|x64 Hybrid.ActiveCfg = Debug|Any CPU
-		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|x64 Hybrid.Build.0 = Debug|Any CPU
+		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|x64 Hybrid.ActiveCfg = Debug|x64
+		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|x64 Hybrid.Build.0 = Debug|x64
 		{38A09514-215B-490E-B73F-F66894BF7AC9}.Release|x64 Hybrid.ActiveCfg = Release|Any CPU
 		{38A09514-215B-490E-B73F-F66894BF7AC9}.Release|x64 Hybrid.Build.0 = Release|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Debug|x64 Hybrid.ActiveCfg = Debug|Any CPU

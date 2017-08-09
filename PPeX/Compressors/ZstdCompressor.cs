@@ -9,7 +9,7 @@ namespace PPeX.Compressors
 {
     public class ZstdCompressor : BaseCompressor, IDisposable
     {
-        public override ArchiveFileCompression Compression => ArchiveFileCompression.Zstandard;
+        public override ArchiveChunkCompression Compression => ArchiveChunkCompression.Zstandard;
 
         protected ZstdNet.Compressor _compressor;
 
@@ -43,7 +43,7 @@ namespace PPeX.Compressors
 
     public class ZstdDecompressor : IDecompressor
     {
-        public ArchiveFileCompression Compression => ArchiveFileCompression.Zstandard;
+        public ArchiveChunkCompression Compression => ArchiveChunkCompression.Zstandard;
 
         protected ZstdNet.Decompressor _decompressor;
 
