@@ -50,6 +50,7 @@ namespace PPeXUI
             IsModified = false;
 
             trvFiles.Nodes.Clear();
+            lsvChunks.Items.Clear();
         }
 
         public void OpenFile()
@@ -596,6 +597,18 @@ namespace PPeXUI
                 node.Tag = new SubfileHolder(file, file.Name);
                 SetAutoIcon(node);
             }
+
+            foreach (var chunk in arc.Chunks)
+            {
+                var item = lsvChunks.Items.Add(chunk.ID.ToString());
+                item.SubItems.Add(PPeX.Utility.GetBytesReadable((long)chunk.UncompressedLength));
+                item.SubItems.Add(PPeX.Utility.GetBytesReadable((long)chunk.CompressedLength));
+                item.SubItems.Add(chunk.Files.Count.ToString());
+                item.SubItems.Add(chunk.Offset.ToString());
+                item.SubItems.Add(chunk.Compression.ToString());
+            }
+
+            lblFileCount.Text = "Total files: " + arc.Chunks.Sum(x => x.Files.Count) + " - " + PPeX.Utility.GetBytesReadable(arc.Chunks.Sum(x => (long)x.UncompressedLength));
         }
 
         private void btnOpen_Click(object sender, EventArgs e)
