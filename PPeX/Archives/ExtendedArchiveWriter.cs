@@ -190,16 +190,48 @@ namespace PPeX
 
                 List<ChunkWriter> allocatedChunks = AllocateChunks(progress);
 
-                int i = 0;
+                int i = 1;
 
-                foreach (ChunkWriter chunk in allocatedChunks)
+                //foreach (ChunkWriter chunk in allocatedChunks)
+                ParallelOptions options = new ParallelOptions
                 {
-                    i++;
+                    MaxDegreeOfParallelism = 4
+                };
 
+                Parallel.ForEach(allocatedChunks, options, (chunk) =>
+                {
                     try
                     {
                         //Write the chunk
-                        chunk.Write(chunkTableWriter, dataWriter, fileTableWriter);
+                        //chunk.Write(chunkTableWriter, dataWriter, fileTableWriter);
+
+                        using (BinaryWriter tempChunkTableWriter = new BinaryWriter(new MemoryStream()))
+                        using (BinaryWriter tempDataWriter = new BinaryWriter(new MemoryStream()))
+                        using (BinaryWriter tempFileTableWriter = new BinaryWriter(new MemoryStream()))
+                        {
+
+                            using (MemoryStream compressedData = chunk.Write(tempChunkTableWriter, tempDataWriter, tempFileTableWriter, ArchiveStream.Position))
+                                lock (ArchiveStream)
+                                {
+                                    //correct index
+                                    tempChunkTableWriter.Seek(-24, SeekOrigin.End);
+                                    tempChunkTableWriter.Write(ArchiveStream.Position);
+
+                                    Stream temp = tempChunkTableWriter.BaseStream;
+                                    temp.Position = 0;
+                                    temp.CopyTo(chunkTableStream);
+
+
+                                    temp = tempFileTableWriter.BaseStream;
+                                    temp.Position = 0;
+                                    temp.CopyTo(fileTableStream);
+
+                                    compressedData.CopyTo(ArchiveStream);
+                                }
+
+                            i++;
+                        }
+
                     }
                     catch
                     {
@@ -210,12 +242,12 @@ namespace PPeX
 
                         throw;
                     }
-                
+
                     //Update progress
                     progress.Report(new Tuple<string, int>(
                                     "[" + i + " / " + allocatedChunks.Count + "] Written chunk id:" + chunk.ID + " (" + chunk.Files.Count + " files)\r\n",
                                     100 * i / allocatedChunks.Count));
-                }
+                });
 
                 ulong chunkTableOffset = (ulong)ArchiveStream.Position;
 
@@ -263,97 +295,99 @@ namespace PPeX
 
             public List<ISubfile> Files = new List<ISubfile>();
 
-            public void Write(BinaryWriter chunkTableWriter, BinaryWriter chunkDataWriter, BinaryWriter fileTableWriter)
+            public MemoryStream Write(BinaryWriter chunkTableWriter, BinaryWriter chunkDataWriter, BinaryWriter fileTableWriter, long chunkFileOffset)
             {
                 //generate the chunk
-                using (MemoryStream mem = new MemoryStream())
+                MemoryStream mem = new MemoryStream();
+
+                ulong offset = 0;
+
+                using (MemoryStream uncompressed = new MemoryStream())
                 {
-                    ulong offset = 0;
+                    List<WriteReciept> reciepts = new List<WriteReciept>();
 
-                    using (MemoryStream uncompressed = new MemoryStream())
+                    foreach (var file in Files)
                     {
-                        List<WriteReciept> reciepts = new List<WriteReciept>();
+                        //write each file metadata
+                        byte[] archive_name = Encoding.Unicode.GetBytes(file.ArchiveName);
 
-                        foreach (var file in Files)
+                        fileTableWriter.Write((ushort)archive_name.Length);
+                        fileTableWriter.Write(archive_name);
+
+
+                        byte[] file_name = Encoding.Unicode.GetBytes(file.Name);
+
+                        fileTableWriter.Write((ushort)file_name.Length);
+                        fileTableWriter.Write(file_name);
+
+                        fileTableWriter.Write((ushort)file.Type);
+                        fileTableWriter.Write(file.Source.Md5);
+
+                        fileTableWriter.Write(ID);
+
+                        //check if it's a dupe
+                        var reciept = reciepts.FirstOrDefault(x => Utility.CompareBytes(x.Md5, file.Source.Md5));
+
+                        if (reciept != null)
                         {
-                            //write each file metadata
-                            byte[] archive_name = Encoding.Unicode.GetBytes(file.ArchiveName);
+                            //dupe
+                            fileTableWriter.Write(reciept.Offset);
+                            fileTableWriter.Write(reciept.Length);
+                        }
+                        else
+                        {
+                            //not a dupe
+                            fileTableWriter.Write(offset);
 
-                            fileTableWriter.Write((ushort)archive_name.Length);
-                            fileTableWriter.Write(archive_name);
+                            ulong size = file.Source.Size;
 
+                            fileTableWriter.Write(size);
 
-                            byte[] file_name = Encoding.Unicode.GetBytes(file.Name);
-
-                            fileTableWriter.Write((ushort)file_name.Length);
-                            fileTableWriter.Write(file_name);
-
-                            fileTableWriter.Write((ushort)file.Type);
-                            fileTableWriter.Write(file.Source.Md5);
-
-                            fileTableWriter.Write(ID);
-
-                            //check if it's a dupe
-                            var reciept = reciepts.FirstOrDefault(x => Utility.CompareBytes(x.Md5, file.Source.Md5));
-
-                            if (reciept != null)
+                            reciepts.Add(new WriteReciept
                             {
-                                //dupe
-                                fileTableWriter.Write(reciept.Offset);
-                                fileTableWriter.Write(reciept.Length);
-                            }
-                            else
-                            {
-                                //not a dupe
-                                fileTableWriter.Write(offset);
+                                Md5 = file.Source.Md5,
+                                Length = size,
+                                Offset = offset
+                            });
 
-                                ulong size = file.Source.Size;
-
-                                fileTableWriter.Write(size);
-
-                                reciepts.Add(new WriteReciept
-                                {
-                                    Md5 = file.Source.Md5,
-                                    Length = size,
-                                    Offset = offset
-                                });
-
-                                file.WriteToStream(uncompressed);
-                                offset += size;
-                            }
-
-                            
+                            file.WriteToStream(uncompressed);
+                            offset += size;
                         }
 
-                        uncompressed.Position = 0;
-
-                        using (ICompressor compressor = CompressorFactory.GetCompressor(uncompressed, Compression))
-                            compressor.WriteToStream(mem);
+                            
                     }
 
-                    mem.Position = 0;
+                    uncompressed.Position = 0;
 
-                    //start writing the chunk metadata
-                    chunkTableWriter.Write(ID);
-
-                    chunkTableWriter.Write((byte)Compression);
-
-
-                    uint crc = Crc32CAlgorithm.Compute(mem.ToArray());
-
-                    chunkTableWriter.Write(crc);
-
-                    ulong fileOffset = (ulong)chunkDataWriter.BaseStream.Position;
-
-                    chunkTableWriter.Write(fileOffset);
-                    chunkTableWriter.Write(mem.Length);
-                    chunkTableWriter.Write(UncompressedSize);
-
-                    //finally write the chunk data
-                    mem.CopyTo(chunkDataWriter.BaseStream);
+                    using (ICompressor compressor = CompressorFactory.GetCompressor(uncompressed, Compression))
+                        compressor.WriteToStream(mem);
                 }
 
+                mem.Position = 0;
+
+                //start writing the chunk metadata
+                chunkTableWriter.Write(ID);
+
+                chunkTableWriter.Write((byte)Compression);
+
+
+                uint crc = Crc32CAlgorithm.Compute(mem.ToArray());
+
+                chunkTableWriter.Write(crc);
+
+                //ulong fileOffset = (ulong)chunkDataWriter.BaseStream.Position;
+                ulong fileOffset = (ulong)chunkFileOffset;
+
+                chunkTableWriter.Write(fileOffset);
+                chunkTableWriter.Write((ulong)mem.Length);
+                chunkTableWriter.Write(UncompressedSize);
+
+                //finally write the chunk data
+                //mem.CopyTo(chunkDataWriter.BaseStream);
+
+                return mem;
             }
+            
         }
 
         public class WriteReciept
