@@ -12,10 +12,9 @@ namespace PPeXM64
 {
     public class Program
     {
-
-        public static Dictionary<FileEntry, ISubfile> FileCache = new Dictionary<FileEntry, ISubfile>();
         public static List<ExtendedArchive> LoadedArchives = new List<ExtendedArchive>();
-        public static List<CachedObject> DataCache = new List<CachedObject>();
+        public static List<CachedChunk> ChunkCache = new List<CachedChunk>();
+        public static Dictionary<FileEntry, CachedFile> FileCache = new Dictionary<FileEntry, CachedFile>();
 
         public static bool LogFiles = false;
         public static bool IsLoaded = false;
@@ -55,12 +54,17 @@ namespace PPeXM64
                 {
                     var archive = new ExtendedArchive(arc);
 
-                    foreach (var file in archive.ArchiveFiles)
+                    foreach (var chunk in archive.Chunks)
                     {
-                        FileCache[new FileEntry(file.ArchiveName.Replace(".pp", "").ToLower(), file.Name.ToLower())] = file;
+                        ChunkCache[(int)chunk.ID] = new CachedChunk(chunk);
                     }
 
-                    Console.WriteLine("Loaded \"" + archive.Title + "\" (" + archive.ArchiveFiles.Count + " files)");
+                    foreach (var file in archive.Files)
+                    {
+                        FileCache[new FileEntry(file.ArchiveName, file.Name)] = new CachedFile(file, ChunkCache.First(x => x.ID == file.ChunkID));
+                    }
+
+                    Console.WriteLine("Loaded \"" + archive.Title + "\" (" + archive.Files.Count + " files)");
 
                     LoadedArchives.Add(archive);
                 }
@@ -104,12 +108,7 @@ namespace PPeXM64
         /// <summary>
         /// The total amount of memory used by cached data.
         /// </summary>
-        public static long LoadedMemorySize => DataCache.Sum(x => x.Data.LongLength);
-
-        /// <summary>
-        /// The memory pressure thresholds to use when trimming memory.
-        /// </summary>
-        static byte[] Thresholds = new byte[] { 75, 145, 180, 225, 255 };
+        public static long LoadedMemorySize => ChunkCache.Sum(x => (long)x.Data?.LongLength);
 
         /// <summary>
         /// Trims memory using a generation-based prioritizer.
@@ -119,85 +118,23 @@ namespace PPeXM64
         {
             lock (loadLock)
             {
-                //Iterate on the static thresholds
-                for (int i = 0; i < Thresholds.Length; i++)
-                {
-                    if (LoadedMemorySize < MaxSize)
-                        break;
+                long loadedDiff = LoadedMemorySize;
 
-                    long loadedDiff = LoadedMemorySize;
+                IOrderedEnumerable<CachedChunk> sortedChunks = ChunkCache.AsEnumerable().OrderBy(x => x.Accesses);
 
-                    byte currentThreshold = Thresholds[i];
-                    Console.Write("Pass " + (i + 1) + " at threshold " + currentThreshold + "...  ");
+                long accumulatedSize = 0;
 
-                    List<CachedObject> temp = new List<CachedObject>(DataCache);
+                IEnumerable<CachedChunk> removedChunks = sortedChunks.TakeWhile(x => (accumulatedSize += x.Data.Length) < (loadedDiff - MaxSize));
 
-                    //Deallocate each file based on its priority
-                    foreach (var item in temp)
-                    {
-                        if (item.Priority <= currentThreshold)
-                            DataCache.Remove(item);
-                    }
+                foreach (var chunk in removedChunks)
+                    chunk.Deallocate();
 
-                    loadedDiff -= LoadedMemorySize;
-
-                    Console.WriteLine("(" + Utility.GetBytesReadable(loadedDiff) + ")");
-                }
+                Console.WriteLine("Freed " + removedChunks.Count() + " chunk(s) (" + Utility.GetBytesReadable(accumulatedSize) + ")");
             }
 
             //Collect garbage and compact the heap
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
-        }
-
-        
-        /// <summary>
-        /// Attempt to cache a file in memory.
-        /// </summary>
-        /// <param name="combinedName">The combined name (or address) of the file to cache.</param>
-        /// <returns></returns>
-        public static bool TryLoad(string combinedName)
-        {
-            string[] splitNames = combinedName.Split('/');
-
-            ISubfile result;
-            if (!FileCache.TryGetValue(new FileEntry(splitNames[0], splitNames[1]), out result))
-                //We don't have the file
-                return false;
-
-#warning handle dupes somehow
-
-            if (!DataCache.Any(x => x.Name == combinedName))
-            {
-                //We haven't cached the file yet
-                ArchiveFileSource source = result.Source as ArchiveFileSource;
-                ArchiveFileCompression oldCompression = source.Compression;
-
-                //We don't want to decompress the data (to keep memory footprint small) so we mark it as uncompressed
-                source.Compression = ArchiveFileCompression.Uncompressed;
-                
-                using (Stream stream = source.GetStream())
-                using (MemoryStream mem = new MemoryStream())
-                {
-                    //Copy it to a cached object
-                    stream.CopyTo(mem);
-                    CachedObject obj = new CachedObject()
-                    {
-                        Data = mem.ToArray(),
-                        Metadata = source.Metadata,
-                        MD5 = source.Md5,
-                        Priority = source.Priority,
-                        Name = combinedName,
-                    };
-
-                    DataCache.Add(obj);
-                }
-
-                //Restore the original compression value
-                source.Compression = oldCompression;
-            }
-
-            return true;
         }
         
         public static object loadLock = new object();
@@ -223,9 +160,11 @@ namespace PPeXM64
                 //Transfer the file
                 lock (loadLock)
                 {
-                    //Ensure we have the file in memory
-                    //Cache the file into memory
-                    if (!TryLoad(argument))
+                    string[] splitNames = argument.Split('/');
+                    FileEntry entry = new FileEntry(splitNames[0], splitNames[1]);
+
+                    //Ensure we have the file
+                    if (!FileCache.ContainsKey(entry))
                     {
                         //We don't have the file
                         handler.WriteString("NotAvailable");
@@ -238,21 +177,13 @@ namespace PPeXM64
                     //Write the data to the pipe
                     using (BinaryWriter writer = new BinaryWriter(handler.BaseStream, Encoding.Unicode, true))
                     {
-                        CachedObject cached = DataCache.First(x => x.Name == argument);
-
-                        string[] splitNames = argument.Split('/');
-                        ISubfile subfile = FileCache[new FileEntry(splitNames[0], splitNames[1])];
-                        ArchiveFileSource source = subfile.Source as ArchiveFileSource;
-
-                        MemorySource mem = new MemorySource(cached.Data, cached.Metadata, source.Compression, source.Encoding);
-
-#warning need to remove this buffer
-                        //We can't trust the subfile size reading
-                        using (Stream temp = mem.GetStream())
+                        CachedFile cached = FileCache[entry];
+                        
+                        using (Stream output = cached.GetStream())
                         {
-                            handler.WriteString(temp.Length.ToString());
+                            handler.WriteString(cached.Length.ToString());
 
-                            temp.CopyTo(handler.BaseStream);
+                            output.CopyTo(handler.BaseStream);
                         }
                             
                     }

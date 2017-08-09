@@ -23,7 +23,7 @@ namespace PPeXM64
 
         public FileEntry(string Archive, string File)
         {
-            this.Archive = Archive.ToLower();
+            this.Archive = Archive.ToLower().Replace(".pp", "");
             this.File = File.ToLower();
         }
 
