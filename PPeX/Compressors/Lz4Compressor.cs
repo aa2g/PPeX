@@ -9,7 +9,7 @@ namespace PPeX.Compressors
 {
     public class Lz4Compressor : BaseCompressor
     {
-        public override ArchiveFileCompression Compression => ArchiveFileCompression.LZ4;
+        public override ArchiveChunkCompression Compression => ArchiveChunkCompression.LZ4;
 
         protected bool highCompression;
 
@@ -43,7 +43,7 @@ namespace PPeX.Compressors
 
     public class Lz4Decompressor : IDecompressor
     {
-        public ArchiveFileCompression Compression => ArchiveFileCompression.LZ4;
+        public ArchiveChunkCompression Compression => ArchiveChunkCompression.LZ4;
 
         public Stream BaseStream { get; protected set; }
 
@@ -56,8 +56,8 @@ namespace PPeX.Compressors
         {
             MemoryStream buffer = new MemoryStream();
 
-            using (var lz4 = new LZ4.LZ4Stream(buffer, LZ4.LZ4StreamMode.Decompress))
-                BaseStream.CopyTo(lz4);
+            using (var lz4 = new LZ4.LZ4Stream(BaseStream, LZ4.LZ4StreamMode.Decompress))
+                lz4.CopyTo(buffer);
 
             return buffer;
         }
