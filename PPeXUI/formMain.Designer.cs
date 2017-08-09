@@ -69,6 +69,16 @@
             this.label6 = new System.Windows.Forms.Label();
             this.txtFileName = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.lsvChunks = new System.Windows.Forms.ListView();
+            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.lblFileCount = new System.Windows.Forms.ToolStripStatusLabel();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.txtSaveProg = new System.Windows.Forms.TextBox();
             this.prgSaveProgress = new System.Windows.Forms.ProgressBar();
@@ -92,6 +102,8 @@
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numPriority)).BeginInit();
+            this.tabPage4.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numBitrate)).BeginInit();
@@ -304,6 +316,7 @@
             // tabControl1
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
+            this.tabControl1.Controls.Add(this.tabPage4);
             this.tabControl1.Controls.Add(this.tabPage2);
             this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -507,6 +520,84 @@
             this.label5.TabIndex = 0;
             this.label5.Text = "Name:";
             // 
+            // tabPage4
+            // 
+            this.tabPage4.Controls.Add(this.lsvChunks);
+            this.tabPage4.Controls.Add(this.statusStrip1);
+            this.tabPage4.Location = new System.Drawing.Point(4, 22);
+            this.tabPage4.Name = "tabPage4";
+            this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage4.Size = new System.Drawing.Size(554, 281);
+            this.tabPage4.TabIndex = 3;
+            this.tabPage4.Text = "Chunk Viewer";
+            this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // lsvChunks
+            // 
+            this.lsvChunks.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader1,
+            this.columnHeader2,
+            this.columnHeader3,
+            this.columnHeader4,
+            this.columnHeader5,
+            this.columnHeader6});
+            this.lsvChunks.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lsvChunks.GridLines = true;
+            this.lsvChunks.LargeImageList = this.trvImageList;
+            this.lsvChunks.Location = new System.Drawing.Point(3, 3);
+            this.lsvChunks.Name = "lsvChunks";
+            this.lsvChunks.Size = new System.Drawing.Size(548, 253);
+            this.lsvChunks.SmallImageList = this.trvImageList;
+            this.lsvChunks.TabIndex = 0;
+            this.lsvChunks.UseCompatibleStateImageBehavior = false;
+            this.lsvChunks.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader1
+            // 
+            this.columnHeader1.Text = "ID";
+            this.columnHeader1.Width = 51;
+            // 
+            // columnHeader2
+            // 
+            this.columnHeader2.Text = "Decomp. Size";
+            this.columnHeader2.Width = 91;
+            // 
+            // columnHeader3
+            // 
+            this.columnHeader3.Text = "Comp. Size";
+            this.columnHeader3.Width = 86;
+            // 
+            // columnHeader4
+            // 
+            this.columnHeader4.Text = "File Count";
+            this.columnHeader4.Width = 73;
+            // 
+            // columnHeader5
+            // 
+            this.columnHeader5.Text = "Offset";
+            this.columnHeader5.Width = 94;
+            // 
+            // columnHeader6
+            // 
+            this.columnHeader6.Text = "Comp. Type";
+            this.columnHeader6.Width = 93;
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lblFileCount});
+            this.statusStrip1.Location = new System.Drawing.Point(3, 256);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(548, 22);
+            this.statusStrip1.TabIndex = 1;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // lblFileCount
+            // 
+            this.lblFileCount.Name = "lblFileCount";
+            this.lblFileCount.Size = new System.Drawing.Size(93, 17);
+            this.lblFileCount.Text = "Total files: 0 - 0B";
+            // 
             // tabPage2
             // 
             this.tabPage2.Controls.Add(this.txtSaveProg);
@@ -689,6 +780,10 @@
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numPriority)).EndInit();
+            this.tabPage4.ResumeLayout(false);
+            this.tabPage4.PerformLayout();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
             this.tabPage3.ResumeLayout(false);
@@ -752,5 +847,15 @@
         private System.Windows.Forms.ToolStripMenuItem convertxggTowavToolStripMenuItem;
         private System.Windows.Forms.NumericUpDown numPriority;
         private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TabPage tabPage4;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel lblFileCount;
+        private System.Windows.Forms.ListView lsvChunks;
+        private System.Windows.Forms.ColumnHeader columnHeader1;
+        private System.Windows.Forms.ColumnHeader columnHeader2;
+        private System.Windows.Forms.ColumnHeader columnHeader3;
+        private System.Windows.Forms.ColumnHeader columnHeader4;
+        private System.Windows.Forms.ColumnHeader columnHeader5;
+        private System.Windows.Forms.ColumnHeader columnHeader6;
     }
 }

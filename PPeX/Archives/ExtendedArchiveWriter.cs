@@ -61,6 +61,8 @@ namespace PPeX
             this.Name = Name;
             DefaultCompression = ArchiveChunkCompression.Zstandard;
 
+            ChunkSizeLimit = 16 * 1024 * 1024;
+
             leaveOpen = LeaveOpen;
         }
 
@@ -74,7 +76,7 @@ namespace PPeX
             Write(progress);
         }
 
-        protected List<ChunkWriter> AllocateChunks()
+        protected List<ChunkWriter> AllocateChunks(IProgress<Tuple<string, int>> progress)
         {
             List<ChunkWriter> chunks = new List<ChunkWriter>();
             uint ID = 0;
@@ -85,8 +87,12 @@ namespace PPeX
             ChunkWriter currentChunk = new ChunkWriter(ID++, DefaultCompression);
             uint currentSize = 0;
 
+            double total = fileList.Count;
+
             while (fileList.Count > 0)
             {
+                progress.Report(new Tuple<string, int>("", (int)(((total - fileList.Count) * 100) / total)));
+
                 ISubfile file = fileList.Dequeue();
 
                 if (currentChunk.Files.Any(x => Utility.CompareBytes(x.Source.Md5, file.Source.Md5)))
@@ -179,33 +185,35 @@ namespace PPeX
 
 
                 progress.Report(new Tuple<string, int>(
-                                    "Allocating chunks...",
+                                    "Allocating chunks...\r\n",
                                     0));
 
-                List<ChunkWriter> allocatedChunks = AllocateChunks();
+                List<ChunkWriter> allocatedChunks = AllocateChunks(progress);
 
                 int i = 0;
 
                 foreach (ChunkWriter chunk in allocatedChunks)
                 {
-                    //try
-                    //{
+                    i++;
+
+                    try
+                    {
                         //Write the chunk
                         chunk.Write(chunkTableWriter, dataWriter, fileTableWriter);
-                    //}
-                    //catch
-                    //{
+                    }
+                    catch
+                    {
                         //Cancel the write process on error
-                        /*progress.Report(new Tuple<string, int>(
+                        progress.Report(new Tuple<string, int>(
                                     "[" + i + " / " + allocatedChunks.Count + "] Stopped writing chunk id:" + chunk.ID + "\r\n",
-                                    100 * i / allocatedChunks.Count));*/
+                                    100 * i / allocatedChunks.Count));
 
-                        //throw;
-                    //}
+                        throw;
+                    }
                 
                     //Update progress
                     progress.Report(new Tuple<string, int>(
-                                    "[" + i + " / " + Files.Count + "] Written chunk id:" + chunk.ID + " (" + chunk.Files.Count + " files)\r\n",
+                                    "[" + i + " / " + allocatedChunks.Count + "] Written chunk id:" + chunk.ID + " (" + chunk.Files.Count + " files)\r\n",
                                     100 * i / allocatedChunks.Count));
                 }
 
