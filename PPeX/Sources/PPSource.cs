@@ -11,7 +11,7 @@ namespace PPeX
     /// <summary>
     /// A data source from a .pp file.
     /// </summary>
-    public class PPSource : IDataSource
+    public class PPSource : BaseSource
     {
         protected IReadFile subfile;
 
@@ -22,35 +22,21 @@ namespace PPeX
         public PPSource(IReadFile subfile)
         {
             this.subfile = subfile;
-            
-            using (Stream stream = GetStream())
-            {
-                Md5 = Utility.GetMd5(stream);
 
-                Size = (uint)stream.Position;
-            }
+            var pp = subfile as SB3Utility.ppSubfile;
+            Size = pp.size;
         }
-        
-        /// <summary>
-        /// The MD5 hash of the uncompressed data.
-        /// </summary>
-        public byte[] Md5 { get; protected set; }
-        
-        /// <summary>
-        /// The uncompressed size of the data.
-        /// </summary>
-        public uint Size { get; protected set; }
 
         /// <summary>
         /// Returns a stream of uncompressed data.
         /// </summary>
         /// <returns></returns>
-        public Stream GetStream()
+        public override Stream GetStream()
         {
             return subfile.CreateReadStream();
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             
         }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using PPeX.Compressors;
 
 namespace PPeX
 {
@@ -12,7 +13,7 @@ namespace PPeX
     {
         public uint ID { get; protected set; }
 
-        public ArchiveFileCompression Compression { get; protected set; }
+        public ArchiveChunkCompression Compression { get; protected set; }
 
         public uint CRC32C { get; protected set; }
 
@@ -35,7 +36,7 @@ namespace PPeX
             chunk.baseArchive = archive;
 
             chunk.ID = reader.ReadUInt32();
-            chunk.Compression = (ArchiveFileCompression)reader.ReadByte();
+            chunk.Compression = (ArchiveChunkCompression)reader.ReadByte();
             chunk.CRC32C = reader.ReadUInt32();
             chunk.Offset = reader.ReadUInt64();
             chunk.CompressedLength = reader.ReadUInt64();
@@ -72,8 +73,15 @@ namespace PPeX
 
         public Stream GetStream()
         {
+            using (Stream raw = GetRawStream())
+            using (IDecompressor decompressor = CompressorFactory.GetDecompressor(raw, Compression))
+                return decompressor.Decompress();
+        }
+
+        public Stream GetRawStream()
+        {
             Stream stream = new FileStream(baseArchive.Filename, FileMode.Open, FileAccess.Read, FileShare.Read);
-            
+
             return new Substream(stream, (long)Offset, (long)CompressedLength);
         }
 
@@ -85,7 +93,7 @@ namespace PPeX
         {
             uint crc = 0;
 
-            using (Stream source = GetStream())
+            using (Stream source = GetRawStream())
             {
                 byte[] buffer = new byte[Core.Settings.BufferSize];
                 int length = 0;

@@ -25,7 +25,7 @@ namespace PPeX
             return md5.ComputeHash(sub);
         }
 
-        public static long TestCompression(Stream data, ArchiveFileCompression method)
+        public static long TestCompression(Stream data, ArchiveChunkCompression method)
         {
             using (ICompressor compressor = CompressorFactory.GetCompressor(data, method))
             using (MemoryStream temp = new MemoryStream())
@@ -94,6 +94,29 @@ namespace PPeX
                     return false;
 
             return true;
+        }
+    }
+
+    class ByteArrayComparer : IComparer<byte[]>
+    {
+        public int Compare(byte[] x, byte[] y)
+        {
+            if (x.Length > y.Length)
+                return 1;
+
+            if (x.Length < y.Length)
+                return -1;
+
+            for (int i = 0; i < x.Length; i++)
+            {
+                if (x[i] > y[i])
+                    return 1;
+
+                if (x[i] < y[i])
+                    return -1;
+            }
+
+            return 0;
         }
     }
 }

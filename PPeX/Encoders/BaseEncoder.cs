@@ -16,7 +16,7 @@ namespace PPeX.Encoders
             Source = source;
         }
 
-        public abstract ArchiveFileEncoding Encoding { get; }
+        public abstract ArchiveFileType Encoding { get; }
 
         public abstract uint EncodedLength { get; protected set; }
 
@@ -41,7 +41,7 @@ namespace PPeX.Encoders
 
         public byte[] Metadata { get; protected set; }
 
-        public abstract ArchiveFileEncoding Encoding { get; }
+        public abstract ArchiveFileType Encoding { get; }
 
         public abstract Stream Decode();
         public abstract string NameTransform(string original);
@@ -54,26 +54,26 @@ namespace PPeX.Encoders
 
     public static class EncoderFactory
     {
-        public static IEncoder GetEncoder(IDataSource source, ArchiveFileEncoding encoding)
+        public static IEncoder GetEncoder(IDataSource source, ArchiveFileType encoding)
         {
             switch (encoding)
             {
-                case ArchiveFileEncoding.XggAudio:
+                case ArchiveFileType.XggAudio:
                     return new XggEncoder(source, true);
-                case ArchiveFileEncoding.Raw:
+                case ArchiveFileType.Raw:
                     return new PassthroughEncoder(source.GetStream());
                 default:
                     throw new InvalidOperationException("Encoding type is invalid.");
             }
         }
 
-        public static IDecoder GetDecoder(Stream stream, ArchiveFileEncoding encoding)
+        public static IDecoder GetDecoder(Stream stream, ArchiveFileType encoding)
         {
             switch (encoding)
             {
-                case ArchiveFileEncoding.XggAudio:
+                case ArchiveFileType.XggAudio:
                     return new XggDecoder(stream);
-                case ArchiveFileEncoding.Raw:
+                case ArchiveFileType.Raw:
                     return new PassthroughEncoder(stream);
                 default:
                     throw new InvalidOperationException("Encoding type is invalid.");

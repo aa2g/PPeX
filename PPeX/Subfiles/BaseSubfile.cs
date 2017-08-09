@@ -35,6 +35,11 @@ namespace PPeX
         public string Name { get; protected set; }
         
         /// <summary>
+        /// The content type of the subfile.
+        /// </summary>
+        public ArchiveFileType Type { get; protected set; }
+
+        /// <summary>
         /// The data source of the subfile.
         /// </summary>
         public IDataSource Source { get; protected set; }

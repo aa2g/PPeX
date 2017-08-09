@@ -9,7 +9,7 @@ namespace PPeX
 {
     public interface IEncoder : IDisposable
     {
-        ArchiveFileEncoding Encoding { get; }
+        ArchiveFileType Encoding { get; }
 
         Stream Encode();
         uint EncodedLength { get; }
@@ -19,7 +19,7 @@ namespace PPeX
 
     public interface IDecoder : IDisposable
     {
-        ArchiveFileEncoding Encoding { get; }
+        ArchiveFileType Encoding { get; }
 
         Stream Decode();
 

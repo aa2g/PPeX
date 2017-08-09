@@ -78,8 +78,6 @@
             this.txtSaveLocation = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.txtArchiveName = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.cmbArchiveType = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.cmbCompression = new System.Windows.Forms.ComboBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
@@ -519,8 +517,6 @@
             this.tabPage2.Controls.Add(this.txtSaveLocation);
             this.tabPage2.Controls.Add(this.label3);
             this.tabPage2.Controls.Add(this.txtArchiveName);
-            this.tabPage2.Controls.Add(this.label2);
-            this.tabPage2.Controls.Add(this.cmbArchiveType);
             this.tabPage2.Controls.Add(this.label1);
             this.tabPage2.Controls.Add(this.cmbCompression);
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
@@ -609,28 +605,6 @@
             this.txtArchiveName.Name = "txtArchiveName";
             this.txtArchiveName.Size = new System.Drawing.Size(176, 20);
             this.txtArchiveName.TabIndex = 4;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(6, 36);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(73, 13);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "Archive Type:";
-            // 
-            // cmbArchiveType
-            // 
-            this.cmbArchiveType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbArchiveType.FormattingEnabled = true;
-            this.cmbArchiveType.Items.AddRange(new object[] {
-            "Base Archive",
-            "Mod",
-            "BGM Pack"});
-            this.cmbArchiveType.Location = new System.Drawing.Point(89, 33);
-            this.cmbArchiveType.Name = "cmbArchiveType";
-            this.cmbArchiveType.Size = new System.Drawing.Size(121, 21);
-            this.cmbArchiveType.TabIndex = 2;
             // 
             // label1
             // 
@@ -750,8 +724,6 @@
         private System.Windows.Forms.TextBox txtSaveLocation;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox txtArchiveName;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.ComboBox cmbArchiveType;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox cmbCompression;
         private System.Windows.Forms.TextBox txtFileName;

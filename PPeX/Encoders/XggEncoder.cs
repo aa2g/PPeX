@@ -35,7 +35,7 @@ namespace PPeX.Encoders
             PreserveStereo = preserveStereo;
         }
 
-        public override ArchiveFileEncoding Encoding => ArchiveFileEncoding.XggAudio;
+        public override ArchiveFileType Encoding => ArchiveFileType.XggAudio;
 
         public override uint EncodedLength { get; protected set; }
 
@@ -153,7 +153,7 @@ namespace PPeX.Encoders
             
         }
 
-        public override ArchiveFileEncoding Encoding => ArchiveFileEncoding.XggAudio;
+        public override ArchiveFileType Encoding => ArchiveFileType.XggAudio;
 
         protected byte[] internalDecodedData;
 

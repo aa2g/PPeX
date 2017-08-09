@@ -17,7 +17,7 @@ namespace PPeX
         /// The frame size (in seconds) that the Opus encoder should use.
         /// </summary>
         [JsonProperty]
-        public double XggFrameSize = 0.020;
+        public double XggFrameSize = 0.060;
 
         /// <summary>
         /// The bitrate that the Opus encoder should use.

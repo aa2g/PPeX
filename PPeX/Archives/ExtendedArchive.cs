@@ -74,6 +74,8 @@ namespace PPeX
         /// <param name="Filename">The filename of the .ppx file.</param>
         protected void ReadFromFile(string Filename)
         {
+            this.Filename = Filename;
+
             using (FileStream arc = new FileStream(Filename, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (BinaryReader reader = new BinaryReader(arc))
             {
@@ -89,37 +91,36 @@ namespace PPeX
                 if (version != Version)
                     throw new InvalidDataException("Supplied extended PP archive is of an incompatible version.");
 
-                //Check type (and special code)
-                ushort type = reader.ReadUInt16();
-
-                switch (type)
-                {
-                    case 1:
-                    case 2:
-                    case 3:
-                        break;
-                    default:
-                        throw new InvalidDataException("Supplied extended PP archive is of an incompatible type.");
-                }
-
-                //Read the file headers
+                //Read the title
                 ushort strlen = reader.ReadUInt16();
 
                 Title = Encoding.Unicode.GetString(reader.ReadBytes((int)strlen));
 
-                reader.BaseStream.Position = 1024;
+                //Read chunk and file headers
+                ChunkTableOffset = reader.ReadUInt64();
+                FileTableOffset = reader.ReadUInt64();
+                
+
+                reader.BaseStream.Position = (long)ChunkTableOffset;
 
                 uint number = reader.ReadUInt32();
-                uint headerlength = reader.ReadUInt32();
-
-                List<ArchiveFileSource> dupes = new List<ArchiveFileSource>();
 
                 for (int i = 0; i < number; i++)
                 {
-                    var source = new ArchiveFileSource(reader, Filename);
-                    var file = new IsolatedSubfile(source);
+                    var chunk = ExtendedArchiveChunk.ReadFromTable(reader, this);
 
-                    files.Add(file);
+                    chunks.Add(chunk);
+                }
+
+                reader.BaseStream.Position = (long)FileTableOffset;
+
+                number = reader.ReadUInt32();
+                
+                for (int i = 0; i < number; i++)
+                {
+                    var source = ArchiveFileSource.ReadFromTable(reader, this);
+
+                    files.Add(source);
                 }
             }
         }

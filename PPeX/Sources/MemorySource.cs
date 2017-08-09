@@ -21,7 +21,7 @@ namespace PPeX
         /// Creates a new data source from an unprocessed byte array.
         /// </summary>
         /// <param name="data">The byte array to use.</param>
-        public MemorySource(byte[] data) : this(data, new byte[] { }, ArchiveFileCompression.Uncompressed, ArchiveFileEncoding.Raw)
+        public MemorySource(byte[] data) : this(data, ArchiveFileType.Raw)
         {
             using (MemoryStream mem = new MemoryStream(data))
                 Md5 = Utility.GetMd5(mem);
@@ -33,12 +33,9 @@ namespace PPeX
         /// <param name="data">The byte array to use.</param>
         /// <param name="compression">The compression that the byte array has used.</param>
         /// <param name="encoding">The encoding of the data.</param>
-        public MemorySource(byte[] data, byte[] metadata, ArchiveFileCompression compression, ArchiveFileEncoding encoding)
+        public MemorySource(byte[] data, ArchiveFileType encoding)
         {
             DataStream = new MemoryStream(data, 0, data.Length, false, true);
-            Metadata = metadata;
-            Size = (uint)data.Length;
-            Compression = compression;
             Encoding = encoding;
 
             using (Stream mem = GetStream())
@@ -51,25 +48,15 @@ namespace PPeX
         public byte[] Md5 { get; protected set; }
 
         /// <summary>
-        /// Metadata relating to the encoding of the file.
-        /// </summary>
-        public byte[] Metadata { get; protected set; }
-
-        /// <summary>
         /// The uncompressed size of the data.
         /// </summary>
 #warning implement
-        public uint Size { get; protected set; }
-
-        /// <summary>
-        /// The compression method used on the data.
-        /// </summary>
-        public ArchiveFileCompression Compression { get; set; }
+        public uint Size => (uint)DataStream.Length;
 
         /// <summary>
         /// The type of the data.
         /// </summary>
-        public ArchiveFileEncoding Encoding { get; set; }
+        public ArchiveFileType Encoding { get; set; }
         
         /// <summary>
         /// The internal memory stream that contains the data.
@@ -83,8 +70,7 @@ namespace PPeX
         public Stream GetStream()
         {
             using (MemoryStream buffer = new MemoryStream(DataStream.GetBuffer(), false))
-            using (IDecompressor decompressor = CompressorFactory.GetDecompressor(buffer, Compression))
-            using (IDecoder decoder = EncoderFactory.GetDecoder(decompressor.Decompress(), Encoding, Metadata))
+            using (IDecoder decoder = EncoderFactory.GetDecoder(buffer, Encoding))
             using (Stream output = decoder.Decode())
             {
                 MemoryStream temp = new MemoryStream();

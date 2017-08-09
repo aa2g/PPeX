@@ -18,7 +18,7 @@ namespace PPeX.Encoders
 
         public uint EncodedLength => (uint)BaseStream.Length;
 
-        public ArchiveFileEncoding Encoding => ArchiveFileEncoding.Raw;
+        public ArchiveFileType Encoding => ArchiveFileType.Raw;
 
         public Stream Decode()
         {

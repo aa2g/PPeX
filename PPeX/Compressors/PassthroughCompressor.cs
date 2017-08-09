@@ -9,7 +9,7 @@ namespace PPeX.Compressors
 {
     public class PassthroughCompressor : BaseCompressor, IDecompressor
     {
-        public override ArchiveFileCompression Compression => ArchiveFileCompression.Uncompressed;
+        public override ArchiveChunkCompression Compression => ArchiveChunkCompression.Uncompressed;
 
         public PassthroughCompressor(Stream stream) : base(stream, (uint)stream.Length)
         {
