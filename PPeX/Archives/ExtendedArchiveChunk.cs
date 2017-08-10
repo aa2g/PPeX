@@ -23,6 +23,11 @@ namespace PPeX
 
         public ulong UncompressedLength { get; protected set; }
 
+        public uint GlobalFileIndex { get; protected set; }
+
+        public uint LocalFileCount { get; protected set; }
+
+
         protected ExtendedArchive baseArchive;
 
         protected ExtendedArchiveChunk()
@@ -41,6 +46,8 @@ namespace PPeX
             chunk.Offset = reader.ReadUInt64();
             chunk.CompressedLength = reader.ReadUInt64();
             chunk.UncompressedLength = reader.ReadUInt64();
+            chunk.GlobalFileIndex = reader.ReadUInt32();
+            chunk.LocalFileCount = reader.ReadUInt32();
 
             return chunk;
         }

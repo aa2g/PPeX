@@ -217,7 +217,7 @@ namespace PPeX
                         using (MemoryStream compressedData = chunk.CompressData())
                             lock (ArchiveStream)
                             {
-                                chunk.WriteChunkTable(chunkTableWriter, (ulong)ArchiveStream.Position);
+                                chunk.WriteChunkTable(chunkTableWriter, (ulong)ArchiveStream.Position, fileCount);
 
                                 fileCount += (uint)chunk.WriteFileTable(fileTableWriter, fileCount);
                                 
@@ -288,7 +288,7 @@ namespace PPeX
 
             public List<ISubfile> Files = new List<ISubfile>();
 
-            public int WriteFileTable(BinaryWriter fileTableWriter, uint fileCount)
+            public int WriteFileTable(BinaryWriter fileTableWriter, uint fileOffset)
             {
                 ulong offset = 0;
                 List<WriteReciept> reciepts = new List<WriteReciept>();
@@ -319,6 +319,7 @@ namespace PPeX
                     if (reciept != null)
                     {
                         //dupe
+                        fileTableWriter.Write((uint)(fileOffset + reciept.Index));
 
                         fileTableWriter.Write(ID);
                         fileTableWriter.Write(reciept.Offset);
@@ -327,6 +328,7 @@ namespace PPeX
                     else
                     {
                         //not a dupe
+                        fileTableWriter.Write(ArchiveFileSource.CanonLinkID);
 
                         fileTableWriter.Write(ID);
                         fileTableWriter.Write(offset);
@@ -354,7 +356,7 @@ namespace PPeX
 
             protected MemoryStream CachedOutput;
 
-            public void WriteChunkTable(BinaryWriter chunkTableWriter, ulong chunkFileOffset)
+            public void WriteChunkTable(BinaryWriter chunkTableWriter, ulong chunkFileOffset, uint fileOffset)
             {
                 chunkTableWriter.Write(ID);
 
@@ -367,6 +369,9 @@ namespace PPeX
                 chunkTableWriter.Write(chunkFileOffset);
                 chunkTableWriter.Write((ulong)CachedOutput.Length);
                 chunkTableWriter.Write(UncompressedSize);
+
+                chunkTableWriter.Write(fileOffset);
+                chunkTableWriter.Write((uint)Files.Count);
             }
 
             public MemoryStream CompressData()
