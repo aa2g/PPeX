@@ -48,6 +48,10 @@ namespace PPeX
         /// </summary>
         public byte[] Md5 { get; protected set; }
 
+        public const uint CanonLinkID = 0xFFFFFFFF;
+
+        public uint LinkID { get; protected set; }
+
         protected ExtendedArchive baseArchive;
 
         ExtendedArchiveChunk _indexedChunk = null;
@@ -86,6 +90,8 @@ namespace PPeX
             file.Type = (ArchiveFileType)reader.ReadUInt16();
 
             file.Md5 = reader.ReadBytes(16);
+
+            file.LinkID = reader.ReadUInt32();
 
             file.ChunkID = reader.ReadUInt32();
 
