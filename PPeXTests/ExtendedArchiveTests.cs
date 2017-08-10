@@ -13,66 +13,105 @@ namespace PPeX.Tests
     [TestClass()]
     public class ExtendedArchiveTests
     {
-        [TestMethod()]
-        public void CreateAndReadTest()
+        public static byte[] TestData = Encoding.UTF8.GetBytes("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ac purus id diam consectetur fermentum. Etiam nulla nisi, tincidunt sed sagittis nec, finibus vel elit. Pellentesque sodales massa eget tortor eleifend dictum. Ut finibus tellus efficitur nulla hendrerit convallis. Cras sed neque sed tellus luctus vehicula sed in sapien.");
+        public static byte[] TestHash;
+        public static ExtendedArchive TestArchive;
+
+        [ClassInitialize]
+        public static void Initialize(TestContext context)
         {
             FileStream arc = new FileStream("test.ppx", FileMode.Create);
             var writer = new ExtendedArchiveWriter(arc, "test", true);
-
-            byte[] data = Encoding.UTF8.GetBytes("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ac purus id diam consectetur fermentum. Etiam nulla nisi, tincidunt sed sagittis nec, finibus vel elit. Pellentesque sodales massa eget tortor eleifend dictum. Ut finibus tellus efficitur nulla hendrerit convallis. Cras sed neque sed tellus luctus vehicula sed in sapien.");
+            
+            using (var mem = new MemoryStream(TestData))
+                TestHash = Utility.GetMd5(mem);
 
             writer.Files.Add(new Subfile(
-                new MemorySource(data),
+                new MemorySource(TestData),
                     "test1",
                     "t",
                     ArchiveFileType.Raw));
 
             writer.Files.Add(new Subfile(
-                new MemorySource(data),
+                new MemorySource(TestData),
                     "test2",
                     "t",
                     ArchiveFileType.Raw));
 
             writer.Write();
 
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
             arc.Close();
 
-            var archive = new ExtendedArchive("test.ppx");
+            TestArchive = new ExtendedArchive("test.ppx");
+        }
 
-            Assert.AreEqual("test", archive.Title);
+        [TestMethod]
+        public void ArchiveMetadataTest()
+        {
+            Assert.AreEqual("test", TestArchive.Title, "Archive title is incorrect.");
 
-            sw.Stop();
-            Trace.WriteLine("Setup: " + Math.Round(sw.Elapsed.TotalMilliseconds, 4) + "ms");
+            Assert.AreEqual(2, TestArchive.Files.Count, "File count is incorrect.");
 
-            sw.Restart();
-            TimeSpan old = sw.Elapsed;
+            Assert.AreEqual(1, TestArchive.Chunks.Count, "Chunk count is incorrect.");
 
+            Assert.IsTrue(TestArchive.Files.Any(x => x.Name == "test1"), "Archive does not contain file \"test1\".");
 
-            foreach (var file in archive.Files)
+            Assert.IsTrue(TestArchive.Files.Any(x => x.Name == "test2"), "Archive does not contain file \"test2\".");
+        }
+
+        [TestMethod]
+        public void ChunkChecksumTest()
+        {
+            int failed = 0;
+
+            foreach (var chunk in TestArchive.Chunks)
             {
-                using (MemoryStream mem = new MemoryStream())
-                using (Stream source = file.GetStream())
-                {
-                    source.CopyTo(mem);
-                    sw.Stop();
-                    double mbs = ((double)file.Size / (1024 * 1024 * ((sw.Elapsed.TotalMilliseconds - old.TotalMilliseconds) / 1000.0)));
-                    Trace.WriteLine(file.Name + ": " + Math.Round(mbs, 5) + "mb/s");
-                    old = sw.Elapsed;
-
-                    Assert.IsTrue(Utility.CompareBytes(data, mem.ToArray()), "Data is not consistent.");
-
-                    Assert.IsTrue(file.Chunk.VerifyChecksum(), "CRC32C does not match data.");
-
-                    sw.Start();
-                }
-
+                if (!chunk.VerifyChecksum())
+                    failed++;
             }
 
-            sw.Stop();
-            Trace.WriteLine("Total: " + sw.Elapsed.TotalMilliseconds + "ms");
+            Assert.IsTrue(failed == 0, "Chunk checksum does not match data. (" + failed + " / " + TestArchive.Chunks.Count + " failed)");
+        }
+
+        [TestMethod]
+        public void FileHashTest()
+        {
+            int failed = 0;
+
+            foreach (var file in TestArchive.Files)
+            {
+                if (!Utility.CompareBytes(file.Md5, TestHash))
+                    failed++;
+            }
+
+            Assert.IsTrue(failed == 0, "File hash is not consistent. (" + failed + " / " + TestArchive.Files.Count + " failed)");
+        }
+
+        [TestMethod]
+        public void FileDataTest()
+        {
+            int failed = 0;
+
+            foreach (var file in TestArchive.Files)
+            {
+                using (MemoryStream mem = new MemoryStream())
+                using (Stream decomp = file.GetStream())
+                {
+                    decomp.CopyTo(mem);
+
+                    if (!Utility.CompareBytes(mem.ToArray(), TestData))
+                        failed++;
+                }
+            }
+
+            Assert.IsTrue(failed == 0, "File data is not consistent. (" + failed + " / " + TestArchive.Files.Count + " failed)");
+        }
+
+        [ClassCleanup]
+        public static void Cleanup()
+        {
+            if (File.Exists("test.ppx"))
+                File.Delete("test.ppx");
         }
     }
 }
