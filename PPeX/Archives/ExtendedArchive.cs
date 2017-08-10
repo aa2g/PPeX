@@ -57,13 +57,13 @@ namespace PPeX
         /// <summary>
         /// Subfiles that are contained within the extended archive.
         /// </summary>
-        public IReadOnlyCollection<ExtendedArchiveChunk> Chunks => chunks.AsReadOnly();
+        public IReadOnlyList<ExtendedArchiveChunk> Chunks => chunks.AsReadOnly();
 
         protected List<ArchiveFileSource> files = new List<ArchiveFileSource>();
         /// <summary>
         /// Subfiles that are contained within the extended archive.
         /// </summary>
-        public IReadOnlyCollection<ArchiveFileSource> Files => files.AsReadOnly();
+        public IReadOnlyList<ArchiveFileSource> Files => files.AsReadOnly();
 
         protected ulong ChunkTableOffset = 0;
         protected ulong FileTableOffset = 0;
