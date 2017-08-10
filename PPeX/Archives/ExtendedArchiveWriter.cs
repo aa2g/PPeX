@@ -199,7 +199,7 @@ namespace PPeX
 
                 List<ChunkWriter> allocatedChunks = AllocateChunks(progress);
 
-                int i = 1;
+                int i = 0;
 
                 //foreach (ChunkWriter chunk in allocatedChunks)
                 ParallelOptions options = new ParallelOptions
