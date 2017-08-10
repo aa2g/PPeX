@@ -70,7 +70,7 @@ namespace PPeX
             DefaultCompression = ArchiveChunkCompression.Zstandard;
 
             ChunkSizeLimit = 16 * 1024 * 1024;
-            Threads = 2;
+            Threads = 4;
 
             leaveOpen = LeaveOpen;
         }
@@ -141,7 +141,7 @@ namespace PPeX
                     }
 
                     chunks.Add(tempChunk);
-                    break;
+                    continue;
                 }
 
                 if (currentSize + file.Source.Size > ChunkSizeLimit)
@@ -263,6 +263,9 @@ namespace PPeX
                 dataWriter.Write(fileTableOffset);
             }
 
+            System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect();
+
             progress.Report(new Tuple<string, int>("Finished.\n", 100));
         }
 
@@ -272,13 +275,7 @@ namespace PPeX
             public uint ID { get; protected set; }
             public ArchiveChunkCompression Compression { get; protected set; }
             
-            ulong UncompressedSize
-            {
-                get
-                {
-                    return (ulong)Files.Sum(x => x.Size);
-                }
-            }
+            ulong UncompressedSize { get; set; }
 
             public ChunkWriter(uint id, ArchiveChunkCompression compression)
             {
@@ -399,6 +396,8 @@ namespace PPeX
                             file.WriteToStream(uncompressed);
                         }
                     }
+
+                    UncompressedSize = (ulong)uncompressed.Length;
 
                     uncompressed.Position = 0;
 

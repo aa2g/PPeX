@@ -38,7 +38,7 @@ namespace PPeX.Compressors
             switch (compression)
             {
                 case ArchiveChunkCompression.Zstandard:
-                    return new ZstdCompressor(stream, 14);
+                    return new ZstdCompressor(stream, 22);
                 case ArchiveChunkCompression.LZ4:
                     return new Lz4Compressor(stream, true);
                 case ArchiveChunkCompression.Uncompressed:
