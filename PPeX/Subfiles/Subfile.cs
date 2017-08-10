@@ -20,6 +20,24 @@ namespace PPeX
         {
             Type = type;
             OnlyReport = onlyReport;
+
+            using (IEncoder encoder = EncoderFactory.GetEncoder(Source, Type))
+            {
+                Name = encoder.NameTransform(name);
+            }
+        }
+
+        public Subfile(IDataSource source, string name, string archiveName, bool onlyReport = false) : this(source, name, archiveName, ArchiveFileType.Raw, onlyReport)
+        {
+            if (name.EndsWith(".wav"))
+                Type = ArchiveFileType.XggAudio;
+            else
+                Type = ArchiveFileType.Raw;
+
+            using (IEncoder encoder = EncoderFactory.GetEncoder(Source, Type))
+            {
+                Name = encoder.NameTransform(name);
+            }
         }
 
         public override void WriteToStream(Stream stream)

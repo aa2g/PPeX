@@ -528,8 +528,7 @@ namespace PPeXUI
                         ISubfile subfile = new PPeX.Subfile(
                                 holder.Source,
                                 node.Text,
-                                node.Parent.Text,
-                                ArchiveFileType.Raw);
+                                node.Parent.Text);
 
                         writer.Files.Add(subfile);
 
