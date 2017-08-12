@@ -49,7 +49,14 @@ namespace PPeXUI
             cxtItems.Enabled = false;
             IsModified = false;
 
+
+            trvFiles.BeginUpdate();
+
             trvFiles.Nodes.Clear();
+
+            trvFiles.EndUpdate();
+
+
             lsvChunks.Items.Clear();
         }
 
@@ -104,7 +111,6 @@ namespace PPeXUI
                 txtFileSize.Text = "";
                 txtFileType.Text = "";
                 txtFileMD5.Text = "";
-                numPriority.ForeColor = numPriority.BackColor;
             }
             else if (trvFiles.SelectedNode.Tag != null)
             {
@@ -115,9 +121,6 @@ namespace PPeXUI
                 txtFileSize.Text = current.Size.ToString();
                 txtFileType.Text = current.Type;
                 txtFileMD5.Text = current.MD5;
-
-                numPriority.Value = current.Priority;
-                numPriority.ForeColor = SystemColors.WindowText;
             }
             else
             {
@@ -128,28 +131,6 @@ namespace PPeXUI
                 txtFileSize.Text = "";
                 txtFileType.Text = "";
                 txtFileMD5.Text = "";
-
-                int priority = 150;
-                numPriority.Value = priority;
-
-                if (trvFiles.SelectedNode.Nodes.Count > 0)
-                {
-                    TreeNode parent = trvFiles.SelectedNode;
-                    priority = (parent.FirstNode.Tag as SubfileHolder).Priority;
-
-                    numPriority.Value = priority;
-
-                    bool similar = parent.Nodes.Cast<TreeNode>().All(x => (x.Tag as SubfileHolder).Priority == priority);
-
-                    if (similar)
-                    {
-                        numPriority.ForeColor = SystemColors.WindowText;
-                    }
-                    else
-                    {
-                        numPriority.ForeColor = numPriority.BackColor;
-                    }
-                }
             }
 
             isreloading = false;
@@ -496,6 +477,7 @@ namespace PPeXUI
             ExtendedArchiveWriter writer = new ExtendedArchiveWriter(arc, txtArchiveName.Text);
 
             writer.DefaultCompression = (ArchiveChunkCompression)cmbCompression.SelectedIndex;
+            writer.ChunkSizeLimit = (ulong)numChunkSize.Value * 1024 * 1024;
 
             IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>((x) =>
             {
@@ -540,13 +522,15 @@ namespace PPeXUI
                     writer.Write(progress);
 
                     btnSave.DynamicInvoke(() => btnSave.Enabled = true);
-                } 
+                }
+#if !DEBUG
                 catch (Exception ex)
                 {
                     progress.Report(new Tuple<string, int>(
                     "ERROR: " + ex.Message + "\n",
                     100));
                 }
+#endif
                 finally
                 {
                     arc.Close();
@@ -584,18 +568,27 @@ namespace PPeXUI
             IsModified = false;
 
             ExtendedArchive arc = new ExtendedArchive(dialog.FileName);
+            
+            List<TreeNode> parents = new List<TreeNode>();
+
+            trvFiles.BeginUpdate();
 
             foreach (var file in arc.Files)
             {
-                TreeNode parent = trvFiles.Nodes.Cast<TreeNode>().FirstOrDefault(x => x.Text == file.ArchiveName);
+                TreeNode parent = parents.FirstOrDefault(x => x.Text == file.ArchiveName);
 
                 if (parent == null)
+                {
                     parent = trvFiles.Nodes.Add(file.ArchiveName);
+                    parents.Add(parent);
+                }
 
                 TreeNode node = parent.Nodes.Add(file.Name);
                 node.Tag = new SubfileHolder(file, file.Name);
                 SetAutoIcon(node);
             }
+
+            trvFiles.EndUpdate();
 
             foreach (var chunk in arc.Chunks)
             {
@@ -615,41 +608,6 @@ namespace PPeXUI
             Open();
         }
 
-        public byte DeterminePriority(string PPname)
-        {
-            if (PPname.Substring(4, 2) == "06")
-                //UI
-                return 210;
-            else if (PPname.Substring(4, 2) == "08")
-                //backgrounds
-                return 200;
-            else if (
-                PPname.Substring(3, 3) == "e01" ||
-                PPname.Substring(3, 3) == "e03")
-                //character models
-                return 190;
-            else if (
-                PPname.Substring(3, 3) == "p01" ||
-                PPname.Substring(3, 3) == "p03" ||
-                PPname.Substring(3, 3) == "e04")
-                //clothing
-                return 180;
-            else if (PPname.Substring(4, 2) == "07")
-                //music
-                return 170;
-            else if (
-                PPname.Substring(3, 3) == "e02" ||
-                PPname.Substring(3, 4) == "el02")
-                //hairs
-                return 120;
-            else if (PPname.Substring(4, 2) == "05")
-                //personality
-                return 50;
-
-            //default/unknown
-            return 150;
-        }
-
         public void ImportPP(string filename, IProgress<int> progress)
         {
             ppParser pp = new ppParser(filename);
@@ -663,8 +621,6 @@ namespace PPeXUI
                 parent = trvFiles.Nodes.Add(name);
             });
 
-            byte priority = DeterminePriority(name);
-
             int counter = 0;
             foreach (IReadFile file in pp.Subfiles)
             {
@@ -674,7 +630,6 @@ namespace PPeXUI
                 trvFiles.DynamicInvoke(() =>
                 {
                     TreeNode node = parent.Nodes.Add(file.Name);
-                    tag.Priority = priority;
                     node.Tag = tag;
                     SetAutoIcon(node);
                 });
@@ -733,14 +688,12 @@ namespace PPeXUI
             var parent = trvFiles.Nodes.Add(Path.GetFileName(path));
 
             string name = Path.GetFileName(path);
-            byte priority = DeterminePriority(name);
 
             foreach (string file in files)
             {
                 TreeNode node = parent.Nodes.Add(Path.GetFileName(file));
 
                 var tag = new SubfileHolder(new FileSource(file), Path.GetFileName(file));
-                tag.Priority = priority;
                 node.Tag = tag;
                 SetAutoIcon(node);
             }
@@ -893,34 +846,6 @@ namespace PPeXUI
 
             progform.ShowDialog(this);
         }
-
-        private void numPriority_ValueChanged(object sender, EventArgs e)
-        {
-            if (!isreloading && trvFiles.SelectedNode != null)
-            {
-                var node = trvFiles.SelectedNode;
-
-                if (node.Tag == null)
-                {
-                    foreach (TreeNode child in node.Nodes)
-                    {
-                        var current = child.Tag as SubfileHolder;
-
-                        current.Priority = (byte)numPriority.Value;
-                    }
-                }
-                else
-                {
-                    var current = node.Tag as SubfileHolder;
-
-                    current.Priority = (byte)numPriority.Value;
-                }
-
-                IsModified = true;
-
-                ReloadInfo();
-            }
-        }
     }
 
     public class SubfileHolder
@@ -929,7 +854,6 @@ namespace PPeXUI
         {
             Source = source;
             Name = name;
-            Priority = 150;
         }
 
         public IDataSource Source;
@@ -954,8 +878,6 @@ namespace PPeXUI
         }
 
         public string InternalName { get; protected set; }
-
-        public byte Priority { get; set; }
 
         public string Type
         {
