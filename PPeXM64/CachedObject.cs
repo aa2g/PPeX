@@ -36,7 +36,7 @@ namespace PPeXM64
             {
                 Data = new byte[BaseChunk.CompressedLength];
 
-                using (Stream fstream = BaseChunk.GetStream())
+                using (Stream fstream = BaseChunk.GetRawStream())
                 {
                     fstream.Read(Data, 0, (int)BaseChunk.CompressedLength);
                 }
@@ -51,19 +51,24 @@ namespace PPeXM64
             }
         }
 
-        protected Stream decompress(byte[] data, int offset, int length)
+        protected Stream decompress(int offset, int length)
         {
             lock (_allocLock)
             {
-                if (data == null)
+                if (Data == null)
                     Allocate();
+
+                if (length < 0)
+                    length = Data.Length;
 
                 MemoryStream output = new MemoryStream();
 
-                using (MemoryStream input = new MemoryStream(data, offset, length))
+                using (MemoryStream input = new MemoryStream(Data))
                 using (IDecompressor decompressor = CompressorFactory.GetDecompressor(input, BaseChunk.Compression))
                 using (Stream decomp = decompressor.Decompress())
-                    decomp.CopyTo(output);
+                    decomp.CopyTo(output, offset, length);
+
+                Accesses++;
 
                 output.Position = 0;
                 return output;
@@ -73,12 +78,12 @@ namespace PPeXM64
 
         public Stream GetStream()
         {
-            return decompress(Data, 0, Data.Length);
+            return decompress(0, -1);
         }
 
         public Stream GetStream(int offset, int length)
         {
-            return decompress(Data, offset, length);
+            return decompress(offset, length);
         }
     }
 
@@ -117,10 +122,11 @@ namespace PPeXM64
 
         public Stream GetStream()
         {
-            using (IDecoder decoder = EncoderFactory.GetDecoder(Chunk.GetStream(Offset, Length), Type))
-            {
-                return decoder.Decode();
-            }
+            //using (IDecoder decoder = EncoderFactory.GetDecoder(Chunk.GetStream(Offset, Length), Type))
+            IDecoder decoder = EncoderFactory.GetDecoder(Chunk.GetStream(Offset, Length), Type);
+            //{
+            return decoder.Decode();
+            //}
         }
     }
 }
