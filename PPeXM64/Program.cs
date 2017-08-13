@@ -13,7 +13,7 @@ namespace PPeXM64
     public class Program
     {
         public static List<ExtendedArchive> LoadedArchives = new List<ExtendedArchive>();
-        public static List<CachedChunk> ChunkCache = new List<CachedChunk>();
+        public static Dictionary<int, CachedChunk> ChunkCache = new Dictionary<int, CachedChunk>();
         public static Dictionary<FileEntry, CachedFile> FileCache = new Dictionary<FileEntry, CachedFile>();
 
         public static bool LogFiles = false;
@@ -61,7 +61,7 @@ namespace PPeXM64
 
                     foreach (var file in archive.Files)
                     {
-                        FileCache[new FileEntry(file.ArchiveName, file.Name)] = new CachedFile(file, ChunkCache.First(x => x.ID == file.ChunkID));
+                        FileCache[new FileEntry(file.ArchiveName, file.Name)] = new CachedFile(file, ChunkCache.Values.First(x => x.ID == file.ChunkID));
                     }
 
                     Console.WriteLine("Loaded \"" + archive.Title + "\" (" + archive.Files.Count + " files)");
@@ -75,9 +75,9 @@ namespace PPeXM64
             Console.WriteLine("Finished loading " + LoadedArchives.Count + " archive(s)");
 
             IsLoaded = true;
-            
+
             string line;
-            
+
             //Handle arguments from the user
             while (true)
             {
@@ -95,6 +95,7 @@ namespace PPeXM64
                         break;
                     case "size":
                         Console.WriteLine(Utility.GetBytesReadable(LoadedMemorySize));
+                        Console.WriteLine(ChunkCache.Values.Count(x => x.Data != null) + " chunks loaded");
                         break;
                     case "trim":
                         Console.WriteLine(Utility.GetBytesReadable(LoadedMemorySize));
@@ -108,7 +109,21 @@ namespace PPeXM64
         /// <summary>
         /// The total amount of memory used by cached data.
         /// </summary>
-        public static long LoadedMemorySize => ChunkCache.Sum(x => (long)x.Data?.LongLength);
+        public static long LoadedMemorySize
+        {
+            get
+            {
+                long size = 0;
+
+                foreach (var chunk in ChunkCache.Values)
+                {
+                    if (chunk.Data != null)
+                        size += chunk.Data.LongLength;
+                }
+
+                return size;
+            }
+        }
 
         /// <summary>
         /// Trims memory using a generation-based prioritizer.
@@ -120,7 +135,7 @@ namespace PPeXM64
             {
                 long loadedDiff = LoadedMemorySize;
 
-                IOrderedEnumerable<CachedChunk> sortedChunks = ChunkCache.AsEnumerable().OrderBy(x => x.Accesses);
+                IOrderedEnumerable<CachedChunk> sortedChunks = ChunkCache.Values.Where(x => x.Data != null).OrderBy(x => x.Accesses);
 
                 long accumulatedSize = 0;
 
@@ -184,8 +199,10 @@ namespace PPeXM64
                             handler.WriteString(cached.Length.ToString());
 
                             output.CopyTo(handler.BaseStream);
+
+                            output.Position = 0;
+                            File.WriteAllBytes("B:\\test.obj", (output as MemoryStream).ToArray());
                         }
-                            
                     }
                 }
             }

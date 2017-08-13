@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -59,6 +60,28 @@ namespace PPeXM64
                 @"HKEY_CURRENT_USER\SOFTWARE\illusion\AA2Play",
                 "INSTALLDIR",
                 "");
+        }
+
+        public static void CopyTo(this Stream input, Stream output, long offset, int length)
+        {
+            int remaining = length;
+            byte[] buffer = new byte[4096];
+
+            input.Position = offset;
+
+            while (remaining > 0)
+            {
+                int toRead = Math.Min(remaining, 4096);
+
+                int read = input.Read(buffer, 0, toRead);
+
+                if (read <= 0)
+                    return;
+
+                output.Write(buffer, 0, read);
+
+                remaining -= read;
+            }
         }
     }
 }
