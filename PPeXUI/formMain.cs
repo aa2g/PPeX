@@ -41,6 +41,15 @@ namespace PPeXUI
         private void formMain_Load(object sender, EventArgs e)
         {
             cmbCompression.SelectedIndex = 2;
+
+            //Find the physical amount of cores
+            int coreCount = 0;
+            foreach (var item in new System.Management.ManagementObjectSearcher("Select * from Win32_Processor").Get())
+            {
+                coreCount += int.Parse(item["NumberOfCores"].ToString());
+            }
+
+            numThreads.Value = Math.Min(8, coreCount);
         }
 
         public void CloseFile()
@@ -478,6 +487,7 @@ namespace PPeXUI
 
             writer.DefaultCompression = (ArchiveChunkCompression)cmbCompression.SelectedIndex;
             writer.ChunkSizeLimit = (ulong)numChunkSize.Value * 1024 * 1024;
+            writer.Threads = (int)numThreads.Value;
 
             IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>((x) =>
             {
