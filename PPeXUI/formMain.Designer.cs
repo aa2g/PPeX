@@ -52,8 +52,6 @@
             this.convertxggTowavToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.numPriority = new System.Windows.Forms.NumericUpDown();
-            this.label10 = new System.Windows.Forms.Label();
             this.lsvSource = new System.Windows.Forms.ListView();
             this.btnTestCompr = new System.Windows.Forms.Button();
             this.txtFileProg = new System.Windows.Forms.TextBox();
@@ -91,6 +89,10 @@
             this.label1 = new System.Windows.Forms.Label();
             this.cmbCompression = new System.Windows.Forms.ComboBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.numThreads = new System.Windows.Forms.NumericUpDown();
+            this.label11 = new System.Windows.Forms.Label();
+            this.numChunkSize = new System.Windows.Forms.NumericUpDown();
+            this.label2 = new System.Windows.Forms.Label();
             this.numBitrate = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -101,11 +103,12 @@
             this.toolStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numPriority)).BeginInit();
             this.tabPage4.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numThreads)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numChunkSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numBitrate)).BeginInit();
             this.SuspendLayout();
             // 
@@ -328,8 +331,6 @@
             // 
             // tabPage1
             // 
-            this.tabPage1.Controls.Add(this.numPriority);
-            this.tabPage1.Controls.Add(this.label10);
             this.tabPage1.Controls.Add(this.lsvSource);
             this.tabPage1.Controls.Add(this.btnTestCompr);
             this.tabPage1.Controls.Add(this.txtFileProg);
@@ -352,33 +353,6 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Properties";
             this.tabPage1.UseVisualStyleBackColor = true;
-            // 
-            // numPriority
-            // 
-            this.numPriority.Increment = new decimal(new int[] {
-            10,
-            0,
-            0,
-            0});
-            this.numPriority.Location = new System.Drawing.Point(53, 139);
-            this.numPriority.Maximum = new decimal(new int[] {
-            255,
-            0,
-            0,
-            0});
-            this.numPriority.Name = "numPriority";
-            this.numPriority.Size = new System.Drawing.Size(57, 20);
-            this.numPriority.TabIndex = 16;
-            this.numPriority.ValueChanged += new System.EventHandler(this.numPriority_ValueChanged);
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(6, 141);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(41, 13);
-            this.label10.TabIndex = 15;
-            this.label10.Text = "Priority:";
             // 
             // lsvSource
             // 
@@ -721,6 +695,10 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.numThreads);
+            this.tabPage3.Controls.Add(this.label11);
+            this.tabPage3.Controls.Add(this.numChunkSize);
+            this.tabPage3.Controls.Add(this.label2);
             this.tabPage3.Controls.Add(this.numBitrate);
             this.tabPage3.Controls.Add(this.label9);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
@@ -729,6 +707,75 @@
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Options";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // numThreads
+            // 
+            this.numThreads.Location = new System.Drawing.Point(135, 59);
+            this.numThreads.Maximum = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+            this.numThreads.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numThreads.Name = "numThreads";
+            this.numThreads.ReadOnly = true;
+            this.numThreads.Size = new System.Drawing.Size(82, 20);
+            this.numThreads.TabIndex = 3;
+            this.numThreads.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(6, 61);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(108, 13);
+            this.label11.TabIndex = 0;
+            this.label11.Text = "Compression threads:";
+            // 
+            // numChunkSize
+            // 
+            this.numChunkSize.Increment = new decimal(new int[] {
+            4,
+            0,
+            0,
+            0});
+            this.numChunkSize.Location = new System.Drawing.Point(135, 33);
+            this.numChunkSize.Maximum = new decimal(new int[] {
+            64,
+            0,
+            0,
+            0});
+            this.numChunkSize.Minimum = new decimal(new int[] {
+            4,
+            0,
+            0,
+            0});
+            this.numChunkSize.Name = "numChunkSize";
+            this.numChunkSize.ReadOnly = true;
+            this.numChunkSize.Size = new System.Drawing.Size(82, 20);
+            this.numChunkSize.TabIndex = 3;
+            this.numChunkSize.Value = new decimal(new int[] {
+            16,
+            0,
+            0,
+            0});
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(6, 35);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(83, 13);
+            this.label2.TabIndex = 0;
+            this.label2.Text = "Block size (MB):";
             // 
             // numBitrate
             // 
@@ -779,7 +826,6 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numPriority)).EndInit();
             this.tabPage4.ResumeLayout(false);
             this.tabPage4.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
@@ -788,6 +834,8 @@
             this.tabPage2.PerformLayout();
             this.tabPage3.ResumeLayout(false);
             this.tabPage3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numThreads)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numChunkSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numBitrate)).EndInit();
             this.ResumeLayout(false);
 
@@ -845,8 +893,6 @@
         private System.Windows.Forms.ListView lsvSource;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem convertxggTowavToolStripMenuItem;
-        private System.Windows.Forms.NumericUpDown numPriority;
-        private System.Windows.Forms.Label label10;
         private System.Windows.Forms.TabPage tabPage4;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel lblFileCount;
@@ -857,5 +903,9 @@
         private System.Windows.Forms.ColumnHeader columnHeader4;
         private System.Windows.Forms.ColumnHeader columnHeader5;
         private System.Windows.Forms.ColumnHeader columnHeader6;
+        private System.Windows.Forms.NumericUpDown numChunkSize;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.NumericUpDown numThreads;
+        private System.Windows.Forms.Label label11;
     }
 }
