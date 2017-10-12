@@ -34,11 +34,13 @@ namespace PPeXM64
         {
             lock (_allocLock)
             {
-                Data = new byte[BaseChunk.CompressedLength];
+                Data = new byte[BaseChunk.UncompressedLength];
 
                 using (Stream fstream = BaseChunk.GetRawStream())
+                using (IDecompressor decompressor = CompressorFactory.GetDecompressor(fstream, BaseChunk.Compression))
+                using (Stream decomp = decompressor.Decompress())
                 {
-                    fstream.Read(Data, 0, (int)BaseChunk.CompressedLength);
+                    decomp.Read(Data, 0, (int)BaseChunk.UncompressedLength);
                 }
             }
         }
@@ -55,6 +57,7 @@ namespace PPeXM64
         {
             lock (_allocLock)
             {
+                /*
                 if (Data == null)
                     Allocate();
 
@@ -72,8 +75,14 @@ namespace PPeXM64
 
                 output.Position = 0;
                 return output;
+                */
+
+                if (Data == null)
+                    Allocate();
+
+                return new MemoryStream(Data, offset, length);
             }
-                
+
         }
 
         public Stream GetStream()

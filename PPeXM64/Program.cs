@@ -199,9 +199,6 @@ namespace PPeXM64
                             handler.WriteString(cached.Length.ToString());
 
                             output.CopyTo(handler.BaseStream);
-
-                            output.Position = 0;
-                            File.WriteAllBytes("B:\\test.obj", (output as MemoryStream).ToArray());
                         }
                     }
                 }
