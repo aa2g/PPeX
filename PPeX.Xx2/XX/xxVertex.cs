@@ -9,7 +9,7 @@ namespace PPeX.Xx2
 {
     public class xxVertex
     {
-        public short Index;
+        public ushort Index;
 
         public float[] Position = new float[3];
 
@@ -25,7 +25,7 @@ namespace PPeX.Xx2
 
         internal xxVertex(BinaryReader reader)
         {
-            Index = reader.ReadInt16();
+            Index = reader.ReadUInt16();
 
             for (int i = 0; i < 3; i++)
                 Position[i] = reader.ReadSingle();

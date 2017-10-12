@@ -40,10 +40,7 @@ namespace PPeX.Xx2
                 WriteMesh(writer, mesh);
 
             writer.Write(obj.DuplicateVerticies.Count);
-
-
-#warning sorting
-            obj.DuplicateVerticies = obj.DuplicateVerticies.OrderBy(x => x.Position.Sum()).ToList();
+            
 
             WriteVerticies(writer, obj.DuplicateVerticies);
 
@@ -79,20 +76,17 @@ namespace PPeX.Xx2
 
             writer.Write(mesh.Verticies.Count);
 
-#warning sorting
-
-            mesh.Verticies = mesh.Verticies.OrderBy(x => x.Index).ToList();
-
             WriteVerticies(writer, mesh.Verticies);
 
-#warning sorting
-            mesh.Faces = mesh.Faces.OrderBy(x => x).ToArray();
 
             writer.Write(IntegerEncoder.Encode(mesh.Faces));
         }
 
         protected void WriteVerticies(BinaryWriter writer, List<xxVertex> verticies)
         {
+            if (verticies.Count == 0)
+                return;
+
             //encode indicies
             writer.Write(IntegerEncoder.Encode(verticies.Select(x => x.Index).ToArray()));
 
@@ -131,7 +125,7 @@ namespace PPeX.Xx2
             //write bone indicies
             for (int i = 0; i < verticies.Count; i++)
             {
-                writer.Write(verticies[i].Unknown);
+                writer.Write(verticies[i].BoneIndicies);
             }
 
             //write unknowns
