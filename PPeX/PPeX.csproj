@@ -105,6 +105,10 @@
       <Project>{838bdb0b-5eb1-4c1e-9026-0a8842ac00c6}</Project>
       <Name>OpusWrapper</Name>
     </ProjectReference>
+    <ProjectReference Include="..\PPeX.Xx2\PPeX.Xx2.csproj">
+      <Project>{43858100-25a4-4982-b206-b0aac8fd533e}</Project>
+      <Name>PPeX.Xx2</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SB3UtilityPP\SB3UtilityPP.csproj">
       <Project>{5647b104-8f58-4867-b849-dac65d5243bd}</Project>
       <Name>SB3UtilityPP</Name>
