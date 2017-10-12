@@ -13,7 +13,7 @@ namespace PPeX.Xx2
 
         public short[] Faces;
 
-        public List<xxVertex> Vertexes = new List<xxVertex>();
+        public List<xxVertex> Verticies = new List<xxVertex>();
 
         internal xxMeshInfo(BinaryReader reader, int version)
         {
@@ -35,7 +35,7 @@ namespace PPeX.Xx2
 
             if (version >= 4)
                 for (int i = 0; i < vertexCount; i++)
-                    Vertexes.Add(new xxVertex(reader));
+                    Verticies.Add(new xxVertex(reader));
 
             if (version >= 5)
                 Unknowns.Add(reader.ReadBytes(20));
@@ -56,7 +56,7 @@ namespace PPeX.Xx2
             {
                 Unknowns.Add(reader.ReadBytes(1));
 
-                Unknowns.Add(Encoding.ASCII.GetBytes(reader.ReadEncryptedStringInt()));
+                Unknowns.Add(Encoding.ASCII.GetBytes(reader.ReadEncryptedString()));
                 //uint unknownLength = reader.ReadUInt32();
                 //Unknowns.Add(BitConverter.GetBytes(unknownLength));
 
