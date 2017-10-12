@@ -9,15 +9,15 @@ namespace PPeX.Xx2
 {
     public class xxBone
     {
-        string Name;
+        public string Name;
 
-        int Index;
+        public int Index;
 
         public float[,] Transforms = new float[4, 4];
 
         internal xxBone(BinaryReader reader)
         {
-            Name = reader.ReadEncryptedStringInt();
+            Name = reader.ReadEncryptedString();
             Index = reader.ReadInt32();
 
             for (int x = 0; x < 4; x++)

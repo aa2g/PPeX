@@ -40,12 +40,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="xxBone.cs" />
-    <Compile Include="xxMeshInfo.cs" />
-    <Compile Include="xxObject.cs" />
-    <Compile Include="xxParser.cs" />
+    <Compile Include="EncoderCommon.cs" />
+    <Compile Include="FloatEncoder.cs" />
+    <Compile Include="IntegerEncoder.cs" />
+    <Compile Include="Xx2File.cs" />
+    <Compile Include="Xx2Writer.cs" />
+    <Compile Include="XX\xxBone.cs" />
+    <Compile Include="XX\xxMeshInfo.cs" />
+    <Compile Include="XX\xxObject.cs" />
+    <Compile Include="XX\xxParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="xxVertex.cs" />
+    <Compile Include="XX\xxVertex.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="XXFormatFinal.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
