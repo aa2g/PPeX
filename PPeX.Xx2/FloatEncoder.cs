@@ -108,5 +108,22 @@ namespace PPeX.Xx2
 
             return values;
         }
+
+        public static byte[] Encode(float[] floats, int precision)
+        {
+            uint[] values = Quantize(floats, precision);
+
+            List<byte> output = new List<byte>();
+
+            //write offset
+            output.AddRange(BitConverter.GetBytes(floats.Min()));
+
+            //write multiplier
+            output.AddRange(BitConverter.GetBytes(floats.Max() - floats.Min()));
+
+            output.AddRange(IntegerEncoder.Encode(values, false));
+
+            return output.ToArray();
+        }
     }
 }
