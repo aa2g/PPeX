@@ -11,7 +11,7 @@ namespace PPeX.Xx2
     {
         public List<byte[]> Unknowns = new List<byte[]>();
 
-        public short[] Faces;
+        public ushort[] Faces;
 
         public List<xxVertex> Verticies = new List<xxVertex>();
 
@@ -26,10 +26,10 @@ namespace PPeX.Xx2
 
             int faceCount = reader.ReadInt32();
 
-            Faces = new short[faceCount];
+            Faces = new ushort[faceCount];
 
             for (int i = 0; i < faceCount; i++)
-                Faces[i] = reader.ReadInt16();
+                Faces[i] = reader.ReadUInt16();
 
             int vertexCount = reader.ReadInt32();
 

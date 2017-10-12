@@ -8,14 +8,14 @@ namespace PPeX.Xx2
 {
     public class IntegerEncoder
     {
-        public static byte[] Encode(int[] values)
+        public static byte[] Encode(uint[] values, bool zigzag = true)
         {
-            int lastValue = 0;
+            uint lastValue = 0;
             int[] deltas = new int[values.Length];
 
             for (int i = 0; i < values.Length; i++)
             {
-                deltas[i] = values[i] - lastValue;
+                deltas[i] = (int)(values[i] - lastValue);
 
                 lastValue = values[i];
             }
@@ -24,16 +24,19 @@ namespace PPeX.Xx2
 
             for (int i = 0; i < deltas.Length; i++)
             {
-                encoded.AddRange(EncoderCommon.ZigzagFull(deltas[i]));
+                if (zigzag)
+                    encoded.AddRange(EncoderCommon.ZigzagFull(deltas[i]));
+                else
+                    encoded.AddRange(EncoderCommon.EncodeFull((uint)deltas[i]));
             }
 
             return encoded.ToArray();
         }
 
 
-        public static byte[] Encode(short[] values)
+        public static byte[] Encode(ushort[] values, bool zigzag = true)
         {
-            short lastValue = 0;
+            ushort lastValue = 0;
             int[] deltas = new int[values.Length];
 
             for (int i = 0; i < values.Length; i++)
@@ -47,7 +50,10 @@ namespace PPeX.Xx2
 
             for (int i = 0; i < deltas.Length; i++)
             {
-                encoded.AddRange(EncoderCommon.ZigzagFull(deltas[i]));
+                if (zigzag)
+                    encoded.AddRange(EncoderCommon.ZigzagFull(deltas[i]));
+                else
+                    encoded.AddRange(EncoderCommon.EncodeFull((uint)deltas[i]));
             }
 
             return encoded.ToArray();
