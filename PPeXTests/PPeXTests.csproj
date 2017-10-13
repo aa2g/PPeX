@@ -73,8 +73,13 @@
     <Compile Include="PP2Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CachedObjectTests.cs" />
+    <Compile Include="Xx2Tests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\PPeX.Xx2\PPeX.Xx2.csproj">
+      <Project>{43858100-25a4-4982-b206-b0aac8fd533e}</Project>
+      <Name>PPeX.Xx2</Name>
+    </ProjectReference>
     <ProjectReference Include="..\PPeXM64\PPeXM64.csproj">
       <Project>{10f63d2e-61aa-4a1f-badc-8b8aa6ece5d9}</Project>
       <Name>PPeXM64</Name>
