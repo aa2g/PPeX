@@ -14,10 +14,13 @@ namespace PPeX.Xx2
 
         public byte[] UnencodedData;
 
-        public Xx2File(int version, xxObject root, byte[] otherData)
+        public byte[] Unknown;
+
+        public Xx2File(int version, xxObject root, byte[] unknown, byte[] otherData)
         {
             Version = version;
             RootObject = root;
+            Unknown = unknown;
             UnencodedData = otherData;
         }
 
@@ -25,9 +28,8 @@ namespace PPeX.Xx2
         {
             Version = parser.Version;
             RootObject = parser.RootObject;
+            Unknown = parser.Unknown;
             UnencodedData = parser.UnencodedData;
         }
-
-        
     }
 }

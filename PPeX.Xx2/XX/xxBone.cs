@@ -24,5 +24,10 @@ namespace PPeX.Xx2
                 for (int y = 0; y < 4; y++)
                     Transforms[x, y] = reader.ReadSingle();
         }
+
+        internal xxBone()
+        {
+
+        }
     }
 }

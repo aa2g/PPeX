@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +12,24 @@ namespace PPeX.Xx2
         public bool Sign;
         public byte Exponent;
         public int Mantissa;
+
+        public static explicit operator float(FloatComponent component)
+        {
+            int reconstructed = 0;
+
+            if (component.Sign)
+                reconstructed |= 0x1;
+
+            reconstructed <<= 8;
+
+            reconstructed |= component.Exponent;
+
+            reconstructed <<= 23;
+
+            reconstructed |= component.Mantissa;
+
+            return BitConverter.ToSingle(BitConverter.GetBytes(reconstructed).Reverse().ToArray(), 0);
+        }
     }
 
     public static class FloatEncoder
@@ -42,8 +61,10 @@ namespace PPeX.Xx2
         {
             List<byte> encoded = new List<byte>();
 
+            //write dummy precision
+            encoded.Add(0);
+
             //encode signs
-            
             for (int i = 0; i < values.Length; i++)
             {
                 if (!values[i].Sign)
@@ -53,38 +74,42 @@ namespace PPeX.Xx2
             }
 
             //encode exponents
-            byte lastExponent = 0;
-            int[] expDeltas = new int[values.Length];
-
-            for (int i = 0; i < values.Length; i++)
-            {
-                expDeltas[i] = values[i].Exponent - lastExponent;
-
-                lastExponent = values[i].Exponent;
-            }
-            
-            for (int i = 0; i < expDeltas.Length; i++)
-            {
-                encoded.AddRange(EncoderCommon.ZigzagHalf(expDeltas[i]));
-            }
+            encoded.AddRange(IntegerEncoder.Encode(values.Select(x => x.Exponent).ToArray(), true, true));
 
             //encode mantissas
-            int lastMantissa = 0;
-            int[] mantissaDeltas = new int[values.Length];
-
-            for (int i = 0; i < values.Length; i++)
-            {
-                mantissaDeltas[i] = values[i].Mantissa - lastMantissa;
-
-                lastMantissa = values[i].Mantissa;
-            }
-
-            for (int i = 0; i < expDeltas.Length; i++)
-            {
-                encoded.AddRange(EncoderCommon.EncodeHalf((uint)mantissaDeltas[i]));
-            }
+            encoded.AddRange(IntegerEncoder.Encode(values.Select(x => (uint)x.Mantissa).ToArray(), false, true));
 
             return encoded.ToArray();
+        }
+
+        static float[] DecodeLossless(BinaryReader reader, int count)
+        {
+            FloatComponent[] decoded = new FloatComponent[count];
+
+            //decode signs
+            for (int i = 0; i < count; i++)
+            {
+                decoded[i].Sign = reader.ReadByte() == 1;
+            }
+
+            //decode exponents
+            uint[] exponents = IntegerEncoder.DecodeHalf(reader, count, true);
+
+            for (int i = 0; i < count; i++)
+            {
+                decoded[i].Exponent = (byte)exponents[i];
+            }
+
+            //decode mantissas
+
+            uint[] mantissas = IntegerEncoder.DecodeHalf(reader, count, false);
+
+            for (int i = 0; i < count; i++)
+            {
+                decoded[i].Mantissa = (int)mantissas[i];
+            }
+
+            return decoded.Select(x => (float)x).ToArray();
         }
 
         public static uint[] Quantize(float[] floats, int precision)
@@ -101,7 +126,7 @@ namespace PPeX.Xx2
             {
                 float value = floats[i] - minimum;
 
-                float result = value * largest / total;
+                float result = (value * largest) / total;
 
                 values[i] = (uint)(Math.Round(result, MidpointRounding.AwayFromZero));
             }
@@ -111,9 +136,15 @@ namespace PPeX.Xx2
 
         public static byte[] Encode(float[] floats, int precision)
         {
+            if (precision == 0)
+                return Encode(floats); //fallback to lossless method
+
             uint[] values = Quantize(floats, precision);
 
             List<byte> output = new List<byte>();
+            
+            //write precision
+            output.Add((byte)precision);
 
             //write offset
             output.AddRange(BitConverter.GetBytes(floats.Min()));
@@ -124,6 +155,36 @@ namespace PPeX.Xx2
             output.AddRange(IntegerEncoder.Encode(values, false));
 
             return output.ToArray();
+        }
+
+        static float[] DecodeLossy(BinaryReader reader, int count, byte precision)
+        {
+            //read offset
+            float offset = reader.ReadSingle();
+
+            //read multiplier
+            float multiplier = reader.ReadSingle();
+
+            uint[] values = IntegerEncoder.DecodeFull(reader, count, false);
+
+            //calculate largest within precision
+            uint largest = (uint)((2 << precision) - 1);
+
+            //calculate original float
+            float[] result = values.Select(x =>
+                (((float)x / largest) * multiplier) + offset).ToArray();
+
+            return result;
+        }
+
+        public static float[] Decode(BinaryReader reader, int count)
+        {
+            byte precision = reader.ReadByte();
+
+            if (precision == 0)
+                return DecodeLossless(reader, count);
+            else
+                return DecodeLossy(reader, count, precision);
         }
     }
 }

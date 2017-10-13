@@ -9,6 +9,19 @@ namespace PPeX.Xx2
 {
     public class Xx2Writer
     {
+        public int Precision { get; set; }
+
+        public Xx2Writer()
+        {
+            Precision = 0;
+        }
+
+        public Xx2Writer(int precision)
+        {
+            Precision = precision;
+        }
+
+
         public void Write(Xx2File file, string filename)
         {
             using (FileStream stream = new FileStream(filename, FileMode.Create))
@@ -16,7 +29,16 @@ namespace PPeX.Xx2
             {
                 writer.Write(file.Version);
 
+
+                writer.Write(file.Unknown.Length);
+
+                writer.Write(file.Unknown);
+
+
                 WriteObject(writer, file.RootObject);
+
+
+                writer.Write(file.UnencodedData.Length);
 
                 writer.Write(file.UnencodedData);
             }
@@ -39,8 +61,8 @@ namespace PPeX.Xx2
             foreach (var mesh in obj.Meshes)
                 WriteMesh(writer, mesh);
 
+
             writer.Write(obj.DuplicateVerticies.Count);
-            
 
             WriteVerticies(writer, obj.DuplicateVerticies);
 
@@ -48,7 +70,7 @@ namespace PPeX.Xx2
 
             for (int x = 0; x < 4; x++)
                 for (int y = 0; x < 4; x++)
-                    transforms[x * 4 + y] = obj.Transforms[x, y];
+                    transforms[(x * 4) + y] = obj.Transforms[x, y];
 
 
             writer.Write(FloatEncoder.Encode(transforms));
@@ -79,6 +101,8 @@ namespace PPeX.Xx2
             WriteVerticies(writer, mesh.Verticies);
 
 
+            writer.Write(mesh.Faces.Length);
+
             writer.Write(IntegerEncoder.Encode(mesh.Faces));
         }
 
@@ -95,7 +119,7 @@ namespace PPeX.Xx2
             {
                 float[] data = verticies.Select(x => x.Position[i]).ToArray();
 
-                writer.Write(FloatEncoder.Encode(data));
+                writer.Write(FloatEncoder.Encode(data, Precision));
             }
 
             //encode each normal collated
@@ -103,7 +127,7 @@ namespace PPeX.Xx2
             {
                 float[] data = verticies.Select(x => x.Normal[i]).ToArray();
 
-                writer.Write(FloatEncoder.Encode(data));
+                writer.Write(FloatEncoder.Encode(data, Precision));
             }
 
             //encode each weight collated
@@ -111,7 +135,7 @@ namespace PPeX.Xx2
             {
                 float[] data = verticies.Select(x => x.Weights[i]).ToArray();
 
-                writer.Write(FloatEncoder.Encode(data));
+                writer.Write(FloatEncoder.Encode(data, Precision));
             }
 
             //encode each UV collated
@@ -119,7 +143,7 @@ namespace PPeX.Xx2
             {
                 float[] data = verticies.Select(x => x.UV[i]).ToArray();
 
-                writer.Write(FloatEncoder.Encode(data));
+                writer.Write(FloatEncoder.Encode(data, Precision));
             }
 
             //write bone indicies
@@ -137,6 +161,9 @@ namespace PPeX.Xx2
 
         protected void WriteBones(BinaryWriter writer, List<xxBone> bones)
         {
+            if (bones.Count == 0)
+                return;
+
             //encode indicies
             writer.Write(IntegerEncoder.Encode(bones.Select(x => x.Index).ToArray()));
 

@@ -78,6 +78,11 @@ namespace PPeX.Xx2
                 Children.Add(new xxObject(reader, version));
         }
 
+        internal xxObject()
+        {
+
+        }
+
         public override string ToString()
         {
             return Name;
