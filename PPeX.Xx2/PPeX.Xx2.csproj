@@ -44,6 +44,7 @@
     <Compile Include="FloatEncoder.cs" />
     <Compile Include="IntegerEncoder.cs" />
     <Compile Include="Xx2File.cs" />
+    <Compile Include="Xx2Reader.cs" />
     <Compile Include="Xx2Writer.cs" />
     <Compile Include="XX\xxBone.cs" />
     <Compile Include="XX\xxMeshInfo.cs" />

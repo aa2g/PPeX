@@ -43,5 +43,10 @@ namespace PPeX.Xx2
 
             Unknown = reader.ReadBytes(20);
         }
+
+        internal xxVertex()
+        {
+
+        }
     }
 }

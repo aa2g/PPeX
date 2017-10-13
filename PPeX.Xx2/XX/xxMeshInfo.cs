@@ -65,5 +65,10 @@ namespace PPeX.Xx2
                 Unknowns.Add(reader.ReadBytes(16));
             }
         }
+
+        internal xxMeshInfo()
+        {
+
+        }
     }
 }
