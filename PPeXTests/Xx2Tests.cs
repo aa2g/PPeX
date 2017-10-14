@@ -99,5 +99,28 @@ namespace PPeXTests
 
             Assert.AreEqual(-20, EncoderCommon.DecodeZigzag(EncoderCommon.ZigzagBase(-20)));
         }
+
+
+        [TestMethod()]
+        public void EncryptedStringTest()
+        {
+            string testString = "test";
+
+            MemoryStream mem = new MemoryStream();
+
+            using (BinaryWriter writer = new BinaryWriter(mem, Encoding.ASCII, true))
+                writer.WriteEncryptedString(testString);
+
+            Assert.AreEqual(4 + testString.Length + 1, mem.Position);
+
+            mem.Position = 0;
+
+            string result;
+
+            using (BinaryReader reader = new BinaryReader(mem, Encoding.ASCII, true))
+                result = reader.ReadEncryptedString();
+
+            Assert.AreEqual(testString, result);
+        }
     }
 }

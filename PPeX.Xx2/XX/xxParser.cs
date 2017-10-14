@@ -31,25 +31,4 @@ namespace PPeX.Xx2
             }
         }
     }
-
-
-
-
-    public static class xxExtensions
-    {
-        public static string ReadEncryptedString(this BinaryReader reader)
-        {
-            int length = reader.ReadInt32();
-            byte[] array = reader.ReadBytes(length);
-
-            for (int i = 0; i < length - 1; i++)
-                array[i] = (byte)~array[i];
-
-            string decrypted = Encoding.ASCII.GetString(array);
-            if (decrypted.Length > 0)
-                decrypted = decrypted.Remove(decrypted.Length - 1);
-
-            return decrypted;
-        }
-    }
 }

@@ -31,7 +31,7 @@ namespace PPeX.Xx2
                 Position[i] = reader.ReadSingle();
 
             for (int i = 0; i < 3; i++)
-                Position[i] = reader.ReadSingle();
+                Weights[i] = reader.ReadSingle();
 
             BoneIndicies = reader.ReadBytes(4);
 
@@ -47,6 +47,27 @@ namespace PPeX.Xx2
         internal xxVertex()
         {
 
+        }
+
+        public void Write(BinaryWriter writer)
+        {
+            writer.Write(Index);
+
+            for (int i = 0; i < 3; i++)
+                writer.Write(Position[i]);
+
+            for (int i = 0; i < 3; i++)
+                writer.Write(Weights[i]);
+
+            writer.Write(BoneIndicies);
+
+            for (int i = 0; i < 3; i++)
+                writer.Write(Normal[i]);
+
+            for (int i = 0; i < 2; i++)
+                writer.Write(UV[i]);
+
+            writer.Write(Unknown);
         }
     }
 }

@@ -83,6 +83,57 @@ namespace PPeX.Xx2
 
         }
 
+        public void Write(BinaryWriter writer, int version)
+        {
+            int unknownCounter = 0;
+
+            writer.WriteEncryptedString(Name);
+            
+            writer.Write((int)Children.Count);
+
+            for (int x = 0; x < 4; x++)
+                for (int y = 0; y < 4; y++)
+                    writer.Write(Transforms[x, y]);
+
+            writer.Write(Unknowns[unknownCounter++]);
+
+            writer.Write((int)Meshes.Count);
+
+            writer.Write(Unknowns[unknownCounter++]);
+
+
+            writer.Write(Unknowns[unknownCounter++]);
+
+
+            if (version >= 6)
+                writer.WriteEncryptedString(Encoding.ASCII.GetString(Unknowns[unknownCounter++]));
+
+
+            if (Meshes.Count > 0)
+            {
+                writer.Write(Unknowns[unknownCounter++]);
+
+                for (int i = 0; i < Meshes.Count; i++)
+                    Meshes[i].Write(writer, version);
+
+                writer.Write((ushort)DuplicateVerticies.Count);
+
+                writer.Write(Unknowns[unknownCounter++]);
+
+                for (int i = 0; i < DuplicateVerticies.Count; i++)
+                    DuplicateVerticies[i].Write(writer);
+
+                writer.Write((int)Bones.Count);
+
+                for (int i = 0; i < Bones.Count; i++)
+                    Bones[i].Write(writer);
+            }
+
+
+            for (int i = 0; i < Children.Count; i++)
+                Children[i].Write(writer, version);
+        }
+
         public override string ToString()
         {
             return Name;
