@@ -9,6 +9,43 @@ namespace PPeX.Xx2
 {
     public static class EncoderCommon
     {
+        public static string ReadEncryptedString(this BinaryReader reader)
+        {
+            int length = reader.ReadInt32();
+            byte[] array = reader.ReadBytes(length);
+
+            for (int i = 0; i < length - 1; i++)
+                array[i] = (byte)~array[i];
+
+            string decrypted = Encoding.ASCII.GetString(array);
+            if (decrypted.Length > 0)
+                decrypted = decrypted.Remove(decrypted.Length - 1);
+
+            return decrypted;
+        }
+        public static void WriteEncryptedString(this BinaryWriter writer, string String)
+        {
+            if (String.Length == 0)
+            {
+                writer.Write((int)0);
+                return;
+            }
+
+            writer.Write((int)(String.Length + 1));
+
+
+            byte[] array = Encoding.ASCII.GetBytes(String);
+
+            Array.Resize(ref array, array.Length + 1);
+
+            array[array.Length - 1] = 0;
+
+            for (int i = 0; i < array.Length; i++)
+                array[i] = (byte)~array[i];
+
+            writer.Write(array);
+        }
+
         public static uint[] DecodeAll(BinaryReader reader, int count, bool half, bool zigzag)
         {
             int[] deltas = new int[count];

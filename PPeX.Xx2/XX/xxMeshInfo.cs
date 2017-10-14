@@ -57,10 +57,6 @@ namespace PPeX.Xx2
                 Unknowns.Add(reader.ReadBytes(1));
 
                 Unknowns.Add(Encoding.ASCII.GetBytes(reader.ReadEncryptedString()));
-                //uint unknownLength = reader.ReadUInt32();
-                //Unknowns.Add(BitConverter.GetBytes(unknownLength));
-
-                //Unknowns.Add(reader.ReadBytes(unknownLength));
 
                 Unknowns.Add(reader.ReadBytes(16));
             }
@@ -69,6 +65,47 @@ namespace PPeX.Xx2
         internal xxMeshInfo()
         {
 
+        }
+
+        public void Write(BinaryWriter writer, int version)
+        {
+            int unknownCounter = 0;
+
+            writer.Write(Unknowns[unknownCounter++]);
+
+            writer.Write(Unknowns[unknownCounter++]);
+
+            writer.Write((int)Faces.Length);
+
+            for (int i = 0; i < Faces.Length; i++)
+                writer.Write(Faces[i]);
+
+            writer.Write((int)Verticies.Count);
+
+            if (version >= 4)
+                for (int i = 0; i < Verticies.Count; i++)
+                    Verticies[i].Write(writer);
+
+            if (version >= 5)
+                writer.Write(Unknowns[unknownCounter++]);
+
+            if (version >= 2)
+                writer.Write(Unknowns[unknownCounter++]);
+
+            if (version >= 3)
+                writer.Write(Unknowns[unknownCounter++]);
+
+            if (version >= 6)
+                writer.Write(Unknowns[unknownCounter++]);
+
+            if (version >= 8)
+            {
+                writer.Write(Unknowns[unknownCounter++]);
+
+                writer.WriteEncryptedString(Encoding.ASCII.GetString(Unknowns[unknownCounter++]));
+
+                writer.Write(Unknowns[unknownCounter++]);
+            }
         }
     }
 }

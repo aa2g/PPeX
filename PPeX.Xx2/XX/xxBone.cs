@@ -29,5 +29,16 @@ namespace PPeX.Xx2
         {
 
         }
+
+        public void Write(BinaryWriter writer)
+        {
+            writer.WriteEncryptedString(Name);
+
+            writer.Write(Index);
+
+            for (int x = 0; x < 4; x++)
+                for (int y = 0; y < 4; y++)
+                    writer.Write(Transforms[x, y]);
+        }
     }
 }
