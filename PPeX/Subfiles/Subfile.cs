@@ -31,6 +31,8 @@ namespace PPeX
         {
             if (name.EndsWith(".wav"))
                 Type = ArchiveFileType.XggAudio;
+            else if (name.EndsWith(".xx"))
+                Type = ArchiveFileType.Xx2Mesh;
             else
                 Type = ArchiveFileType.Raw;
 

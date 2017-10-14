@@ -26,6 +26,12 @@ namespace PPeX
         public int XggBitrate = 48000;
 
         /// <summary>
+        /// The bit precision that the mesh encoder should use.
+        /// </summary>
+        [JsonProperty]
+        public int Xx2Precision = 16;
+
+        /// <summary>
         /// Whether or not checksums should be verified on an archive load. Note: If enabled, causes massive slowdowns on first loads.
         /// </summary>
         [JsonProperty]

@@ -120,7 +120,7 @@ namespace PPeX.Xx2
             float maximum = floats.Max();
             float total = maximum - minimum;
 
-            uint largest = (uint)((2 << precision) - 1);
+            uint largest = (uint)((1 << precision) - 1);
 
             for (int i = 0; i < floats.Length; i++)
             {
@@ -168,7 +168,7 @@ namespace PPeX.Xx2
             uint[] values = IntegerEncoder.DecodeFull(reader, count, false);
 
             //calculate largest within precision
-            uint largest = (uint)((2 << precision) - 1);
+            uint largest = (uint)((1 << precision) - 1);
 
             //calculate original float
             float[] result = values.Select(x =>

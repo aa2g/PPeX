@@ -21,11 +21,15 @@ namespace PPeX.Xx2
             Precision = precision;
         }
 
-
         public void Write(Xx2File file, string filename)
         {
             using (FileStream stream = new FileStream(filename, FileMode.Create))
-            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.ASCII))
+                Write(file, stream);
+        }
+
+        public void Write(Xx2File file, Stream stream)
+        {
+            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.ASCII, true))
             {
                 writer.Write(file.Version);
 
