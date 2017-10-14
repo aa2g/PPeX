@@ -79,6 +79,7 @@
     <Compile Include="Encoders\BaseEncoder.cs" />
     <Compile Include="Encoders\PassthroughEncoder.cs" />
     <Compile Include="Encoders\XggEncoder.cs" />
+    <Compile Include="Encoders\Xx2Encoder.cs" />
     <Compile Include="ICompressor.cs" />
     <Compile Include="IEncoder.cs" />
     <Compile Include="Settings.cs" />

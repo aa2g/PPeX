@@ -19,7 +19,12 @@ namespace PPeX
         /// <summary>
         /// The file is audio data, encoded via <see cref="Encoders.XggEncoder"/>.
         /// </summary>
-        XggAudio = 1
+        XggAudio = 1,
+
+        /// <summary>
+        /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx2Encoder"/>.
+        /// </summary>
+        Xx2Mesh = 2
     }
 
     /// <summary>
