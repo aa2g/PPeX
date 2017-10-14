@@ -38,6 +38,12 @@ namespace PPeX
         public int Xx2Precision = 16;
 
         /// <summary>
+        /// The default level Zstandard should use in compression.
+        /// </summary>
+        [JsonProperty]
+        public int ZstdCompressionLevel = 22;
+
+        /// <summary>
         /// Whether or not checksums should be verified on an archive load. Note: If enabled, causes massive slowdowns on first loads.
         /// </summary>
         [JsonProperty]
