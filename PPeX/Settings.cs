@@ -17,13 +17,19 @@ namespace PPeX
         /// The frame size (in seconds) that the Opus encoder should use.
         /// </summary>
         [JsonProperty]
-        public double XggFrameSize = 0.060;
+        public double XggFrameSize = 0.120;
 
         /// <summary>
         /// The bitrate that the Opus encoder should use.
         /// </summary>
         [JsonProperty]
-        public int XggBitrate = 48000;
+        public int XggMusicBitrate = 44000;
+
+        /// <summary>
+        /// The bitrate that the Opus encoder should use.
+        /// </summary>
+        [JsonProperty]
+        public int XggVoiceBitrate = 32000;
 
         /// <summary>
         /// The bit precision that the mesh encoder should use.

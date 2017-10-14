@@ -61,7 +61,7 @@ namespace PPeX.Encoders
                     using (var opus = OpusEncoder.Create(res.WaveFormat.SampleRate, channels, FragLabs.Audio.Codecs.Opus.Application.Audio))
                     {
 
-                        opus.Bitrate = Core.Settings.XggBitrate;
+                        opus.Bitrate = channels > 1 ? Core.Settings.XggMusicBitrate : Core.Settings.XggVoiceBitrate;
                         int packetsize = (int)(res.WaveFormat.SampleRate * Core.Settings.XggFrameSize * 2 * channels);
 
                         writer.Write(System.Text.Encoding.ASCII.GetBytes(Magic));
