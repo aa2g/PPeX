@@ -152,6 +152,9 @@ namespace PPeX.Xx2
             //write multiplier
             output.AddRange(BitConverter.GetBytes(floats.Max() - floats.Min()));
 
+            //System.Diagnostics.Trace.WriteLine("Range: " + (floats.Max() - floats.Min()).ToString());
+
+            //write values
             output.AddRange(IntegerEncoder.Encode(values, false));
 
             return output.ToArray();

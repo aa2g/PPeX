@@ -51,7 +51,7 @@ namespace PPeXTests
             float[] result = FloatEncoder.Decode(new System.IO.BinaryReader(new System.IO.MemoryStream(data)), 6);
 
             for (int i = 0; i < 5; i++)
-                Assert.AreEqual(array[i], result[i], 0.005);
+                Assert.AreEqual(array[i], result[i], 0.01);
         }
     }
 
