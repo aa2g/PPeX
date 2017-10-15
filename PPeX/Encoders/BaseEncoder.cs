@@ -75,6 +75,8 @@ namespace PPeX.Encoders
             {
                 case ArchiveFileType.XggAudio:
                     return new XggDecoder(stream);
+                case ArchiveFileType.Xx2Mesh:
+                    return new Xx2Decoder(stream);
                 case ArchiveFileType.Raw:
                     return new PassthroughEncoder(stream);
                 default:

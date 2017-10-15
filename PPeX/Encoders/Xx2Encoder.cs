@@ -49,4 +49,32 @@ namespace PPeX.Encoders
             base.Dispose();
         }
     }
+
+    public class Xx2Decoder : BaseDecoder
+    {
+        public Xx2Decoder(Stream baseStream) : base(baseStream)
+        {
+
+        }
+
+        public override ArchiveFileType Encoding => ArchiveFileType.Xx2Mesh;
+
+        MemoryStream mem = new MemoryStream();
+
+        public override Stream Decode()
+        {
+            Xx2File file = Xx2Reader.Read(BaseStream);
+
+            file.DecodeToXX(mem);
+
+            mem.Position = 0;
+
+            return mem;
+        }
+
+        public override string NameTransform(string original)
+        {
+            return original.Replace(".xx2", ".xx");
+        }
+    }
 }
