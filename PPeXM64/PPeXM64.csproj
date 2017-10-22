@@ -63,7 +63,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CachedObject.cs" />
+    <Compile Include="CachedChunk.cs" />
+    <Compile Include="CachedFile.cs" />
+    <Compile Include="CompressedCache.cs" />
     <Compile Include="FileEntry.cs" />
     <Compile Include="Pipe.cs" />
     <Compile Include="Program.cs" />
