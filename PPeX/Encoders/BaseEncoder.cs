@@ -54,6 +54,11 @@ namespace PPeX.Encoders
 
     public static class EncoderFactory
     {
+        public static IEncoder GetEncoder(this ISubfile subfile)
+        {
+            return GetEncoder(subfile.Source, subfile.Type);
+        }
+
         public static IEncoder GetEncoder(IDataSource source, ArchiveFileType encoding)
         {
             switch (encoding)

@@ -14,7 +14,8 @@ namespace PPeX.Tests
     public class ExtendedArchiveTests
     {
         public static byte[] TestData = Encoding.UTF8.GetBytes("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ac purus id diam consectetur fermentum. Etiam nulla nisi, tincidunt sed sagittis nec, finibus vel elit. Pellentesque sodales massa eget tortor eleifend dictum. Ut finibus tellus efficitur nulla hendrerit convallis. Cras sed neque sed tellus luctus vehicula sed in sapien.");
-        public static byte[] TestHash;
+        public static byte[] TestData2 = Encoding.UTF8.GetBytes("orem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ac purus id diam consectetur fermentum. Etiam nulla nisi, tincidunt sed sagittis nec, finibus vel elit. Pellentesque sodales massa eget tortor eleifend dictum. Ut finibus tellus efficitur nulla hendrerit convallis. Cras sed neque sed tellus luctus vehicula sed in sapien.");
+    public static byte[] TestHash;
         public static ExtendedArchive TestArchive;
 
         [ClassInitialize]
@@ -38,6 +39,12 @@ namespace PPeX.Tests
                     "t",
                     ArchiveFileType.Raw));
 
+            writer.Files.Add(new Subfile(
+                new MemorySource(TestData2),
+                    "test3",
+                    "t",
+                    ArchiveFileType.Raw));
+
             writer.Write();
 
             arc.Close();
@@ -50,13 +57,15 @@ namespace PPeX.Tests
         {
             Assert.AreEqual("test", TestArchive.Title, "Archive title is incorrect.");
 
-            Assert.AreEqual(2, TestArchive.Files.Count, "File count is incorrect.");
+            Assert.AreEqual(3, TestArchive.Files.Count, "File count is incorrect.");
 
             Assert.AreEqual(1, TestArchive.Chunks.Count, "Chunk count is incorrect.");
 
             Assert.IsTrue(TestArchive.Files.Any(x => x.Name == "test1"), "Archive does not contain file \"test1\".");
 
             Assert.IsTrue(TestArchive.Files.Any(x => x.Name == "test2"), "Archive does not contain file \"test2\".");
+
+            Assert.IsTrue(TestArchive.Files.Any(x => x.Name == "test3"), "Archive does not contain file \"test3\".");
         }
 
         [TestMethod]
@@ -67,6 +76,21 @@ namespace PPeX.Tests
             foreach (var chunk in TestArchive.Chunks)
             {
                 if (!chunk.VerifyChecksum())
+                    failed++;
+            }
+
+            Assert.IsTrue(failed == 0, "Chunk checksum does not match data. (" + failed + " / " + TestArchive.Chunks.Count + " failed)");
+        }
+
+        [TestMethod]
+        public void ChunkOffsetTest()
+        {
+            int failed = 0;
+
+            foreach (var chunk in TestArchive.Chunks)
+            foreach (var file in chunk.Files)
+            {
+                if (file.Offset + file.Size > chunk.UncompressedLength)
                     failed++;
             }
 

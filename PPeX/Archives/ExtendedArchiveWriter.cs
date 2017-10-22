@@ -144,7 +144,22 @@ namespace PPeX
                     continue;
                 }
 
-                if (currentSize + file.Source.Size > ChunkSizeLimit)
+                uint fileSize = file.Source.Size;
+
+                //This takes longer but maximises space efficiency
+                /*
+                if (file.Type != ArchiveFileType.Raw)
+                {
+                    //need to calculate size based on encoded data
+                    using (var encoder = file.GetEncoder())
+                    {
+                        encoder.Encode().Dispose();
+                        fileSize = encoder.EncodedLength;
+                    }
+                }
+                */
+
+                if (currentSize + fileSize > ChunkSizeLimit)
                 {
                     //cut off the chunk here
                     chunks.Add(currentChunk);
@@ -155,7 +170,7 @@ namespace PPeX
                 }
 
                 currentChunk.Files.Add(file);
-                currentSize += file.Source.Size;
+                currentSize += fileSize;
 
             }
 
@@ -214,6 +229,8 @@ namespace PPeX
                     try
                     {
                         //Write the chunk
+
+                        /*
                         using (MemoryStream compressedData = chunk.CompressData())
                             lock (ArchiveStream)
                             {
@@ -225,6 +242,12 @@ namespace PPeX
 
                                 i++;
                             }
+
+                        */
+
+                        chunk.CompressHybrid(chunkTableWriter, fileTableWriter, ref fileCount, ArchiveStream);
+
+                        i++;
                     }
                     catch
                     {
@@ -399,6 +422,8 @@ namespace PPeX
 
                     UncompressedSize = (ulong)uncompressed.Length;
 
+                    ulong iUncompressedSize = (ulong)Files.Sum(x => x.Size);
+
                     uncompressed.Position = 0;
 
                     using (ICompressor compressor = CompressorFactory.GetCompressor(uncompressed, Compression))
@@ -408,6 +433,103 @@ namespace PPeX
                 CachedOutput.Position = 0;
 
                 return CachedOutput;
+            }
+
+            public void CompressHybrid(BinaryWriter chunkTableWriter, BinaryWriter fileTableWriter, ref uint fileOffset, Stream archiveStream)
+            {
+                ulong offset = 0;
+                List<WriteReciept> reciepts = new List<WriteReciept>();
+
+                int i = 0;
+
+                //generate the chunk
+                CachedOutput = new MemoryStream();
+
+                using (MemoryStream uncompressed = new MemoryStream())
+                {
+
+                    lock (fileTableWriter)
+                        foreach (var file in Files)
+                        {
+                            //write each file metadata
+                            byte[] archive_name = Encoding.Unicode.GetBytes(file.ArchiveName);
+
+                            fileTableWriter.Write((ushort)archive_name.Length);
+                            fileTableWriter.Write(archive_name);
+
+
+                            byte[] file_name = Encoding.Unicode.GetBytes(file.Name);
+
+                            fileTableWriter.Write((ushort)file_name.Length);
+                            fileTableWriter.Write(file_name);
+
+                            fileTableWriter.Write((ushort)file.Type);
+                            fileTableWriter.Write(file.Source.Md5);
+
+                            //check if it's a dupe
+                            var reciept = reciepts.FirstOrDefault(x => Utility.CompareBytes(x.Md5, file.Source.Md5));
+
+                            if (reciept != null)
+                            {
+                                //dupe
+                                fileTableWriter.Write((uint)(fileOffset + reciept.Index));
+
+                                fileTableWriter.Write(ID);
+                                fileTableWriter.Write(reciept.Offset);
+                                fileTableWriter.Write(reciept.Length);
+                            }
+                            else
+                            {
+                                //not a dupe
+                                fileTableWriter.Write(ArchiveFileSource.CanonLinkID);
+
+                                fileTableWriter.Write(ID);
+                                fileTableWriter.Write(offset);
+
+                                long originalPosition = uncompressed.Position;
+
+                                file.WriteToStream(uncompressed);
+
+                                ulong size = (ulong)(uncompressed.Position - originalPosition);//file.Source.Size;
+
+                                fileTableWriter.Write(size);
+
+                                reciepts.Add(new WriteReciept
+                                {
+                                    Md5 = file.Source.Md5,
+                                    Length = size,
+                                    Offset = offset,
+                                    Index = i
+                                });
+
+                                offset += size;
+                            }
+
+                            i++;
+                        }
+
+                    UncompressedSize = (ulong)uncompressed.Length;
+
+                    ulong iUncompressedSize = (ulong)Files.Sum(x => x.Size);
+
+                    uncompressed.Position = 0;
+
+                    using (ICompressor compressor = CompressorFactory.GetCompressor(uncompressed, Compression))
+                        compressor.WriteToStream(CachedOutput);
+                }
+
+                CachedOutput.Position = 0;
+
+                lock (archiveStream)
+                {
+                    WriteChunkTable(chunkTableWriter, (ulong)archiveStream.Position, fileOffset);
+
+                    fileOffset += (uint)Files.Count;
+
+                    CachedOutput.CopyTo(archiveStream);
+                }
+
+                CachedOutput.Dispose();
             }
             
         }

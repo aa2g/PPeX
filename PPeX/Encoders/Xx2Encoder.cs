@@ -34,6 +34,8 @@ namespace PPeX.Encoders
 
             EncodedLength = (uint)encodedXx2.Length;
 
+            encodedXx2.Position = 0;
+
             return encodedXx2;
         }
 
