@@ -40,7 +40,7 @@ namespace PPeX.Compressors
                 case ArchiveChunkCompression.Zstandard:
                     return new ZstdCompressor(stream, Core.Settings.ZstdCompressionLevel);
                 case ArchiveChunkCompression.LZ4:
-                    return new Lz4Compressor(stream, true);
+                    return new Lz4Compressor(stream, false);
                 case ArchiveChunkCompression.Uncompressed:
                     return new PassthroughCompressor(stream);
                 default:
