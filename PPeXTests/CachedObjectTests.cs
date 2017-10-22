@@ -52,7 +52,7 @@ namespace PPeXTests
 
             Assert.IsNotNull(chunk.Data);
 
-            Assert.AreEqual((int)chunk.BaseChunk.CompressedLength, (int)chunk.Data.Length);
+            Assert.AreEqual((int)chunk.BaseChunk.UncompressedLength, (int)chunk.Data.Length);
 
             chunk.Deallocate();
         }
