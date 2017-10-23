@@ -16,6 +16,7 @@ namespace PPeXTests
         public static ExtendedArchive TestArchive;
         public static byte[][] TestData = new byte[8][];
 
+        [DeploymentItem("X64")]
         [ClassInitialize]
         public static void Initialize(TestContext context)
         {
