@@ -59,6 +59,8 @@ namespace PPeX.Compressors
             using (var lz4 = new LZ4.LZ4Stream(BaseStream, LZ4.LZ4StreamMode.Decompress))
                 lz4.CopyTo(buffer);
 
+            buffer.Position = 0;
+
             return buffer;
         }
 
