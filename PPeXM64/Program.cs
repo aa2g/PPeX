@@ -153,7 +153,7 @@ namespace PPeXM64
                         
                         using (Stream output = cached.GetStream())
                         {
-                            handler.WriteString(cached.Length.ToString());
+                            handler.WriteString(output.Length.ToString());
 
                             output.CopyTo(handler.BaseStream);
                         }

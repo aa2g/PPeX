@@ -43,7 +43,10 @@ namespace PPeXM64
                     foreach (var file in cachedChunk.Files)
                     {
                         TotalFiles.Add(file);
-                        LoadedFiles[new FileEntry(file.ArchiveName, file.Name)] = file;
+
+                        string name = PPeX.Encoders.EncoderFactory.GetDecoder(System.IO.Stream.Null, file.Type).NameTransform(file.Name);
+
+                        LoadedFiles[new FileEntry(file.ArchiveName, name)] = file;
                     }
                 }
                 
