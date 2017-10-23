@@ -23,7 +23,7 @@ namespace PPeX.Xx2
 
         public List<xxVertex> DuplicateVerticies = new List<xxVertex>();
 
-        internal xxObject(BinaryReader reader, int version)
+        public xxObject(BinaryReader reader, int version)
         {
             Name = reader.ReadEncryptedString();
 
@@ -33,7 +33,7 @@ namespace PPeX.Xx2
                 for (int y = 0; y < 4; y++)
                     Transforms[x, y] = reader.ReadSingle();
 
-            if (version < 8)
+            if (version < 7)
                 Unknowns.Add(reader.ReadBytes(0x10));
             else
                 Unknowns.Add(reader.ReadBytes(0x20));
@@ -43,7 +43,7 @@ namespace PPeX.Xx2
             Unknowns.Add(reader.ReadBytes(24));
 
 
-            if (version < 8)
+            if (version < 7)
                 Unknowns.Add(reader.ReadBytes(0x10));
             else
                 Unknowns.Add(reader.ReadBytes(0x40));
@@ -55,17 +55,19 @@ namespace PPeX.Xx2
 
             if (meshCount > 0)
             {
-                Unknowns.Add(reader.ReadBytes(1));
+                byte numVector2PerVertex = reader.ReadByte();
+
+                Unknowns.Add(new byte[] { numVector2PerVertex });
 
                 for (int i = 0; i < meshCount; i++)
-                    Meshes.Add(new xxMeshInfo(reader, version));
+                    Meshes.Add(new xxMeshInfo(reader, version, numVector2PerVertex));
 
                 int dupeCount = reader.ReadUInt16();
 
                 Unknowns.Add(reader.ReadBytes(8));
 
                 for (int i = 0; i < dupeCount; i++)
-                    DuplicateVerticies.Add(new xxVertex(reader));
+                    DuplicateVerticies.Add(new xxVertex(reader, version));
 
                 int boneCount = reader.ReadInt32();
 

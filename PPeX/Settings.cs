@@ -32,10 +32,10 @@ namespace PPeX
         public int XggVoiceBitrate = 32000;
 
         /// <summary>
-        /// The bit precision that the mesh encoder should use.
+        /// The bit precision that the mesh encoder should use. Set to 0 for lossless mode.
         /// </summary>
         [JsonProperty]
-        public int Xx2Precision = 16;
+        public int Xx2Precision = 0;
 
         /// <summary>
         /// The default level Zstandard should use in compression.

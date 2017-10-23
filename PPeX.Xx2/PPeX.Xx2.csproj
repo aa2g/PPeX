@@ -47,6 +47,7 @@
     <Compile Include="Xx2Reader.cs" />
     <Compile Include="Xx2Writer.cs" />
     <Compile Include="XX\xxBone.cs" />
+    <Compile Include="XX\xxFace.cs" />
     <Compile Include="XX\xxMeshInfo.cs" />
     <Compile Include="XX\xxObject.cs" />
     <Compile Include="XX\xxParser.cs" />

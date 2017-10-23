@@ -48,7 +48,7 @@ namespace PPeX.Xx2
             }
         }
 
-        protected void WriteObject(BinaryWriter writer, xxObject obj)
+        public void WriteObject(BinaryWriter writer, xxObject obj)
         {
             writer.Write(obj.Name);
 
@@ -73,7 +73,7 @@ namespace PPeX.Xx2
             float[] transforms = new float[16];
 
             for (int x = 0; x < 4; x++)
-                for (int y = 0; x < 4; x++)
+                for (int y = 0; y < 4; y++)
                     transforms[(x * 4) + y] = obj.Transforms[x, y];
 
 
@@ -90,7 +90,7 @@ namespace PPeX.Xx2
         }
 
 
-        protected void WriteMesh(BinaryWriter writer, xxMeshInfo mesh)
+        public void WriteMesh(BinaryWriter writer, xxMeshInfo mesh)
         {
             writer.Write(mesh.Unknowns.Count);
 
@@ -105,18 +105,27 @@ namespace PPeX.Xx2
             WriteVerticies(writer, mesh.Verticies);
 
 
-            writer.Write(mesh.Faces.Length);
+            writer.Write(mesh.Faces.Count);
 
-            writer.Write(IntegerEncoder.Encode(mesh.Faces));
+            for (int i = 0; i < 3; i++)
+            {
+                writer.Write(IntegerEncoder.Encode(mesh.Faces.Select(x => x.VertexIndicies[i]).ToArray()));
+            }
         }
 
-        protected void WriteVerticies(BinaryWriter writer, List<xxVertex> verticies)
+        public void WriteVerticies(BinaryWriter writer, List<xxVertex> verticies)
         {
             if (verticies.Count == 0)
                 return;
 
+            //encode index sizes
+            for (int i = 0; i < verticies.Count; i++)
+            {
+                writer.Write(verticies[i].isIndexUInt16 ? (byte)1 : (byte)0);
+            }
+
             //encode indicies
-            writer.Write(IntegerEncoder.Encode(verticies.Select(x => x.Index).ToArray()));
+            writer.Write(IntegerEncoder.Encode(verticies.Select(x => (uint)x.Index).ToArray()));
 
             //encode each position collated
             for (int i = 0; i < 3; i++)
@@ -163,13 +172,13 @@ namespace PPeX.Xx2
             }
         }
 
-        protected void WriteBones(BinaryWriter writer, List<xxBone> bones)
+        public void WriteBones(BinaryWriter writer, List<xxBone> bones)
         {
             if (bones.Count == 0)
                 return;
 
             //encode indicies
-            writer.Write(IntegerEncoder.Encode(bones.Select(x => x.Index).ToArray()));
+            writer.Write(IntegerEncoder.Encode(bones.Select(x => (uint)x.Index).ToArray()));
 
             //encode each name
             for (int i = 0; i < bones.Count; i++)
@@ -185,7 +194,7 @@ namespace PPeX.Xx2
 
             //encode each transform
             for (int x = 0; x < 4; x++)
-                for (int y = 0; x < 4; x++)
+                for (int y = 0; y < 4; y++)
                 {
                     writer.Write(FloatEncoder.Encode(bones.Select(b => b.Transforms[x, y]).ToArray()));
                 }
