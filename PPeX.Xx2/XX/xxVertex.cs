@@ -9,7 +9,9 @@ namespace PPeX.Xx2
 {
     public class xxVertex
     {
-        public ushort Index;
+        public bool isIndexUInt16;
+
+        public int Index;
 
         public float[] Position = new float[3];
 
@@ -21,11 +23,16 @@ namespace PPeX.Xx2
 
         public float[] UV = new float[2];
 
-        public byte[] Unknown = new byte[20];
+        public byte[] Unknown = new byte[0];
 
-        internal xxVertex(BinaryReader reader)
+        public xxVertex(BinaryReader reader, int version)
         {
-            Index = reader.ReadUInt16();
+            isIndexUInt16 = version > 3;
+
+            if (isIndexUInt16)
+                Index = reader.ReadUInt16();
+            else
+                Index = reader.ReadInt32();
 
             for (int i = 0; i < 3; i++)
                 Position[i] = reader.ReadSingle();
@@ -41,7 +48,8 @@ namespace PPeX.Xx2
             for (int i = 0; i < 2; i++)
                 UV[i] = reader.ReadSingle();
 
-            Unknown = reader.ReadBytes(20);
+            if (version > 3)
+                Unknown = reader.ReadBytes(20);
         }
 
         internal xxVertex()
@@ -51,7 +59,10 @@ namespace PPeX.Xx2
 
         public void Write(BinaryWriter writer)
         {
-            writer.Write(Index);
+            if (isIndexUInt16)
+                writer.Write((ushort)Index);
+            else
+                writer.Write(Index);
 
             for (int i = 0; i < 3; i++)
                 writer.Write(Position[i]);

@@ -39,7 +39,7 @@ namespace PPeX.Xx2
         }
 
 
-        static xxObject ReadObject(BinaryReader reader)
+        public static xxObject ReadObject(BinaryReader reader)
         {
             xxObject obj = new xxObject();
 
@@ -66,14 +66,14 @@ namespace PPeX.Xx2
             float[] transforms = FloatEncoder.Decode(reader, 16);
 
             for (int x = 0; x < 4; x++)
-                for (int y = 0; x < 4; x++)
+                for (int y = 0; y < 4; y++)
                     obj.Transforms[x, y] = transforms[(x * 4) + y];
             
             
 
             int boneCount = reader.ReadInt32();
 
-            ReadBones(reader, boneCount);
+            obj.Bones = ReadBones(reader, boneCount);
 
 
             int childrenCount = reader.ReadInt16();
@@ -86,7 +86,7 @@ namespace PPeX.Xx2
         }
 
 
-        static xxMeshInfo ReadMesh(BinaryReader reader)
+        public static xxMeshInfo ReadMesh(BinaryReader reader)
         {
             xxMeshInfo mesh = new xxMeshInfo();
 
@@ -103,14 +103,23 @@ namespace PPeX.Xx2
             mesh.Verticies = ReadVerticies(reader, vertexCount);
 
 
-            int meshCount = reader.ReadInt32();
+            int faceCount = reader.ReadInt32();
 
-            mesh.Faces = IntegerEncoder.DecodeFull(reader, meshCount, true).Select(x => (ushort)x).ToArray();
+            for (int x = 0; x < faceCount; x++)
+                mesh.Faces.Add(new xxFace());
+
+            for (int i = 0; i < 3; i++)
+            {
+                ushort[] collection = IntegerEncoder.DecodeFull(reader, faceCount, true).Select(x => (ushort)x).ToArray();
+
+                for (int x = 0; x < faceCount; x++)
+                    mesh.Faces[x].VertexIndicies[i] = collection[x];
+            }
 
             return mesh;
         }
 
-        static List<xxVertex> ReadVerticies(BinaryReader reader, int count)
+        public static List<xxVertex> ReadVerticies(BinaryReader reader, int count)
         {
             if (count == 0)
                 return new List<xxVertex>();
@@ -120,12 +129,18 @@ namespace PPeX.Xx2
             for (int i = 0; i < count; i++)
                 verticies.Add(new xxVertex());
 
+            //decode index sizes
+            for (int i = 0; i < verticies.Count; i++)
+            {
+                verticies[i].isIndexUInt16 = reader.ReadByte() == 1;
+            }
+
             //decode indicies
             uint[] indicies = EncoderCommon.DecodeAll(reader, count, false, true);
 
             for (int i = 0; i < count; i++)
             {
-                verticies[i].Index = (ushort)indicies[i];
+                verticies[i].Index = (int)indicies[i];
             }
 
             //decode each position collated
@@ -179,7 +194,7 @@ namespace PPeX.Xx2
             return verticies;
         }
 
-        static List<xxBone> ReadBones(BinaryReader reader, int count)
+        public static List<xxBone> ReadBones(BinaryReader reader, int count)
         {
             List<xxBone> bones = new List<xxBone>();
 
@@ -195,7 +210,7 @@ namespace PPeX.Xx2
 
             for (int i = 0; i < count; i++)
             {
-                bones[i].Index = indicies[i];
+                bones[i].Index = (int)indicies[i];
             }
 
             //decode each name
@@ -206,7 +221,7 @@ namespace PPeX.Xx2
 
             //decode each transform
             for (int x = 0; x < 4; x++)
-                for (int y = 0; x < 4; x++)
+                for (int y = 0; y < 4; y++)
                 {
                     float[] transforms = FloatEncoder.Decode(reader, count);
 
