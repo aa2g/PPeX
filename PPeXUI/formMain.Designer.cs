@@ -89,6 +89,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.cmbCompression = new System.Windows.Forms.ComboBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.numXx2Precision = new System.Windows.Forms.NumericUpDown();
+            this.label10 = new System.Windows.Forms.Label();
             this.numThreads = new System.Windows.Forms.NumericUpDown();
             this.label11 = new System.Windows.Forms.Label();
             this.numChunkSize = new System.Windows.Forms.NumericUpDown();
@@ -107,6 +109,7 @@
             this.statusStrip1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numXx2Precision)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numChunkSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numBitrate)).BeginInit();
@@ -695,6 +698,8 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.numXx2Precision);
+            this.tabPage3.Controls.Add(this.label10);
             this.tabPage3.Controls.Add(this.numThreads);
             this.tabPage3.Controls.Add(this.label11);
             this.tabPage3.Controls.Add(this.numChunkSize);
@@ -707,6 +712,33 @@
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Options";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // numXx2Precision
+            // 
+            this.numXx2Precision.Location = new System.Drawing.Point(135, 85);
+            this.numXx2Precision.Maximum = new decimal(new int[] {
+            24,
+            0,
+            0,
+            0});
+            this.numXx2Precision.Name = "numXx2Precision";
+            this.numXx2Precision.ReadOnly = true;
+            this.numXx2Precision.Size = new System.Drawing.Size(82, 20);
+            this.numXx2Precision.TabIndex = 5;
+            this.numXx2Precision.Value = new decimal(new int[] {
+            16,
+            0,
+            0,
+            0});
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(6, 87);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(87, 13);
+            this.label10.TabIndex = 4;
+            this.label10.Text = "Xx2 bit precision:";
             // 
             // numThreads
             // 
@@ -834,6 +866,7 @@
             this.tabPage2.PerformLayout();
             this.tabPage3.ResumeLayout(false);
             this.tabPage3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numXx2Precision)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numChunkSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numBitrate)).EndInit();
@@ -907,5 +940,7 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.NumericUpDown numThreads;
         private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.NumericUpDown numXx2Precision;
+        private System.Windows.Forms.Label label10;
     }
 }

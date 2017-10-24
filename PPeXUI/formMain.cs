@@ -355,7 +355,8 @@ namespace PPeXUI
 
                     using (FileStream fs = new FileStream(dialog.FileName, FileMode.Create))
                     {
-                        sh.Source.GetStream().CopyTo(fs);
+                        (sh.Source as ArchiveFileSource).GetRawStream().CopyTo(fs);
+                        //sh.Source.GetStream().CopyTo(fs);
                     }
 
                     prgFileProgress.Value = 100;
@@ -488,6 +489,7 @@ namespace PPeXUI
             writer.DefaultCompression = (ArchiveChunkCompression)cmbCompression.SelectedIndex;
             writer.ChunkSizeLimit = (ulong)numChunkSize.Value * 1024 * 1024;
             writer.Threads = (int)numThreads.Value;
+            Core.Settings.Xx2Precision = (int)numXx2Precision.Value;
 
             IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>((x) =>
             {
