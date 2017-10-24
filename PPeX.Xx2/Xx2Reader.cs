@@ -23,10 +23,23 @@ namespace PPeX.Xx2
 
                 int unknownLength = reader.ReadInt32();
 
-                byte[] unknown = reader.ReadBytes(unknownLength);
+                byte[] headerUnknown = reader.ReadBytes(unknownLength);
 
 
                 xxObject obj = ReadObject(reader);
+
+                //always length of 4
+                byte[] materialUnknown = reader.ReadBytes(4);
+
+
+                int materialCount = reader.ReadInt32();
+
+                List<xxMaterial> materials = ReadMaterials(reader, materialCount);
+
+
+                int textureCount = reader.ReadInt32();
+
+                List<xxTexture> textures = ReadTextures(reader, textureCount);
 
 
                 int unencodedLength = reader.ReadInt32();
@@ -34,7 +47,7 @@ namespace PPeX.Xx2
                 byte[] unencoded = reader.ReadBytes(unencodedLength);
 
 
-                return new Xx2File(version, obj, unknown, unencoded);
+                return new Xx2File(version, obj, headerUnknown, materialUnknown, materials, textures, unencoded);
             }
         }
 
@@ -230,6 +243,98 @@ namespace PPeX.Xx2
                 }
 
             return bones;
+        }
+
+        public static List<xxMaterial> ReadMaterials(BinaryReader reader, int count)
+        {
+            List<xxMaterial> materials = new List<xxMaterial>();
+
+            //decode universal unknown size
+            int unknownSize = reader.ReadInt32();
+
+            for (int i = 0; i < count; i++)
+            {
+                materials.Add(new xxMaterial());
+
+                //read name
+                materials[i].Name = reader.ReadString();
+
+                //read color sets
+                materials[i].Ambient = new Color4(reader);
+                materials[i].Diffuse = new Color4(reader);
+                materials[i].Emissive = new Color4(reader);
+                materials[i].Specular = new Color4(reader);
+
+                //read power
+                materials[i].Power = reader.ReadSingle();
+
+                //read material textures
+                //*always* in groups of 4
+                for (int x = 0; x < 4; x++)
+                {
+                    materials[i].Textures.Add(new xxMaterialTexture());
+
+                    materials[i].Textures[x].Name = reader.ReadString();
+
+                    //always a size of 16
+                    materials[i].Textures[x].Unknown = reader.ReadBytes(16);
+                }
+
+                //read universally sized unknown
+                materials[i].Unknown = reader.ReadBytes(unknownSize);
+            }
+
+            return materials;
+        }
+
+        public static List<xxTexture> ReadTextures(BinaryReader reader, int count)
+        {
+            List<xxTexture> textures = new List<xxTexture>();
+
+            List<int> indexes = new List<int>();
+
+            List<byte[]> datasets = new List<byte[]>();
+
+            //read each texture metadata
+            for (int i = 0; i < count; i++)
+            {
+                textures.Add(new xxTexture());
+
+                textures[i].Name = reader.ReadString();
+
+                textures[i].Checksum = reader.ReadByte();
+                textures[i].Depth = reader.ReadInt32();
+                textures[i].Format = reader.ReadInt32();
+                textures[i].Height = reader.ReadInt32();
+                textures[i].ImageFileFormat = reader.ReadInt32();
+                textures[i].MipLevels = reader.ReadInt32();
+                textures[i].ResourceType = reader.ReadInt32();
+                textures[i].Width = reader.ReadInt32();
+
+                //unknown is always 4 bytes long
+                textures[i].Unknown = reader.ReadBytes(4);
+
+                //read the data index
+                indexes.Add(reader.ReadInt32());
+            }
+
+            //read each individual texture data
+            int datasetCount = reader.ReadInt32();
+
+            for (int i = 0; i < datasetCount; i++)
+            {
+                int length = reader.ReadInt32();
+
+                datasets.Add(reader.ReadBytes(length));
+            }
+
+            //reassign data to textures
+            for (int i = 0; i < count; i++)
+            {
+                textures[i].ImageData = datasets[indexes[i]];
+            }
+
+            return textures;
         }
     }
 }

@@ -11,9 +11,15 @@ namespace PPeX.Xx2
     {
         public int Version { get; protected set; }
 
-        public byte[] Unknown;
+        public byte[] HeaderUnknown;
 
         public xxObject RootObject { get; protected set; }
+
+        public byte[] MaterialUnknown;
+
+        public List<xxMaterial> Materials = new List<xxMaterial>();
+
+        public List<xxTexture> Textures = new List<xxTexture>();
 
         public byte[] UnencodedData;
 
@@ -51,14 +57,28 @@ namespace PPeX.Xx2
                     unknownLength = 17;
                 }
 
-                Unknown = new byte[unknownLength];
-                Unknown[0] = format[4];
+                HeaderUnknown = new byte[unknownLength];
+                HeaderUnknown[0] = format[4];
 
-                stream.Read(Unknown, 1, unknownLength - 1);
-
-
+                stream.Read(HeaderUnknown, 1, unknownLength - 1);
 
                 RootObject = new xxObject(reader, Version);
+
+
+
+                MaterialUnknown = reader.ReadBytes(4);
+
+                int materialCount = reader.ReadInt32();
+
+                for (int i = 0; i < materialCount; i++)
+                    Materials.Add(new xxMaterial(reader, Version));
+
+
+                int textureCount = reader.ReadInt32();
+
+                for (int i = 0; i < textureCount; i++)
+                    Textures.Add(new xxTexture(reader));
+
 
                 using (MemoryStream unencoded = new MemoryStream())
                 {

@@ -11,25 +11,37 @@ namespace PPeX.Xx2
     {
         public int Version { get; protected set; }
 
+        public byte[] HeaderUnknown;
+
         public xxObject RootObject;
+
+        public byte[] MaterialUnknown;
+
+        public List<xxMaterial> Materials = new List<xxMaterial>();
+
+        public List<xxTexture> Textures = new List<xxTexture>();
 
         public byte[] UnencodedData;
 
-        public byte[] Unknown;
-
-        public Xx2File(int version, xxObject root, byte[] unknown, byte[] otherData)
+        public Xx2File(int version, xxObject root, byte[] headerUnknown, byte[] materialUnknown, List<xxMaterial> materials, List<xxTexture> textures, byte[] unencoded)
         {
             Version = version;
+            HeaderUnknown = headerUnknown;
             RootObject = root;
-            Unknown = unknown;
-            UnencodedData = otherData;
+            MaterialUnknown = materialUnknown;
+            Materials = materials;
+            Textures = textures;
+            UnencodedData = unencoded;
         }
 
         public Xx2File(xxParser parser)
         {
             Version = parser.Version;
+            HeaderUnknown = parser.HeaderUnknown;
             RootObject = parser.RootObject;
-            Unknown = parser.Unknown;
+            MaterialUnknown = parser.MaterialUnknown;
+            Materials = parser.Materials;
+            Textures = parser.Textures;
             UnencodedData = parser.UnencodedData;
         }
 
@@ -39,9 +51,25 @@ namespace PPeX.Xx2
             {
                 writer.Write((int)Version);
 
-                writer.Write(Unknown);
+                writer.Write(HeaderUnknown);
 
                 RootObject.Write(writer, Version);
+
+
+                writer.Write(MaterialUnknown);
+
+
+                writer.Write(Materials.Count);
+
+                for (int i = 0; i < Materials.Count; i++)
+                    Materials[i].Write(writer);
+
+
+                writer.Write(Textures.Count);
+
+                for (int i = 0; i < Textures.Count; i++)
+                    Textures[i].Write(writer);
+
 
                 writer.Write(UnencodedData);
             }

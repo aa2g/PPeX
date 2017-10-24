@@ -43,15 +43,18 @@
     <Compile Include="EncoderCommon.cs" />
     <Compile Include="FloatEncoder.cs" />
     <Compile Include="IntegerEncoder.cs" />
+    <Compile Include="Utility.cs" />
     <Compile Include="Xx2File.cs" />
     <Compile Include="Xx2Reader.cs" />
     <Compile Include="Xx2Writer.cs" />
     <Compile Include="XX\xxBone.cs" />
     <Compile Include="XX\xxFace.cs" />
+    <Compile Include="XX\xxMaterial.cs" />
     <Compile Include="XX\xxMeshInfo.cs" />
     <Compile Include="XX\xxObject.cs" />
     <Compile Include="XX\xxParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XX\xxTexture.cs" />
     <Compile Include="XX\xxVertex.cs" />
   </ItemGroup>
   <ItemGroup>
