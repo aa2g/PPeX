@@ -105,6 +105,7 @@
     <ProjectReference Include="..\OpusWrapper\OpusWrapper.csproj">
       <Project>{838bdb0b-5eb1-4c1e-9026-0a8842ac00c6}</Project>
       <Name>OpusWrapper</Name>
+      <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\PPeX.Xx2\PPeX.Xx2.csproj">
       <Project>{43858100-25a4-4982-b206-b0aac8fd533e}</Project>
