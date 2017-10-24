@@ -154,10 +154,10 @@ namespace PPeXTests
             Assert.AreEqual(original.Version, saved.Version, "Version does not match.");
 
             //verify unknown
-            Assert.AreEqual(original.Unknown.Length, saved.Unknown.Length, "Unknown length does not match.");
+            Assert.AreEqual(original.HeaderUnknown.Length, saved.HeaderUnknown.Length, "Header unknown length does not match.");
 
-            for (int x = 0; x < original.Unknown.Length; x++)
-                Assert.AreEqual(original.Unknown[x], saved.Unknown[x], "Unknown does not match.");
+            for (int x = 0; x < original.HeaderUnknown.Length; x++)
+                Assert.AreEqual(original.HeaderUnknown[x], saved.HeaderUnknown[x], "Header unknown does not match.");
 
             //verify object
             VerifyObject(original.RootObject, saved.RootObject);
@@ -167,6 +167,105 @@ namespace PPeXTests
 
             for (int x = 0; x < original.UnencodedData.Length; x++)
                 Assert.AreEqual(original.UnencodedData[x], saved.UnencodedData[x], "Unencoded data does not match.");
+        }
+
+        public static void VerifyMaterialTextures(IList<xxMaterialTexture> original, IList<xxMaterialTexture> saved)
+        {
+            Assert.AreEqual(original.Count, saved.Count, "Material texture count does not match.");
+
+            for (int i = 0; i < original.Count; i++)
+            {
+                Assert.AreEqual(original[i].Name, saved[i].Name, "Material texture name does not match.");
+
+
+                Assert.AreEqual(original[i].Unknown.Length, saved[i].Unknown.Length, "Material texture unknown length does not match.");
+
+                for (int x = 0; x < original[i].Unknown.Length; x++)
+                    Assert.AreEqual(original[i].Unknown[x], saved[i].Unknown[x], "Material texture unknown does not match.");
+            }
+        }
+
+        public static void VerifyMaterials(IList<xxMaterial> original, IList<xxMaterial> saved)
+        {
+            Assert.AreEqual(original.Count, saved.Count, "Material count does not match.");
+
+            for (int i = 0; i < original.Count; i++)
+            {
+                Assert.AreEqual(original[i].Name, saved[i].Name, "Material name does not match.");
+
+                Assert.AreEqual(original[i].Power, saved[i].Power, "Material power does not match.");
+
+                //verify ambient
+                Assert.AreEqual(original[i].Ambient.R, saved[i].Ambient.R, "Material Ambient R do not match.");
+                Assert.AreEqual(original[i].Ambient.G, saved[i].Ambient.G, "Material Ambient G do not match.");
+                Assert.AreEqual(original[i].Ambient.B, saved[i].Ambient.B, "Material Ambient B do not match.");
+                Assert.AreEqual(original[i].Ambient.A, saved[i].Ambient.A, "Material Ambient A do not match.");
+
+                //verify emissive
+                Assert.AreEqual(original[i].Emissive.R, saved[i].Emissive.R, "Material Emissive R do not match.");
+                Assert.AreEqual(original[i].Emissive.G, saved[i].Emissive.G, "Material Emissive G do not match.");
+                Assert.AreEqual(original[i].Emissive.B, saved[i].Emissive.B, "Material Emissive B do not match.");
+                Assert.AreEqual(original[i].Emissive.A, saved[i].Emissive.A, "Material Emissive A do not match.");
+
+                //verify diffuse
+                Assert.AreEqual(original[i].Diffuse.R, saved[i].Diffuse.R, "Material Diffuse R do not match.");
+                Assert.AreEqual(original[i].Diffuse.G, saved[i].Diffuse.G, "Material Diffuse G do not match.");
+                Assert.AreEqual(original[i].Diffuse.B, saved[i].Diffuse.B, "Material Diffuse B do not match.");
+                Assert.AreEqual(original[i].Diffuse.A, saved[i].Diffuse.A, "Material Diffuse A do not match.");
+
+                //verify specular
+                Assert.AreEqual(original[i].Specular.R, saved[i].Specular.R, "Material Specular R do not match.");
+                Assert.AreEqual(original[i].Specular.G, saved[i].Specular.G, "Material Specular G do not match.");
+                Assert.AreEqual(original[i].Specular.B, saved[i].Specular.B, "Material Specular B do not match.");
+                Assert.AreEqual(original[i].Specular.A, saved[i].Specular.A, "Material Specular A do not match.");
+
+                //verify unknown
+                Assert.AreEqual(original[i].Unknown.Length, saved[i].Unknown.Length, "Material unknown length does not match.");
+
+                for (int x = 0; x < original[i].Unknown.Length; x++)
+                    Assert.AreEqual(original[i].Unknown[x], saved[i].Unknown[x], "Material unknown does not match.");
+
+                //verify material textures
+                VerifyMaterialTextures(original[i].Textures, saved[i].Textures);
+            }
+        }
+
+        public static void VerifyTextures(IList<xxTexture> original, IList<xxTexture> saved)
+        {
+            Assert.AreEqual(original.Count, saved.Count, "Texture count does not match.");
+
+            for (int i = 0; i < original.Count; i++)
+            {
+                Assert.AreEqual(original[i].Name, saved[i].Name, "Texture name does not match.");
+
+                Assert.AreEqual(original[i].Checksum, saved[i].Checksum, "Texture checksum does not match.");
+
+                Assert.AreEqual(original[i].Depth, saved[i].Depth, "Texture depth does not match.");
+
+                Assert.AreEqual(original[i].Format, saved[i].Format, "Texture format does not match.");
+
+                Assert.AreEqual(original[i].Height, saved[i].Height, "Texture height does not match.");
+
+                Assert.AreEqual(original[i].ImageFileFormat, saved[i].ImageFileFormat, "Texture image file format does not match.");
+
+                Assert.AreEqual(original[i].MipLevels, saved[i].MipLevels, "Texture checksum does not match.");
+
+                Assert.AreEqual(original[i].ResourceType, saved[i].ResourceType, "Texture checksum does not match.");
+
+                Assert.AreEqual(original[i].Width, saved[i].Width, "Texture checksum does not match.");
+
+                //verify unknown
+                Assert.AreEqual(original[i].Unknown.Length, saved[i].Unknown.Length, "Texture unknown length does not match.");
+
+                for (int x = 0; x < original[i].Unknown.Length; x++)
+                    Assert.AreEqual(original[i].Unknown[x], saved[i].Unknown[x], "Texture unknown does not match.");
+
+                //verify image data
+                Assert.AreEqual(original[i].ImageData.Length, saved[i].ImageData.Length, "Texture image data length does not match.");
+
+                for (int x = 0; x < original[i].ImageData.Length; x++)
+                    Assert.AreEqual(original[i].ImageData[x], saved[i].ImageData[x], "Texture image data does not match.");
+            }
         }
     }
 }

@@ -239,6 +239,44 @@ namespace PPeXTests
                 VerifyFile(File, xxfile2);
             }
         }
+
+        [TestMethod()]
+        public void MaterialWritingTest()
+        {
+            var materials = File.Materials;
+
+            using (MemoryStream mem = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(mem))
+            using (BinaryReader reader = new BinaryReader(mem))
+            {
+                x2writer.WriteMaterials(writer, materials);
+
+                mem.Position = 0;
+
+                var newmaterials = Xx2Reader.ReadMaterials(reader, materials.Count);
+
+                VerifyMaterials(materials, newmaterials);
+            }
+        }
+
+        [TestMethod()]
+        public void TextureWritingTest()
+        {
+            var textures = File.Textures;
+
+            using (MemoryStream mem = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(mem))
+            using (BinaryReader reader = new BinaryReader(mem))
+            {
+                x2writer.WriteTextures(writer, textures);
+
+                mem.Position = 0;
+
+                var newtextures = Xx2Reader.ReadTextures(reader, textures.Count);
+
+                VerifyTextures(textures, newtextures);
+            }
+        }
     }
 
     [DeploymentItem("A00_00_00_03.xx")]
@@ -371,6 +409,44 @@ namespace PPeXTests
                 xxParser parser = new xxParser(mem);
 
                 Assert.IsTrue(PPeX.Utility.CompareBytes(data, mem.ToArray()));
+            }
+        }
+
+        [TestMethod()]
+        public void MaterialWritingTest()
+        {
+            var materials = File.Materials;
+
+            using (MemoryStream mem = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(mem))
+            using (BinaryReader reader = new BinaryReader(mem))
+            {
+                materials[0].Write(writer);
+
+                mem.Position = 0;
+
+                var newmat = new xxMaterial(reader, File.Version);
+
+                VerifyMaterials(new List<xxMaterial> { materials[0] }, new List<xxMaterial> { newmat });
+            }
+        }
+
+        [TestMethod()]
+        public void TextureWritingTest()
+        {
+            var textures = File.Textures;
+
+            using (MemoryStream mem = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(mem))
+            using (BinaryReader reader = new BinaryReader(mem))
+            {
+                textures[0].Write(writer);
+
+                mem.Position = 0;
+
+                var newtext = new xxTexture(reader);
+
+                VerifyTextures(new List<xxTexture> { textures[0] }, new List<xxTexture> { newtext });
             }
         }
     }
