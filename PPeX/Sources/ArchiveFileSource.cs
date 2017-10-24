@@ -102,7 +102,7 @@ namespace PPeX
             return file;
         }
 
-        
+
 
         /// <summary>
         /// Returns a stream of uncompressed and unencoded data.
@@ -119,6 +119,24 @@ namespace PPeX
             {
                 MemoryStream temp = new MemoryStream();
                 output.CopyTo(temp);
+                temp.Position = 0;
+                return temp;
+            }
+        }
+
+        /// <summary>
+        /// Returns a stream of only uncompressed data.
+        /// </summary>
+        /// <returns></returns>
+        public Stream GetRawStream()
+        {
+            using (Stream stream = new Substream(
+                Chunk.GetStream(),
+                (long)Offset,
+                Size))
+            {
+                MemoryStream temp = new MemoryStream();
+                stream.CopyTo(temp);
                 temp.Position = 0;
                 return temp;
             }

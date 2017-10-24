@@ -35,7 +35,7 @@ namespace PPeX
         /// The bit precision that the mesh encoder should use. Set to 0 for lossless mode.
         /// </summary>
         [JsonProperty]
-        public int Xx2Precision = 0;
+        public int Xx2Precision = 16;
 
         /// <summary>
         /// The default level Zstandard should use in compression.
