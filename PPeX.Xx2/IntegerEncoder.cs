@@ -103,6 +103,31 @@ namespace PPeX.Xx2
             return encoded.ToArray();
         }
 
+        public static byte[] EncodeRaw(uint[] values)
+        {
+            List<byte> encoded = new List<byte>();
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                encoded.AddRange(BitConverter.GetBytes(values[i]));
+            }
+
+            return encoded.ToArray();
+        }
+
+
+        public static byte[] EncodeRaw(ushort[] values)
+        {
+            List<byte> encoded = new List<byte>();
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                encoded.AddRange(BitConverter.GetBytes(values[i]));
+            }
+
+            return encoded.ToArray();
+        }
+
 
         public static uint[] DecodeFull(System.IO.BinaryReader reader, int count, bool zigzag = true)
         {
@@ -112,6 +137,21 @@ namespace PPeX.Xx2
         public static uint[] DecodeHalf(System.IO.BinaryReader reader, int count, bool zigzag = true)
         {
             return EncoderCommon.DecodeAll(reader, count, true, zigzag);
+        }
+
+        public static uint[] DecodeRaw(System.IO.BinaryReader reader, int count, bool fullInt)
+        {
+            uint[] values = new uint[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                if (fullInt)
+                    values[i] = reader.ReadUInt32();
+                else
+                    values[i] = reader.ReadUInt16();
+            }
+
+            return values;
         }
     }
 }

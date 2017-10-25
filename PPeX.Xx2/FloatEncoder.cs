@@ -134,6 +134,29 @@ namespace PPeX.Xx2
             return values;
         }
 
+        public static byte[] Encode(float[] floats, double quality)
+        {
+            if (quality == 0)
+                return Encode(floats); //fallback to lossless method
+
+            //convert quality to a precision level
+            double range = (double)floats.Max() - (double)floats.Min();
+
+            double granularity = 1 / (Math.Pow(2, quality));
+
+            //range / ((2 ^ precision) - 1) = granularity
+
+            //rearrange to:
+            //precision = log2((range / granularity) + 1)
+            double precision = Math.Log((range / granularity) + 1, 2);
+
+            //round up
+            precision = Math.Ceiling(precision);
+
+            //use the normal encoding method
+            return Encode(floats, (int)precision);
+        }
+
         public static byte[] Encode(float[] floats, int precision)
         {
             if (precision == 0)
@@ -155,7 +178,10 @@ namespace PPeX.Xx2
             //System.Diagnostics.Trace.WriteLine("Range: " + (floats.Max() - floats.Min()).ToString());
 
             //write values
-            output.AddRange(IntegerEncoder.Encode(values, false));
+            if (precision > 16)
+                output.AddRange(IntegerEncoder.EncodeRaw(values));
+            else
+                output.AddRange(IntegerEncoder.EncodeRaw(values.Select(x => (ushort)x).ToArray()));
 
             return output.ToArray();
         }
@@ -168,7 +194,8 @@ namespace PPeX.Xx2
             //read multiplier
             float multiplier = reader.ReadSingle();
 
-            uint[] values = IntegerEncoder.DecodeFull(reader, count, false);
+            //uint[] values = IntegerEncoder.DecodeFull(reader, count, false);
+            uint[] values = IntegerEncoder.DecodeRaw(reader, count, precision > 16);
 
             //calculate largest within precision
             uint largest = (uint)((1 << precision) - 1);
