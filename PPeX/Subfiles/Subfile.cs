@@ -9,17 +9,48 @@ using System.Threading.Tasks;
 
 namespace PPeX
 {
-    public class Subfile : BaseSubfile
+    public class Subfile : ISubfile
     {
-        protected uint _size;
-        public override uint Size => _size;
+        /// <summary>
+        /// The uncompressed size of the data.
+        /// </summary>
+        public uint Size { get; protected set; }
 
-        protected bool OnlyReport;
+        /// <summary>
+        /// The name of the .pp file the subfile is associated with.
+        /// </summary>
+        public string ArchiveName { get; protected set; }
 
-        public Subfile(IDataSource source, string name, string archiveName, ArchiveFileType type, bool onlyReport = false) : base(source, name, archiveName)
+        /// <summary>
+        /// The name of the subfile as it is stored in a .pp file.
+        /// </summary>
+        public string Name { get; protected set; }
+
+        /// <summary>
+        /// The content type of the subfile.
+        /// </summary>
+        public ArchiveFileType Type { get; protected set; }
+
+        /// <summary>
+        /// The data source of the subfile.
+        /// </summary>
+        public IDataSource Source { get; protected set; }
+
+        /// <summary>
+        /// Writes an uncompressed version of the data to a stream.
+        /// </summary>
+        /// <param name="stream">The stream to write the uncompressed data to.</param>
+        public Stream GetRawStream()
         {
+            return Source.GetStream();
+        }
+
+        public Subfile(IDataSource source, string name, string archiveName, ArchiveFileType type)
+        {
+            ArchiveName = archiveName;
+            //Name = name;
+            Source = source;
             Type = type;
-            OnlyReport = onlyReport;
 
             using (IEncoder encoder = EncoderFactory.GetEncoder(Source, Type))
             {
@@ -27,12 +58,12 @@ namespace PPeX
             }
         }
 
-        public Subfile(IDataSource source, string name, string archiveName, bool onlyReport = false) : this(source, name, archiveName, ArchiveFileType.Raw, onlyReport)
+        public Subfile(IDataSource source, string name, string archiveName) : this(source, name, archiveName, ArchiveFileType.Raw)
         {
             if (name.EndsWith(".wav"))
                 Type = ArchiveFileType.XggAudio;
             else if (name.EndsWith(".xx"))
-                Type = ArchiveFileType.Xx2Mesh;
+                Type = ArchiveFileType.Xx3Mesh;
             else
                 Type = ArchiveFileType.Raw;
 
@@ -40,23 +71,6 @@ namespace PPeX
             {
                 Name = encoder.NameTransform(name);
             }
-        }
-
-        public override void WriteToStream(Stream stream)
-        {
-            if (!OnlyReport)
-                using (IEncoder encoder = EncoderFactory.GetEncoder(Source, Type))
-                {
-                    encoder.Encode().CopyTo(stream);
-                    _size = encoder.EncodedLength;
-                }
-            else
-                using (Stream sourceStream = Source.GetStream())
-                {
-                    sourceStream.CopyTo(stream);
-                    _size = (uint)sourceStream.Length;
-                }
-                    
         }
     }
 }

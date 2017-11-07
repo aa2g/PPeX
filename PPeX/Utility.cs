@@ -6,18 +6,19 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 using PPeX.Compressors;
+using System.Runtime;
 
 namespace PPeX
 {
     public static class Utility
     {
-        public static byte[] GetMd5(Stream stream)
+        public static Md5Hash GetMd5(Stream stream)
         {
             MD5 md5 = MD5.Create();
             return md5.ComputeHash(stream);
         }
 
-        public static byte[] GetMd5(Stream stream, long offset, long length)
+        public static Md5Hash GetMd5(Stream stream, long offset, long length)
         {
             MD5 md5 = MD5.Create();
             Substream sub = new Substream(stream, offset, length);
@@ -94,6 +95,13 @@ namespace PPeX
                     return false;
 
             return true;
+        }
+
+        public static void GCCompress()
+        {
+            //Collect garbage and compact the heap
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect();
         }
     }
 

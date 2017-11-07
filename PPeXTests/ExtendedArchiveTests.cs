@@ -91,7 +91,7 @@ namespace PPeX.Tests
             foreach (var chunk in TestArchive.Chunks)
             foreach (var file in chunk.Files)
             {
-                if (file.Offset + file.Size > chunk.UncompressedLength)
+                if ((file.Source as ArchiveFileSource).Offset + file.Size > chunk.UncompressedLength)
                     failed++;
             }
 
