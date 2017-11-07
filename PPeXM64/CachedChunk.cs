@@ -26,7 +26,7 @@ namespace PPeXM64
 
             foreach (var file in baseChunk.Files)
             {
-                Files.Add(new CachedFile(file, this));
+                Files.Add(new CachedFile(file.Source as ArchiveFileSource, this));
             }
         }
 
