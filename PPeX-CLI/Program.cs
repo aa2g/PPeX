@@ -71,9 +71,9 @@ Sets voice (1 channel audio) bitrate
 (-c only)
 Sets .xx2 bit precision. Set to 0 for lossless mode
 
--threads
+-threads 4
 (-c only)
-Sets threads to be used during compression. Default is (number of processor cores / 2)
+Sets threads to be used during compression.
 
 -regex .+
 Sets a regex to use for compressing or extracting");
