@@ -23,9 +23,7 @@ namespace FragLabs.Audio.Codecs
             using (OpusDecoder decoder = OpusDecoder.Create(48000, channels))
             using (BinaryReader reader = new BinaryReader(stream))
             {
-                //long offset = stream.Position;
                 for (int i = 0; i < length; i++)
-                //while (stream.Position < length)
                 {
                     int framesize = (int)reader.ReadUInt32();
                     byte[] frame = reader.ReadBytes(framesize);
