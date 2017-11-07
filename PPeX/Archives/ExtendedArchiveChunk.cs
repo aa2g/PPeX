@@ -9,9 +9,20 @@ using PPeX.Compressors;
 
 namespace PPeX
 {
+    /// <summary>
+    /// The type of the chunk, which determines the file provider it uses.
+    /// </summary>
+    public enum ChunkType : byte
+    {
+        Generic = 0,
+        Xx3 = 3
+    }
+
     public class ExtendedArchiveChunk
     {
         public uint ID { get; protected set; }
+
+        public ChunkType Type { get; protected set; }
 
         public ArchiveChunkCompression Compression { get; protected set; }
 
@@ -41,6 +52,7 @@ namespace PPeX
             chunk.baseArchive = archive;
 
             chunk.ID = reader.ReadUInt32();
+            chunk.Type = (ChunkType)reader.ReadByte();
             chunk.Compression = (ArchiveChunkCompression)reader.ReadByte();
             chunk.CRC32C = reader.ReadUInt32();
             chunk.Offset = reader.ReadUInt64();
@@ -52,22 +64,22 @@ namespace PPeX
             return chunk;
         }
 
-        protected IReadOnlyList<ArchiveFileSource> generateFileList()
+        protected IReadOnlyList<ArchiveSubfile> generateFileList()
         {
-            List<ArchiveFileSource> files = new List<ArchiveFileSource>();
+            List<ArchiveSubfile> files = new List<ArchiveSubfile>();
 
             foreach (ArchiveFileSource file in baseArchive.Files)
             {
                 if (file.ChunkID == ID)
-                    files.Add(file);
+                    files.Add(new ArchiveSubfile(file));
             }
 
             return files;
         }
 
-        IReadOnlyList<ArchiveFileSource> _cachedFileList = null;
+        IReadOnlyList<ArchiveSubfile> _cachedFileList = null;
 
-        public IReadOnlyList<ArchiveFileSource> Files
+        public IReadOnlyList<ArchiveSubfile> Files
         {
             get
             {

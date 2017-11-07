@@ -9,7 +9,6 @@ namespace PPeX
 {
     /// <summary>
     /// The interface for a subfile within an extended archive. 
-    /// Since these are reading from an already packed archive, subfiles usually only decompress.
     /// </summary>
     public interface ISubfile
     {
@@ -38,9 +37,9 @@ namespace PPeX
         ArchiveFileType Type { get; }
 
         /// <summary>
-        /// Copies raw, compressed and/or encoded data to the stream.
+        /// Creates a stream that returns uncompressed and unencoded data.
         /// </summary>
-        /// <param name="stream">The stream to copy.</param>
-        void WriteToStream(Stream stream);
+        /// <returns></returns>
+        Stream GetRawStream();
     }
 }

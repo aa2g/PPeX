@@ -90,13 +90,35 @@ namespace PPeX
             List<ChunkWriter> chunks = new List<ChunkWriter>();
             uint ID = 0;
 
-            //bunch duplicate files together
-            Queue<ISubfile> fileList = new Queue<ISubfile>(Files.OrderBy(x => x.Source.Md5, new ByteArrayComparer()));
+            Queue<ISubfile> fileList;
 
-            ChunkWriter currentChunk = new ChunkWriter(ID++, DefaultCompression);
+            ChunkWriter currentChunk;
             uint currentSize = 0;
 
-            double total = fileList.Count;
+            double total;
+
+
+            List<ISubfile> GenericFiles = new List<ISubfile>(Files);
+
+            //XX3 chunks
+            progress.Report(new Tuple<string, int>("Allocating Xx3 chunks...\r\n", 0));
+
+            List<ISubfile> Xx3Files = new List<ISubfile>();
+            
+            foreach (var file in Files)
+            {
+                if (file.Type == ArchiveFileType.Xx3Mesh)
+                {
+                    Xx3Files.Add(file);
+                    GenericFiles.Remove(file);
+                }
+            }
+
+            fileList = new Queue<ISubfile>(Xx3Files.OrderBy(x => x.Source.Md5, new ByteArrayComparer()));
+
+            total = fileList.Count;
+
+            currentChunk = new ChunkWriter(ID++, DefaultCompression, ChunkType.Xx3);
 
             while (fileList.Count > 0)
             {
@@ -111,11 +133,79 @@ namespace PPeX
                     continue;
                 }
 
+                uint fileSize = file.Source.Size;
+
+                //This takes longer but maximises space efficiency
+                /*
+                //need to calculate size based on encoded data
+                using (var encoder = file.GetEncoder())
+                {
+                    encoder.Encode().Dispose();
+                    fileSize = encoder.EncodedLength;
+                }
+                */
+
+                if (currentSize + fileSize > ChunkSizeLimit)
+                {
+                    //cut off the chunk here
+                    chunks.Add(currentChunk);
+
+                    //create a new chunk
+                    currentChunk = new ChunkWriter(ID++, DefaultCompression, ChunkType.Xx3);
+                    currentSize = 0;
+                }
+
+                currentChunk.Files.Add(file);
+                currentSize += fileSize;
+
+            }
+
+            if (currentChunk.Files.Count > 0)
+                chunks.Add(currentChunk);
+
+
+            //GENERIC chunks
+            progress.Report(new Tuple<string, int>("Allocating generic chunks...\r\n", 0));
+            //Create a LST chunk
+            ChunkWriter LSTWriter = new ChunkWriter(ID++, DefaultCompression, ChunkType.Generic);
+
+
+            //bunch duplicate files together
+            //going to assume OrderBy is a stable sort
+            fileList = new Queue<ISubfile>(
+                GenericFiles.OrderBy(x => x.Source.Md5, new ByteArrayComparer()) //first sort all similar hashes together
+                .OrderBy(x => Path.GetExtension(x.Name) ?? x.Name)); //then we order by file type, preserving duplicate file order
+
+
+            total = fileList.Count;
+            currentSize = 0;
+
+            currentChunk = new ChunkWriter(ID++, DefaultCompression, ChunkType.Generic);
+
+            while (fileList.Count > 0)
+            {
+                progress.Report(new Tuple<string, int>("", (int)(((total - fileList.Count) * 100) / total)));
+
+                ISubfile file = fileList.Dequeue();
+
+                if (file.Name.EndsWith(".lst"))
+                {
+                    LSTWriter.Files.Add(file);
+                    continue;
+                }
+
+                if (currentChunk.Files.Any(x => Utility.CompareBytes(x.Source.Md5, file.Source.Md5)))
+                {
+                    //if the file is a dupe, add the file regardless
+                    currentChunk.Files.Add(file);
+                    continue;
+                }
+
                 if (file.Type == ArchiveFileType.XggAudio)
                 {
                     //non-compressable data, assign it and any duplicates to a new chunk
 
-                    ChunkWriter tempChunk = new ChunkWriter(ID++, ArchiveChunkCompression.Uncompressed);
+                    ChunkWriter tempChunk = new ChunkWriter(ID++, ArchiveChunkCompression.Uncompressed, ChunkType.Generic);
 
                     tempChunk.Files.Add(file);
 
@@ -165,7 +255,7 @@ namespace PPeX
                     chunks.Add(currentChunk);
 
                     //create a new chunk
-                    currentChunk = new ChunkWriter(ID++, DefaultCompression);
+                    currentChunk = new ChunkWriter(ID++, DefaultCompression, ChunkType.Generic);
                     currentSize = 0;
                 }
 
@@ -173,6 +263,9 @@ namespace PPeX
                 currentSize += fileSize;
 
             }
+
+            if (LSTWriter.Files.Count > 0)
+                chunks.Add(LSTWriter);
 
             if (currentChunk.Files.Count > 0)
                 chunks.Add(currentChunk);
@@ -186,6 +279,8 @@ namespace PPeX
         /// <param name="progress">The progress callback object.</param>
         public void Write(IProgress<Tuple<string, int>> progress)
         {
+            Xx3Encoder.texBank = new Xx2.TextureBank();
+
             using (MemoryStream fileTableStream = new MemoryStream())
             using (BinaryWriter fileTableWriter = new BinaryWriter(fileTableStream))
             using (MemoryStream chunkTableStream = new MemoryStream())
@@ -263,11 +358,33 @@ namespace PPeX
                     progress.Report(new Tuple<string, int>(
                                     "[" + i + " / " + allocatedChunks.Count + "] Written chunk id:" + chunk.ID + " (" + chunk.Files.Count + " files)\r\n",
                                     100 * i / allocatedChunks.Count));
+
+                    //Compress memory
+                    Utility.GCCompress();
                 });
+
+                int additionalChunks = 0;
+
+                //write texture bank chunk
+                progress.Report(new Tuple<string, int>("Writing texture bank...\r\n", 100));
+                var textureBankWriter = new ChunkWriter((uint)(allocatedChunks.Count + (additionalChunks++)), DefaultCompression, ChunkType.Xx3);
+                var textureBankData = new MemoryStream();
+                Xx3Encoder.texBank.Write(new BinaryWriter(textureBankData));
+
+                textureBankWriter.Files.Add(
+                    new Subfile(
+                        new MemorySource(textureBankData.ToArray()),
+                        "TextureBank",
+                        "_xx3"));
+                    
+                textureBankWriter.CompressHybrid(chunkTableWriter, fileTableWriter, ref fileCount, ArchiveStream);
+
+                //Compress memory
+                Utility.GCCompress();
 
                 ulong chunkTableOffset = (ulong)ArchiveStream.Position;
 
-                dataWriter.Write((uint)allocatedChunks.Count);
+                dataWriter.Write((uint)allocatedChunks.Count + additionalChunks);
 
                 chunkTableStream.Position = 0;
                 chunkTableStream.CopyTo(ArchiveStream);
@@ -296,14 +413,18 @@ namespace PPeX
         protected class ChunkWriter
         {
             public uint ID { get; protected set; }
+
+            public ChunkType Type { get; protected set; }
+
             public ArchiveChunkCompression Compression { get; protected set; }
             
             ulong UncompressedSize { get; set; }
 
-            public ChunkWriter(uint id, ArchiveChunkCompression compression)
+            public ChunkWriter(uint id, ArchiveChunkCompression compression, ChunkType type)
             {
                 ID = id;
                 Compression = compression;
+                Type = type;
             }
 
             public List<ISubfile> Files = new List<ISubfile>();
@@ -380,6 +501,8 @@ namespace PPeX
             {
                 chunkTableWriter.Write(ID);
 
+                chunkTableWriter.Write((byte)Type);
+
                 chunkTableWriter.Write((byte)Compression);
 
                 uint crc = Crc32CAlgorithm.Compute(CachedOutput.ToArray());
@@ -416,7 +539,10 @@ namespace PPeX
                                 Md5 = file.Source.Md5
                             });
 
-                            file.WriteToStream(uncompressed);
+                            using (IEncoder encoder = EncoderFactory.GetEncoder(file.Source, file.Type))
+                            {
+                                encoder.Encode().CopyTo(uncompressed);
+                            }
                         }
                     }
 
@@ -488,7 +614,12 @@ namespace PPeX
 
                                 long originalPosition = uncompressed.Position;
 
-                                file.WriteToStream(uncompressed);
+
+                                using (IEncoder encoder = EncoderFactory.GetEncoder(file.Source, file.Type))
+                                {
+                                    encoder.Encode().CopyTo(uncompressed);
+                                }
+
 
                                 ulong size = (ulong)(uncompressed.Position - originalPosition);//file.Source.Size;
 
