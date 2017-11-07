@@ -45,7 +45,7 @@ namespace PPeX.Xx2
             UnencodedData = parser.UnencodedData;
         }
 
-        public void DecodeToXX(Stream stream)
+        public virtual void DecodeToXX(Stream stream)
         {
             using (BinaryWriter writer = new BinaryWriter(stream, Encoding.ASCII, true))
             {
