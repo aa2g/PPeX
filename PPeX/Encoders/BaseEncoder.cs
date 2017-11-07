@@ -67,6 +67,8 @@ namespace PPeX.Encoders
                     return new XggEncoder(source, true);
                 case ArchiveFileType.Xx2Mesh:
                     return new Xx2Encoder(source);
+                case ArchiveFileType.Xx3Mesh:
+                    return new Xx3Encoder(source);
                 case ArchiveFileType.Raw:
                     return new PassthroughEncoder(source.GetStream());
                 default:
