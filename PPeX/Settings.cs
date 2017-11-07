@@ -60,11 +60,24 @@ namespace PPeX
         /// </summary>
         [JsonProperty]
         public string PPXLocation = "";
+
         /// <summary>
         /// The location to load PPX archives.
         /// </summary>
         [JsonProperty]
         public string PlaceholdersLocation = "";
+
+        /// <summary>
+        /// Whether or not to use an MD5 cache to speed up file hashing.
+        /// </summary>
+        [JsonProperty]
+        public bool UseMd5Cache = false;
+
+        /// <summary>
+        /// The location to load PPX archives.
+        /// </summary>
+        [JsonProperty]
+        public Dictionary<string, CachedMd5> Md5Cache = new Dictionary<string, CachedMd5>();
 
         public static Settings Load()
         {

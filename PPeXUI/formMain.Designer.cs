@@ -97,6 +97,9 @@
             this.label2 = new System.Windows.Forms.Label();
             this.numBitrate = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.chkMd5Cache = new System.Windows.Forms.CheckBox();
+            this.btnClearCache = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -113,6 +116,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numChunkSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numBitrate)).BeginInit();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -698,6 +702,7 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.groupBox1);
             this.tabPage3.Controls.Add(this.numXx2Precision);
             this.tabPage3.Controls.Add(this.label10);
             this.tabPage3.Controls.Add(this.numThreads);
@@ -722,7 +727,6 @@
             0,
             0});
             this.numXx2Precision.Name = "numXx2Precision";
-            this.numXx2Precision.ReadOnly = true;
             this.numXx2Precision.Size = new System.Drawing.Size(82, 20);
             this.numXx2Precision.TabIndex = 5;
             this.numXx2Precision.Value = new decimal(new int[] {
@@ -754,7 +758,6 @@
             0,
             0});
             this.numThreads.Name = "numThreads";
-            this.numThreads.ReadOnly = true;
             this.numThreads.Size = new System.Drawing.Size(82, 20);
             this.numThreads.TabIndex = 3;
             this.numThreads.Value = new decimal(new int[] {
@@ -791,7 +794,6 @@
             0,
             0});
             this.numChunkSize.Name = "numChunkSize";
-            this.numChunkSize.ReadOnly = true;
             this.numChunkSize.Size = new System.Drawing.Size(82, 20);
             this.numChunkSize.TabIndex = 3;
             this.numChunkSize.Value = new decimal(new int[] {
@@ -811,6 +813,7 @@
             // 
             // numBitrate
             // 
+            this.numBitrate.Enabled = false;
             this.numBitrate.Increment = new decimal(new int[] {
             32,
             0,
@@ -823,7 +826,6 @@
             0,
             0});
             this.numBitrate.Name = "numBitrate";
-            this.numBitrate.ReadOnly = true;
             this.numBitrate.Size = new System.Drawing.Size(82, 20);
             this.numBitrate.TabIndex = 3;
             // 
@@ -835,6 +837,39 @@
             this.label9.Size = new System.Drawing.Size(123, 13);
             this.label9.TabIndex = 0;
             this.label9.Text = "Audio bitrate (0 for auto):";
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.btnClearCache);
+            this.groupBox1.Controls.Add(this.chkMd5Cache);
+            this.groupBox1.Location = new System.Drawing.Point(9, 174);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(261, 99);
+            this.groupBox1.TabIndex = 6;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Advanced";
+            // 
+            // chkMd5Cache
+            // 
+            this.chkMd5Cache.AutoSize = true;
+            this.chkMd5Cache.Checked = true;
+            this.chkMd5Cache.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkMd5Cache.Location = new System.Drawing.Point(6, 19);
+            this.chkMd5Cache.Name = "chkMd5Cache";
+            this.chkMd5Cache.Size = new System.Drawing.Size(113, 17);
+            this.chkMd5Cache.TabIndex = 0;
+            this.chkMd5Cache.Text = "Use MD5 Caching";
+            this.chkMd5Cache.UseVisualStyleBackColor = true;
+            // 
+            // btnClearCache
+            // 
+            this.btnClearCache.Location = new System.Drawing.Point(125, 15);
+            this.btnClearCache.Name = "btnClearCache";
+            this.btnClearCache.Size = new System.Drawing.Size(130, 23);
+            this.btnClearCache.TabIndex = 1;
+            this.btnClearCache.Text = "Clear Cache";
+            this.btnClearCache.UseVisualStyleBackColor = true;
+            this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
             // 
             // formMain
             // 
@@ -870,6 +905,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numChunkSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numBitrate)).EndInit();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -942,5 +979,8 @@
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.NumericUpDown numXx2Precision;
         private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Button btnClearCache;
+        private System.Windows.Forms.CheckBox chkMd5Cache;
     }
 }
