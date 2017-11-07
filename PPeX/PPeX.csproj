@@ -62,6 +62,26 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Xx2\EncoderCommon.cs" />
+    <Compile Include="Xx2\FloatEncoder.cs" />
+    <Compile Include="Xx2\IntegerEncoder.cs" />
+    <Compile Include="Xx2\Md5Hash.cs" />
+    <Compile Include="Xx2\TextureBank.cs" />
+    <Compile Include="Xx2\Utility.cs" />
+    <Compile Include="Xx2\Xx2\Xx2File.cs" />
+    <Compile Include="Xx2\Xx2\Xx2Reader.cs" />
+    <Compile Include="Xx2\Xx2\Xx2Writer.cs" />
+    <Compile Include="Xx2\Xx3\Xx3File.cs" />
+    <Compile Include="Xx2\Xx3\Xx3Writer.cs" />
+    <Compile Include="Xx2\Xx3\xxTextureReference.cs" />
+    <Compile Include="Xx2\XX\xxBone.cs" />
+    <Compile Include="Xx2\XX\xxFace.cs" />
+    <Compile Include="Xx2\XX\xxMaterial.cs" />
+    <Compile Include="Xx2\XX\xxMeshInfo.cs" />
+    <Compile Include="Xx2\XX\xxObject.cs" />
+    <Compile Include="Xx2\XX\xxParser.cs" />
+    <Compile Include="Xx2\XX\xxTexture.cs" />
+    <Compile Include="Xx2\XX\xxVertex.cs" />
     <Compile Include="Archives\ArchiveEnum.cs" />
     <Compile Include="Archives\ExtendedArchiveChunk.cs" />
     <Compile Include="CachedMd5.cs" />
@@ -114,12 +134,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PPeX.Xx2\PPeX.Xx2.csproj">
-      <Project>{43858100-25a4-4982-b206-b0aac8fd533e}</Project>
-      <Name>PPeX.Xx2</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
+    <Content Include="Xx2\XXFormatFinal.txt" />
     <Content Include="opus.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
