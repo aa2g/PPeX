@@ -398,7 +398,7 @@ namespace PPeXUI
 
                         foreach (var item in items)
                         {
-                            ucb += item.Size;
+                            ucb += (long)item.Size;
 
                             using (Stream data = item.Source.GetStream())
                                 cb += PPeX.Utility.TestCompression(data, method);
@@ -909,7 +909,7 @@ namespace PPeXUI
 
         public string MD5 => BitConverter.ToString(Source.Md5).Replace("-", "");
 
-        public uint Size => Source.Size;
+        public ulong Size => Source.Size;
 
         private string _name;
         public string Name

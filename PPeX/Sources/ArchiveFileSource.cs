@@ -21,7 +21,7 @@ namespace PPeX
         /// <summary>
         /// The length of the file data in the uncompressed chunk.
         /// </summary>
-        public uint Size { get; protected set; }
+        public ulong Size { get; protected set; }
 
         /// <summary>
         /// The offset of the file data in the uncompressed chunk.
@@ -96,7 +96,7 @@ namespace PPeX
             file.ChunkID = reader.ReadUInt32();
 
             file.Offset = reader.ReadUInt64();
-#warning consider changing ISource to fit ulong
+
             file.Size = (uint)reader.ReadUInt64();
 
             return file;
@@ -113,7 +113,7 @@ namespace PPeX
             using (Stream stream = new Substream(
                 Chunk.GetStream(),
                 (long)Offset,
-                Size))
+                (long)Size))
             using (var decoder = EncoderFactory.GetDecoder(stream, Type))
             using (Stream output = decoder.Decode())
             {
@@ -133,7 +133,7 @@ namespace PPeX
             using (Stream stream = new Substream(
                 Chunk.GetStream(),
                 (long)Offset,
-                Size))
+                (long)Size))
             {
                 MemoryStream temp = new MemoryStream();
                 stream.CopyTo(temp);

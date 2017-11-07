@@ -12,7 +12,7 @@ namespace PPeX
         /// <summary>
         /// The uncompressed size of the data.
         /// </summary>
-        public virtual uint Size { get; protected set; }
+        public virtual ulong Size { get; protected set; }
 
         protected byte[] _md5;
 

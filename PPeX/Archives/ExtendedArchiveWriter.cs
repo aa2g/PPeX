@@ -93,7 +93,7 @@ namespace PPeX
             Queue<ISubfile> fileList;
 
             ChunkWriter currentChunk;
-            uint currentSize = 0;
+            ulong currentSize = 0;
 
             double total;
 
@@ -133,7 +133,7 @@ namespace PPeX
                     continue;
                 }
 
-                uint fileSize = file.Source.Size;
+                ulong fileSize = file.Source.Size;
 
                 //This takes longer but maximises space efficiency
                 /*
@@ -234,7 +234,7 @@ namespace PPeX
                     continue;
                 }
 
-                uint fileSize = file.Source.Size;
+                ulong fileSize = file.Source.Size;
 
                 //This takes longer but maximises space efficiency
                 /*
@@ -548,7 +548,7 @@ namespace PPeX
 
                     UncompressedSize = (ulong)uncompressed.Length;
 
-                    ulong iUncompressedSize = (ulong)Files.Sum(x => x.Size);
+                    ulong iUncompressedSize = (ulong)Files.Sum(x => (long)x.Size);
 
                     uncompressed.Position = 0;
 
@@ -641,7 +641,7 @@ namespace PPeX
 
                     UncompressedSize = (ulong)uncompressed.Length;
 
-                    ulong iUncompressedSize = (ulong)Files.Sum(x => x.Size);
+                    ulong iUncompressedSize = (ulong)Files.Sum(x => (long)x.Size);
 
                     uncompressed.Position = 0;
 

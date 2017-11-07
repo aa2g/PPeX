@@ -50,8 +50,7 @@ namespace PPeX
         /// <summary>
         /// The uncompressed size of the data.
         /// </summary>
-#warning implement
-        public uint Size => (uint)DataStream.Length;
+        public ulong Size => (ulong)DataStream.Length;
 
         /// <summary>
         /// The type of the data.

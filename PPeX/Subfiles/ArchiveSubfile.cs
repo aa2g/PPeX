@@ -21,7 +21,7 @@ namespace PPeX
 
         public string Name => _source.Name;
 
-        public uint Size => _source.Size;
+        public ulong Size => (uint)_source.Size;
 
         public ArchiveFileType Type => _source.Type;
 
