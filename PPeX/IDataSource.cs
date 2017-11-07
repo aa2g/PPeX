@@ -15,7 +15,7 @@ namespace PPeX
         /// <summary>
         /// The size of the uncompressed data.
         /// </summary>
-        uint Size { get; }
+        ulong Size { get; }
 
         /// <summary>
         /// The MD5 hash of the uncompressed data.

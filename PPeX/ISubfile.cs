@@ -29,7 +29,7 @@ namespace PPeX
         /// <summary>
         /// The compressed file size of the subfile.
         /// </summary>
-        uint Size { get; }
+        ulong Size { get; }
 
         /// <summary>
         /// The content type of the subfile.

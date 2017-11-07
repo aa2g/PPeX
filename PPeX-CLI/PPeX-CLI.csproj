@@ -53,10 +53,6 @@
       <Project>{a611a988-d477-4e16-af2f-d3a661b909a9}</Project>
       <Name>PPeX</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SB3UtilityPP\SB3UtilityPP.csproj">
-      <Project>{5647B104-8F58-4867-B849-DAC65D5243BD}</Project>
-      <Name>SB3UtilityPP</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -14,7 +14,7 @@ namespace PPeX
         /// <summary>
         /// The uncompressed size of the data.
         /// </summary>
-        public uint Size { get; protected set; }
+        public ulong Size { get; protected set; }
 
         /// <summary>
         /// The name of the .pp file the subfile is associated with.
