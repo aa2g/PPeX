@@ -142,12 +142,6 @@ namespace PPeX
             }
         }
 
-        public void WriteToStream(Stream stream)
-        {
-            using (Stream input = GetStream())
-                input.CopyTo(stream);
-        }
-
         public void Dispose()
         {
             

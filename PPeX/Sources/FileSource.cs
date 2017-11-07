@@ -24,6 +24,32 @@ namespace PPeX
             Size = (uint)new FileInfo(Filename).Length;
         }
 
+        public override byte[] Md5
+        {
+            get
+            {
+                if (Core.Settings.UseMd5Cache)
+                {
+                    CachedMd5 cached;
+                    if (Core.Settings.Md5Cache.TryGetValue(Filename, out cached))
+                    {
+                        if (cached.WeakFileCompare(Filename))
+                            return cached.Hash;
+                    }
+
+                    //otherwise generate new cached hash
+                    cached = CachedMd5.FromFile(Filename);
+
+                    Core.Settings.Md5Cache.Add(Filename, cached);
+
+                    return cached.Hash;
+                }
+
+                //otherwise fall back to normal hash
+                return base.Md5;
+            }
+        }
+
         /// <summary>
         /// Returns a stream of uncompressed data.
         /// </summary>

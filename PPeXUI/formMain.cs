@@ -497,6 +497,23 @@ namespace PPeXUI
                 txtSaveProg.AppendText(x.Item1);
             });
 
+            //attempt loading md5 cache
+            Core.Settings.UseMd5Cache = chkMd5Cache.Checked;
+
+            if (Core.Settings.UseMd5Cache && File.Exists("HashCache.md5.zs"))
+            {
+                progress.Report(new Tuple<string, int>(
+                    "Loading MD5 cache...\n",
+                    0));
+
+                using (var decom = new ZstdNet.Decompressor())
+                {
+                    string rawCache = Encoding.ASCII.GetString(decom.Unwrap(File.ReadAllBytes("HashCache.md5.zs")));
+
+                    Core.Settings.Md5Cache = rawCache.Split('\n').Select(x => CachedMd5.FromString(x)).ToDictionary(x => x.Filename);
+                }
+            }
+
             Task.Run(() =>
             {
                 try
@@ -546,6 +563,15 @@ namespace PPeXUI
                 finally
                 {
                     arc.Close();
+
+                    //write hash cache
+                    if (Core.Settings.UseMd5Cache)
+                        using (var comp = new ZstdNet.Compressor())
+                        {
+                            string rawCache = Core.Settings.Md5Cache.Values.Select(x => x.ToWritableString()).Aggregate((x, y) => x + '\n' + y);
+
+                            File.WriteAllBytes("HashCache.md5.zs", comp.Wrap(Encoding.ASCII.GetBytes(rawCache)));
+                        }
                 }
             });
 
@@ -857,6 +883,17 @@ namespace PPeXUI
             });
 
             progform.ShowDialog(this);
+        }
+
+        private void btnClearCache_Click(object sender, EventArgs e)
+        {
+            if (File.Exists("HashCache.md5.zs"))
+                File.Delete("HashCache.md5.zs");
+        }
+
+        public void LoadMd5Cache()
+        {
+
         }
     }
 

@@ -19,7 +19,7 @@ namespace PPeX
         /// <summary>
         /// The MD5 hash of the uncompressed data.
         /// </summary>
-        public byte[] Md5
+        public virtual byte[] Md5
         {
             get
             {
