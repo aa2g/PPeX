@@ -42,17 +42,11 @@
       <HintPath>..\packages\lz4net.1.0.15.93\lib\net4-client\LZ4.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NAudio, Version=1.8.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NAudio.1.8.0\lib\net35\NAudio.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NAudio.Lame, Version=1.0.3.3048, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NAudio.Lame.1.0.4\lib\net20\NAudio.Lame.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="NAudio, Version=1.8.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NAudio.1.8.3\lib\net35\NAudio.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -63,14 +57,14 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="ZstdNet, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ZstdNet.1.2.0\lib\net45\ZstdNet.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="ZstdNet, Version=1.3.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ZstdNet.1.3.1\lib\net45\ZstdNet.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Archives\ArchiveEnum.cs" />
     <Compile Include="Archives\ExtendedArchiveChunk.cs" />
+    <Compile Include="CachedMd5.cs" />
     <Compile Include="Compressors\BaseCompressor.cs" />
     <Compile Include="Compressors\Lz4Compressor.cs" />
     <Compile Include="Compressors\PassthroughCompressor.cs" />
@@ -80,14 +74,17 @@
     <Compile Include="Encoders\PassthroughEncoder.cs" />
     <Compile Include="Encoders\XggEncoder.cs" />
     <Compile Include="Encoders\Xx2Encoder.cs" />
+    <Compile Include="Encoders\Xx3Encoder.cs" />
+    <Compile Include="FileProviders\XxProvider.cs" />
     <Compile Include="ICompressor.cs" />
     <Compile Include="IEncoder.cs" />
+    <Compile Include="IFileProvider.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Sources\ArchiveFileSource.cs" />
     <Compile Include="Archives\ExtendedArchiveWriter.cs" />
     <Compile Include="Sources\BaseSource.cs" />
     <Compile Include="Sources\MemorySource.cs" />
-    <Compile Include="Subfiles\BaseSubfile.cs" />
+    <Compile Include="Subfiles\ArchiveSubfile.cs" />
     <Compile Include="Archives\ExtendedArchive.cs" />
     <Compile Include="Sources\FileSource.cs" />
     <Compile Include="IDataSource.cs" />
@@ -116,13 +113,14 @@
       <Name>SB3UtilityPP</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\ZstdNet.1.2.0\build\ZstdNet.targets" Condition="Exists('..\packages\ZstdNet.1.2.0\build\ZstdNet.targets')" />
+  <Import Project="..\packages\ZstdNet.1.3.1\build\ZstdNet.targets" Condition="Exists('..\packages\ZstdNet.1.3.1\build\ZstdNet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\ZstdNet.1.2.0\build\ZstdNet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ZstdNet.1.2.0\build\ZstdNet.targets'))" />
+    <Error Condition="!Exists('..\packages\ZstdNet.1.3.1\build\ZstdNet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ZstdNet.1.3.1\build\ZstdNet.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
