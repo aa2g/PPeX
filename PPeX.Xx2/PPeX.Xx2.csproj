@@ -43,10 +43,15 @@
     <Compile Include="EncoderCommon.cs" />
     <Compile Include="FloatEncoder.cs" />
     <Compile Include="IntegerEncoder.cs" />
+    <Compile Include="Md5Hash.cs" />
+    <Compile Include="TextureBank.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="Xx2\Xx2File.cs" />
     <Compile Include="Xx2\Xx2Reader.cs" />
     <Compile Include="Xx2\Xx2Writer.cs" />
+    <Compile Include="Xx3\Xx3Writer.cs" />
+    <Compile Include="Xx3\Xx3File.cs" />
+    <Compile Include="Xx3\xxTextureReference.cs" />
     <Compile Include="XX\xxBone.cs" />
     <Compile Include="XX\xxFace.cs" />
     <Compile Include="XX\xxMaterial.cs" />

@@ -56,7 +56,7 @@ namespace PPeX.Xx2
 
         }
 
-        public void Write(BinaryWriter writer)
+        public virtual void Write(BinaryWriter writer)
         {
             writer.WriteEncryptedString(Name);
 
