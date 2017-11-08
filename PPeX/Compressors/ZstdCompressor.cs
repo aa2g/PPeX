@@ -15,7 +15,7 @@ namespace PPeX.Compressors
 
         public ZstdCompressor(Stream stream, int CompressionLevel) : base(stream, (uint)stream.Length)
         {
-            _compressor = new ZstdNet.Compressor(new ZstdNet.CompressionOptions(CompressionLevel));
+            _compressor = new ZstdNet.Compressor(new ZstdNet.CompressionOptions(CompressionLevel), 7);
         }
 
         public override uint CompressedSize { get; protected set; }
