@@ -366,18 +366,23 @@ namespace PPeX
                 int additionalChunks = 0;
 
                 //write texture bank chunk
-                progress.Report(new Tuple<string, int>("Writing texture bank...\r\n", 100));
-                var textureBankWriter = new ChunkWriter((uint)(allocatedChunks.Count + (additionalChunks++)), DefaultCompression, ChunkType.Xx3);
-                var textureBankData = new MemoryStream();
-                Xx3Encoder.texBank.Write(new BinaryWriter(textureBankData));
+                if (Xx3Encoder.texBank.Textures.Count > 0)
+                {
+                    progress.Report(new Tuple<string, int>("Writing texture bank...\r\n", 100));
+                    var textureBankWriter = new ChunkWriter((uint)(allocatedChunks.Count + (additionalChunks++)), DefaultCompression, ChunkType.Xx3);
+                    var textureBankData = new MemoryStream();
+                    Xx3Encoder.texBank.Write(new BinaryWriter(textureBankData));
 
-                textureBankWriter.Files.Add(
-                    new Subfile(
-                        new MemorySource(textureBankData.ToArray()),
-                        "TextureBank",
-                        "_xx3"));
-                    
-                textureBankWriter.CompressHybrid(chunkTableWriter, fileTableWriter, ref fileCount, ArchiveStream);
+                    textureBankWriter.Files.Add(
+                        new Subfile(
+                            new MemorySource(textureBankData.ToArray()),
+                            "TextureBank",
+                            "_xx3"));
+
+                    textureBankWriter.CompressHybrid(chunkTableWriter, fileTableWriter, ref fileCount, ArchiveStream);
+                }
+
+                
 
                 //Compress memory
                 Utility.GCCompress();
