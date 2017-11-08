@@ -11,6 +11,6 @@ namespace PPeX
     /// </summary>
     public static class Core
     {
-        public static Settings Settings = Settings.Load();
+        public static Settings Settings = new Settings();
     }
 }
