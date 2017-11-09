@@ -11,6 +11,14 @@ namespace PPeX.Xx2
     {
         public byte[] Checksum;
         public byte[] Data;
+
+        public void Write(BinaryWriter writer)
+        {
+            writer.Write(Checksum);
+
+            writer.Write(Data.Length);
+            writer.Write(Data);
+        }
     }
 
     public class TextureBank
@@ -48,10 +56,7 @@ namespace PPeX.Xx2
 
             for (int i = 0; i < Textures.Count; i++)
             {
-                writer.Write(Textures[i].Checksum);
-
-                writer.Write(Textures[i].Data.Length);
-                writer.Write(Textures[i].Data);
+                Textures[i].Write(writer);
             }
         }
     }
