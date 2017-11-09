@@ -377,8 +377,7 @@ namespace PPeX
                 dataWriter.Write(fileTableOffset);
             }
 
-            System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect();
+            Utility.GCCompress();
 
             progress.Report(new Tuple<string, int>("Finished.\n", 100));
         }
@@ -408,6 +407,7 @@ namespace PPeX
         {
             Dictionary<Md5Hash, int> checkedHashes = new Dictionary<Md5Hash, int>();
 
+            int index = 0;
             foreach (var receipt in chunkReceipt.FileReceipts)
             {
                 //write each file metadata
@@ -428,18 +428,27 @@ namespace PPeX
 
                 //pp2 compatiblity
                 //check if it's a dupe
-                int index;
-                if (checkedHashes.TryGetValue(receipt.Md5, out index))
+                int previousIndex;
+                if (checkedHashes.TryGetValue(receipt.Md5, out previousIndex))
+                {
                     //dupe
-                    fileTableWriter.Write((uint)(fileOffset + index));
+                    fileTableWriter.Write((uint)(fileOffset + previousIndex));
+                }
                 else
+                {
                     //not a dupe
                     fileTableWriter.Write(ArchiveFileSource.CanonLinkID);
+
+                    checkedHashes.Add(receipt.Md5, index);
+                }
+                    
 
 
                 fileTableWriter.Write(chunkReceipt.ID);
                 fileTableWriter.Write(receipt.Offset);
                 fileTableWriter.Write(receipt.Length);
+
+                index++;
             }
 
             fileOffset += (uint)chunkReceipt.FileReceipts.Count;
@@ -526,7 +535,7 @@ namespace PPeX
                 using (var encoded = encoder.Encode())
                 {
                     if (UncompressedStream.Length == 0 ||
-                        (ulong)(encoded.Length + UncompressedStream.Length) < maxChunkSize)
+                        (ulong)(encoded.Length + UncompressedStream.Length) <= maxChunkSize)
                     {
                         FileReceipt receipt = new FileReceipt
                         {
