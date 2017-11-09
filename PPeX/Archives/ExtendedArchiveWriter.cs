@@ -86,12 +86,13 @@ namespace PPeX
         /// </summary>
         public void Write()
         {
-            IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>();
+            IProgress<string> progress1 = new Progress<string>();
+            IProgress<int> progress2 = new Progress<int>();
 
-            Write(progress);
+            Write(progress1, progress2);
         }
 
-        protected void AllocateBlocking(IProgress<Tuple<string, int>> progress, BlockingCollection<HybridChunkWriter> chunks)
+        protected void AllocateBlocking(IProgress<string> ProgressStatus, IProgress<int> ProgressPercentage, BlockingCollection<HybridChunkWriter> chunks)
         {
             uint ID = 0;
 
@@ -104,7 +105,8 @@ namespace PPeX
             List<ISubfile> GenericFiles = new List<ISubfile>(Files);
 
             //XX3 chunks
-            progress.Report(new Tuple<string, int>("Allocating Xx3 chunks...\r\n", 0));
+            ProgressStatus.Report("Allocating Xx3 chunks...\r\n");
+            ProgressPercentage.Report(0);
 
             List<ISubfile> Xx3Files = new List<ISubfile>();
             
@@ -125,7 +127,7 @@ namespace PPeX
 
             while (fileList.Count > 0)
             {
-                progress.Report(new Tuple<string, int>("", (int)(((total - fileList.Count) * 100) / total)));
+                ProgressPercentage.Report((int)(((total - fileList.Count) * 100) / total));
 
                 ISubfile file = fileList.Dequeue();
 
@@ -145,7 +147,9 @@ namespace PPeX
 
 
             //GENERIC chunks
-            progress.Report(new Tuple<string, int>("Allocating generic chunks...\r\n", 0));
+            ProgressStatus.Report("Allocating generic chunks...\r\n");
+            ProgressPercentage.Report(0);
+
             //Create a LST chunk
             HybridChunkWriter LSTWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Generic);
 
@@ -163,7 +167,7 @@ namespace PPeX
 
             while (fileList.Count > 0)
             {
-                progress.Report(new Tuple<string, int>("", (int)(((total - fileList.Count) * 100) / total)));
+                ProgressPercentage.Report((int)(((total - fileList.Count) * 100) / total));
 
                 ISubfile file = fileList.Dequeue();
 
@@ -217,16 +221,16 @@ namespace PPeX
                 }
             }
 
-            if (LSTWriter.ContainsFiles)
-                chunks.Add(LSTWriter);
-
             if (currentChunk.ContainsFiles)
                 chunks.Add(currentChunk);
+
+            if (LSTWriter.ContainsFiles)
+                chunks.Add(LSTWriter);
 
             //write texture bank chunk
             if (Xx3Encoder.texBank.Textures.Count > 0)
             {
-                progress.Report(new Tuple<string, int>("Writing texture bank...\r\n", 100));
+                ProgressStatus.Report("Writing texture bank...\r\n");
                 var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3);
 
                 int i = 0;
@@ -287,14 +291,14 @@ namespace PPeX
         /// Writes the archive to the .ppx file.
         /// </summary>
         /// <param name="progress">The progress callback object.</param>
-        public void Write(IProgress<Tuple<string, int>> progress)
+        public void Write(IProgress<string> ProgressStatus, IProgress<int> ProgressPercentage)
         {
             Xx3Encoder.texBank = new Xx2.TextureBank();
 
             QueuedChunks = new BlockingCollection<HybridChunkWriter>(Threads);
 
             CompletedChunks = new List<ChunkReceipt>();
-            threadProgress = new Progress<string>(x => progress.Report(new Tuple<string, int>(x, 0)));
+            threadProgress = ProgressStatus;
 
             threadObjects = new Thread[Threads];
             for (int i = 0; i < Threads; i++)
@@ -330,11 +334,10 @@ namespace PPeX
                 ulong chunkOffset = (ulong)dataWriter.BaseStream.Position;
 
 
-                progress.Report(new Tuple<string, int>(
-                                    "Allocating chunks...\r\n",
-                                    0));
+                ProgressStatus.Report("Allocating chunks...\r\n");
+                ProgressPercentage.Report(0);
 
-                AllocateBlocking(progress, QueuedChunks);
+                AllocateBlocking(ProgressStatus, ProgressPercentage, QueuedChunks);
 
                 //wait for threads
                 foreach (Thread thread in threadObjects)
@@ -379,7 +382,8 @@ namespace PPeX
 
             Utility.GCCompress();
 
-            progress.Report(new Tuple<string, int>("Finished.\n", 100));
+            ProgressStatus.Report("Finished.\r\n");
+            ProgressPercentage.Report(100);
         }
 
         public static void WriteChunkTable(BinaryWriter chunkTableWriter, ChunkReceipt receipt, ref ulong chunkOffset, uint fileOffset)
