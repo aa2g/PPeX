@@ -23,6 +23,16 @@ namespace PPeX
             return false;
         }
 
+        public static bool operator ==(Md5Hash hash1, byte[] hash2)
+        {
+            return hash1.Equals(hash2);
+        }
+
+        public static bool operator !=(Md5Hash hash1, byte[] hash2)
+        {
+            return !hash1.Equals(hash2);
+        }
+
         public override int GetHashCode()
         {
             return ToString().GetHashCode();
