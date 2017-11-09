@@ -491,10 +491,14 @@ namespace PPeXUI
             writer.Threads = (int)numThreads.Value;
             Core.Settings.Xx2Precision = (int)numXx2Precision.Value;
 
-            IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>((x) =>
+            IProgress<string> progressStatus = new Progress<string>(x =>
             {
-                prgSaveProgress.Value = x.Item2;
-                txtSaveProg.AppendText(x.Item1);
+                txtSaveProg.AppendText(x);
+            });
+
+            IProgress<int> progressPercentage = new Progress<int>(x =>
+            {
+                prgSaveProgress.Value = x;
             });
 
             //attempt loading md5 cache
@@ -502,9 +506,8 @@ namespace PPeXUI
 
             if (Core.Settings.UseMd5Cache && File.Exists("HashCache.md5.zs"))
             {
-                progress.Report(new Tuple<string, int>(
-                    "Loading MD5 cache...\n",
-                    0));
+                progressStatus.Report("Loading MD5 cache...\r\n");
+                progressPercentage.Report(0);
 
                 using (var decom = new ZstdNet.Decompressor())
                 {
@@ -518,9 +521,8 @@ namespace PPeXUI
             {
                 try
                 {
-                    progress.Report(new Tuple<string, int>(
-                    "Performing first pass...\n",
-                    0));
+                    progressStatus.Report("Performing first pass...\r\n");
+                    progressPercentage.Report(0);
 
                     var allNodes = trvFiles.Nodes
                         .Cast<TreeNode>()
@@ -543,12 +545,10 @@ namespace PPeXUI
 
                         writer.Files.Add(subfile);
 
-                        progress.Report(new Tuple<string, int>(
-                        "",
-                        100 * i++ / total));
+                        progressPercentage.Report(100 * i++ / total);
                     }
 
-                    writer.Write(progress);
+                    writer.Write(progressStatus, progressPercentage);
 
                     btnSave.DynamicInvoke(() => btnSave.Enabled = true);
                 }

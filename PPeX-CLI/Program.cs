@@ -188,13 +188,17 @@ Sets a regex to use for compressing or extracting");
                         }
                     }
 
-                    writer.Write(new Progress<Tuple<string, int>>(x =>
+                    Progress<string> progressStatus = new Progress<string>(x =>
                     {
-                        if (x.Item1.Trim() == "")
-                            return;
+                        Console.WriteLine(x.Trim());
+                    });
 
-                        Console.WriteLine("[" + x.Item2 + "%] " + x.Item1.Trim());
-                    }));
+                    Progress<int> progressPercentage = new Progress<int>(x =>
+                    {
+                        //"[" + x.Item2 + "%] " + 
+                    });
+
+                    writer.Write(progressStatus, progressPercentage);
                 }
             }
         }
