@@ -11,17 +11,25 @@ namespace PPeX.Xx2
     {
         public int Precision { get; set; }
 
-        public bool TrimTextures { get; set; }
+        public float Quality { get; set; }
 
-        public Xx2Writer()
+        bool IsQualityUsed;
+
+        public Xx2Writer() : this (0)
         {
-            Precision = 0;
-            TrimTextures = false;
+
         }
 
         public Xx2Writer(int precision)
         {
             Precision = precision;
+            IsQualityUsed = false;
+        }
+
+        public Xx2Writer(float quality)
+        {
+            Quality = quality;
+            IsQualityUsed = true;
         }
 
         public void Write(Xx2File file, string filename)
@@ -52,10 +60,6 @@ namespace PPeX.Xx2
                 writer.Write(file.Materials.Count);
 
                 WriteMaterials(writer, file.Materials);
-
-
-                if (TrimTextures)
-                    file.Textures.Clear();
 
                 writer.Write(file.Textures.Count);
 
@@ -152,7 +156,10 @@ namespace PPeX.Xx2
             {
                 float[] data = verticies.Select(x => x.Position[i]).ToArray();
 
-                writer.Write(FloatEncoder.Encode(data, 10f));
+                if (IsQualityUsed)
+                    writer.Write(FloatEncoder.Encode(data, Quality));
+                else
+                    writer.Write(FloatEncoder.Encode(data, Precision));
             }
 
             //encode each normal collated
@@ -160,7 +167,10 @@ namespace PPeX.Xx2
             {
                 float[] data = verticies.Select(x => x.Normal[i]).ToArray();
 
-                writer.Write(FloatEncoder.Encode(data, 10f));
+                if (IsQualityUsed)
+                    writer.Write(FloatEncoder.Encode(data, Quality));
+                else
+                    writer.Write(FloatEncoder.Encode(data, Precision));
             }
 
             //encode each weight collated
@@ -168,7 +178,10 @@ namespace PPeX.Xx2
             {
                 float[] data = verticies.Select(x => x.Weights[i]).ToArray();
 
-                writer.Write(FloatEncoder.Encode(data, 10f));
+                if (IsQualityUsed)
+                    writer.Write(FloatEncoder.Encode(data, Quality));
+                else
+                    writer.Write(FloatEncoder.Encode(data, Precision));
             }
 
             //encode each UV collated
@@ -176,7 +189,10 @@ namespace PPeX.Xx2
             {
                 float[] data = verticies.Select(x => x.UV[i]).ToArray();
 
-                writer.Write(FloatEncoder.Encode(data, 10f));
+                if (IsQualityUsed)
+                    writer.Write(FloatEncoder.Encode(data, Quality));
+                else
+                    writer.Write(FloatEncoder.Encode(data, Precision));
             }
 
             //write bone indicies
