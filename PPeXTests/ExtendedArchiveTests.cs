@@ -15,7 +15,6 @@ namespace PPeX.Tests
     {
         public static byte[] TestData = Encoding.UTF8.GetBytes("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ac purus id diam consectetur fermentum. Etiam nulla nisi, tincidunt sed sagittis nec, finibus vel elit. Pellentesque sodales massa eget tortor eleifend dictum. Ut finibus tellus efficitur nulla hendrerit convallis. Cras sed neque sed tellus luctus vehicula sed in sapien.");
         public static byte[] TestData2 = Encoding.UTF8.GetBytes("orem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ac purus id diam consectetur fermentum. Etiam nulla nisi, tincidunt sed sagittis nec, finibus vel elit. Pellentesque sodales massa eget tortor eleifend dictum. Ut finibus tellus efficitur nulla hendrerit convallis. Cras sed neque sed tellus luctus vehicula sed in sapien.");
-    public static byte[] TestHash;
         public static ExtendedArchive TestArchive;
 
         [DeploymentItem("libstd64.dll")]
@@ -24,9 +23,6 @@ namespace PPeX.Tests
         {
             FileStream arc = new FileStream("test.ppx", FileMode.Create);
             var writer = new ExtendedArchiveWriter(arc, "test", true);
-            
-            using (var mem = new MemoryStream(TestData))
-                TestHash = Utility.GetMd5(mem);
 
             writer.Files.Add(new Subfile(
                 new MemorySource(TestData),
@@ -103,11 +99,17 @@ namespace PPeX.Tests
         {
             int failed = 0;
 
-            foreach (var file in TestArchive.Files)
-            {
-                if (!Utility.CompareBytes(file.Md5, TestHash))
-                    failed++;
-            }
+            using (MemoryStream mem = new MemoryStream(TestData))
+                if (!Utility.CompareBytes(TestArchive.Files.First(x => x.Name == "test1").Md5, Utility.GetMd5(mem)))
+                        failed++;
+
+            using (MemoryStream mem = new MemoryStream(TestData))
+                if (!Utility.CompareBytes(TestArchive.Files.First(x => x.Name == "test2").Md5, Utility.GetMd5(mem)))
+                        failed++;
+
+            using (MemoryStream mem = new MemoryStream(TestData2))
+                if (!Utility.CompareBytes(TestArchive.Files.First(x => x.Name == "test3").Md5, Utility.GetMd5(mem)))
+                        failed++;
 
             Assert.IsTrue(failed == 0, "File hash is not consistent. (" + failed + " / " + TestArchive.Files.Count + " failed)");
         }
@@ -117,16 +119,31 @@ namespace PPeX.Tests
         {
             int failed = 0;
 
-            foreach (var file in TestArchive.Files)
+            using (MemoryStream mem = new MemoryStream())
+            using (Stream decomp = TestArchive.Files.First(x => x.Name == "test1").GetStream())
             {
-                using (MemoryStream mem = new MemoryStream())
-                using (Stream decomp = file.GetStream())
-                {
-                    decomp.CopyTo(mem);
+                decomp.CopyTo(mem);
 
-                    if (!Utility.CompareBytes(mem.ToArray(), TestData))
-                        failed++;
-                }
+                if (!Utility.CompareBytes(mem.ToArray(), TestData))
+                    failed++;
+            }
+
+            using (MemoryStream mem = new MemoryStream())
+            using (Stream decomp = TestArchive.Files.First(x => x.Name == "test2").GetStream())
+            {
+                decomp.CopyTo(mem);
+
+                if (!Utility.CompareBytes(mem.ToArray(), TestData))
+                    failed++;
+            }
+
+            using (MemoryStream mem = new MemoryStream())
+            using (Stream decomp = TestArchive.Files.First(x => x.Name == "test3").GetStream())
+            {
+                decomp.CopyTo(mem);
+
+                if (!Utility.CompareBytes(mem.ToArray(), TestData2))
+                    failed++;
             }
 
             Assert.IsTrue(failed == 0, "File data is not consistent. (" + failed + " / " + TestArchive.Files.Count + " failed)");
