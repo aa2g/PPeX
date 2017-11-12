@@ -1,6 +1,6 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using PPeX;
-using SB3Utility;
+using PPeX.External.PP;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -545,7 +545,9 @@ namespace PPeXUI
 
                         writer.Files.Add(subfile);
 
-                        progressPercentage.Report(100 * i++ / total);
+                        i++;
+                        if (i % 20 == 0)
+                            progressPercentage.Report(100 * i / total);
                     }
 
                     writer.Write(progressStatus, progressPercentage);
@@ -555,9 +557,8 @@ namespace PPeXUI
 #if !DEBUG
                 catch (Exception ex)
                 {
-                    progress.Report(new Tuple<string, int>(
-                    "ERROR: " + ex.Message + "\n",
-                    100));
+                    progressStatus.Report("ERROR: " + ex.Message + "\n");
+                    progressPercentage.Report(0);
                 }
 #endif
                 finally
@@ -568,9 +569,14 @@ namespace PPeXUI
                     if (Core.Settings.UseMd5Cache)
                         using (var comp = new ZstdNet.Compressor())
                         {
-                            string rawCache = Core.Settings.Md5Cache.Values.Select(x => x.ToWritableString()).Aggregate((x, y) => x + '\n' + y);
+                            var strings = Core.Settings.Md5Cache.Values.Select(x => x.ToWritableString());
 
-                            File.WriteAllBytes("HashCache.md5.zs", comp.Wrap(Encoding.ASCII.GetBytes(rawCache)));
+                            if (strings.Count() > 0)
+                            {
+                                string rawCache = strings.Aggregate((x, y) => x + '\n' + y);
+
+                                File.WriteAllBytes("HashCache.md5.zs", comp.Wrap(Encoding.ASCII.GetBytes(rawCache)));
+                            }
                         }
                 }
             });
@@ -622,7 +628,7 @@ namespace PPeXUI
                 }
 
                 TreeNode node = parent.Nodes.Add(file.Name);
-                node.Tag = new SubfileHolder(file, file.Name);
+                node.Tag = new SubfileHolder(file.Source, file.Name);
                 SetAutoIcon(node);
             }
 
