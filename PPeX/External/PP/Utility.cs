@@ -6,7 +6,7 @@ using System.IO;
 using System.Configuration;
 using System.Reflection;
 
-namespace SB3Utility
+namespace PPeX.External.PP
 {
     public static partial class Utility
     {

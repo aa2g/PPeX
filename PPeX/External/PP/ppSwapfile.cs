@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace SB3Utility
+namespace PPeX.External.PP
 {
 	public class ppSwapfile : IReadFile, IWriteFile, IDisposable
 	{
