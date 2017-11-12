@@ -89,6 +89,9 @@
             this.label1 = new System.Windows.Forms.Label();
             this.cmbCompression = new System.Windows.Forms.ComboBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnClearCache = new System.Windows.Forms.Button();
+            this.chkMd5Cache = new System.Windows.Forms.CheckBox();
             this.numXx2Precision = new System.Windows.Forms.NumericUpDown();
             this.label10 = new System.Windows.Forms.Label();
             this.numThreads = new System.Windows.Forms.NumericUpDown();
@@ -97,9 +100,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.numBitrate = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.chkMd5Cache = new System.Windows.Forms.CheckBox();
-            this.btnClearCache = new System.Windows.Forms.Button();
+            this.verifyArchiveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -112,11 +113,11 @@
             this.statusStrip1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numXx2Precision)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numChunkSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numBitrate)).BeginInit();
-            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -304,11 +305,12 @@
             this.toolStripDropDownButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripDropDownButton1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripSeparator3,
-            this.convertxggTowavToolStripMenuItem});
+            this.convertxggTowavToolStripMenuItem,
+            this.verifyArchiveToolStripMenuItem});
             this.toolStripDropDownButton1.Image = global::PPeXUI.Properties.Resources.bricks;
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
-            this.toolStripDropDownButton1.Size = new System.Drawing.Size(29, 22);
+            this.toolStripDropDownButton1.Size = new System.Drawing.Size(29, 20);
             this.toolStripDropDownButton1.Text = "Plugins";
             // 
             // toolStripSeparator3
@@ -718,6 +720,39 @@
             this.tabPage3.Text = "Options";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.btnClearCache);
+            this.groupBox1.Controls.Add(this.chkMd5Cache);
+            this.groupBox1.Location = new System.Drawing.Point(9, 174);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(261, 99);
+            this.groupBox1.TabIndex = 6;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Advanced";
+            // 
+            // btnClearCache
+            // 
+            this.btnClearCache.Location = new System.Drawing.Point(125, 15);
+            this.btnClearCache.Name = "btnClearCache";
+            this.btnClearCache.Size = new System.Drawing.Size(130, 23);
+            this.btnClearCache.TabIndex = 1;
+            this.btnClearCache.Text = "Clear Cache";
+            this.btnClearCache.UseVisualStyleBackColor = true;
+            this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
+            // 
+            // chkMd5Cache
+            // 
+            this.chkMd5Cache.AutoSize = true;
+            this.chkMd5Cache.Checked = true;
+            this.chkMd5Cache.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkMd5Cache.Location = new System.Drawing.Point(6, 19);
+            this.chkMd5Cache.Name = "chkMd5Cache";
+            this.chkMd5Cache.Size = new System.Drawing.Size(113, 17);
+            this.chkMd5Cache.TabIndex = 0;
+            this.chkMd5Cache.Text = "Use MD5 Caching";
+            this.chkMd5Cache.UseVisualStyleBackColor = true;
+            // 
             // numXx2Precision
             // 
             this.numXx2Precision.Location = new System.Drawing.Point(135, 85);
@@ -838,38 +873,12 @@
             this.label9.TabIndex = 0;
             this.label9.Text = "Audio bitrate (0 for auto):";
             // 
-            // groupBox1
+            // verifyArchiveToolStripMenuItem
             // 
-            this.groupBox1.Controls.Add(this.btnClearCache);
-            this.groupBox1.Controls.Add(this.chkMd5Cache);
-            this.groupBox1.Location = new System.Drawing.Point(9, 174);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(261, 99);
-            this.groupBox1.TabIndex = 6;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Advanced";
-            // 
-            // chkMd5Cache
-            // 
-            this.chkMd5Cache.AutoSize = true;
-            this.chkMd5Cache.Checked = true;
-            this.chkMd5Cache.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkMd5Cache.Location = new System.Drawing.Point(6, 19);
-            this.chkMd5Cache.Name = "chkMd5Cache";
-            this.chkMd5Cache.Size = new System.Drawing.Size(113, 17);
-            this.chkMd5Cache.TabIndex = 0;
-            this.chkMd5Cache.Text = "Use MD5 Caching";
-            this.chkMd5Cache.UseVisualStyleBackColor = true;
-            // 
-            // btnClearCache
-            // 
-            this.btnClearCache.Location = new System.Drawing.Point(125, 15);
-            this.btnClearCache.Name = "btnClearCache";
-            this.btnClearCache.Size = new System.Drawing.Size(130, 23);
-            this.btnClearCache.TabIndex = 1;
-            this.btnClearCache.Text = "Clear Cache";
-            this.btnClearCache.UseVisualStyleBackColor = true;
-            this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
+            this.verifyArchiveToolStripMenuItem.Name = "verifyArchiveToolStripMenuItem";
+            this.verifyArchiveToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.verifyArchiveToolStripMenuItem.Text = "Verify Archive";
+            this.verifyArchiveToolStripMenuItem.Click += new System.EventHandler(this.verifyArchiveToolStripMenuItem_Click);
             // 
             // formMain
             // 
@@ -901,12 +910,12 @@
             this.tabPage2.PerformLayout();
             this.tabPage3.ResumeLayout(false);
             this.tabPage3.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numXx2Precision)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numChunkSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numBitrate)).EndInit();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -982,5 +991,6 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button btnClearCache;
         private System.Windows.Forms.CheckBox chkMd5Cache;
+        private System.Windows.Forms.ToolStripMenuItem verifyArchiveToolStripMenuItem;
     }
 }
