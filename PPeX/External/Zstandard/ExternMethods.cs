@@ -61,9 +61,13 @@ namespace ZstdNet
 		[DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
 		private static extern bool SetDllDirectory(string path);
 
-		private const string DllName = "libzstd64.dll";
+#if X64
+        private const string DllName = "libzstd64.dll";
+#elif X86
+        private const string DllName = "libzstd32.dll";
+#endif
 
-		[DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern size_t ZDICT_trainFromBuffer(byte[] dictBuffer, size_t dictBufferCapacity, byte[] samplesBuffer, size_t[] samplesSizes, uint nbSamples);
 		[DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern uint ZDICT_isError(size_t code);
