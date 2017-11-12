@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SB3Utility;
+using PPeX.External.PP;
 
 namespace PPeX
 {
@@ -23,7 +23,7 @@ namespace PPeX
         {
             this.subfile = subfile;
 
-            var pp = subfile as SB3Utility.ppSubfile;
+            var pp = subfile as ppSubfile;
             Size = pp.size;
         }
 
