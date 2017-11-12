@@ -127,6 +127,17 @@ namespace PPeXM64
 
                 handler.WriteString(IsLoaded.ToString());
             }
+            if (request == "pplist")
+            {
+                //Send a list of all loaded .pp files
+
+                var loadedPP = Cache.TotalFiles.Select(x => x.ArchiveName).Distinct();
+
+                if (loadedPP.Count() > 0)
+                    handler.WriteString(loadedPP.Aggregate((a, b) => a.Replace(".pp", "") + " " + b.Replace(".pp", "")));
+                else
+                    handler.WriteString("");
+            }
             else if (request == "load")
             {
                 //Transfer the file
