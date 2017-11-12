@@ -27,7 +27,7 @@ namespace PPeX
         string Name { get; }
 
         /// <summary>
-        /// The compressed file size of the subfile.
+        /// The uncompressed file size of the subfile.
         /// </summary>
         ulong Size { get; }
 

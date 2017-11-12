@@ -33,6 +33,16 @@ namespace PPeX
         public int Xx2Precision = 0;
 
         /// <summary>
+        /// The encode quality that the mesh encoder should use.
+        /// </summary>
+        public float Xx2Quality = 10f;
+
+        /// <summary>
+        /// Whether or not the Xx2 encoder should use quality instead of precision.
+        /// </summary>
+        public bool Xx2IsUsingQuality = false;
+
+        /// <summary>
         /// The default level Zstandard should use in compression.
         /// </summary>
         public int ZstdCompressionLevel = 22;

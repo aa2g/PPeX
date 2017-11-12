@@ -107,6 +107,8 @@
     <Compile Include="External\Zstandard\ExternMethods.cs" />
     <Compile Include="External\Zstandard\Parameters.cs" />
     <Compile Include="External\Zstandard\ThrowHelper.cs" />
+    <Compile Include="FileProviders\GenericProvider.cs" />
+    <Compile Include="Subfiles\Xx3Subfile.cs" />
     <Compile Include="Xx2\EncoderCommon.cs" />
     <Compile Include="Xx2\FloatEncoder.cs" />
     <Compile Include="Xx2\IntegerEncoder.cs" />
@@ -116,6 +118,7 @@
     <Compile Include="Xx2\Xx2\Xx2File.cs" />
     <Compile Include="Xx2\Xx2\Xx2Reader.cs" />
     <Compile Include="Xx2\Xx2\Xx2Writer.cs" />
+    <Compile Include="Xx2\Xx3\Xx3Reader.cs" />
     <Compile Include="Xx2\Xx3\Xx3File.cs" />
     <Compile Include="Xx2\Xx3\Xx3Writer.cs" />
     <Compile Include="Xx2\Xx3\xxTextureReference.cs" />
@@ -155,7 +158,7 @@
     <Compile Include="External\PP\ppSwapfile.cs" />
     <Compile Include="External\PP\Utility.cs" />
     <Compile Include="External\PP\WakeariStream.cs" />
-    <Compile Include="FileProviders\XxProvider.cs" />
+    <Compile Include="FileProviders\Xx3Provider.cs" />
     <Compile Include="ICompressor.cs" />
     <Compile Include="IEncoder.cs" />
     <Compile Include="IFileProvider.cs" />

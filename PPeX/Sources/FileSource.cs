@@ -21,7 +21,6 @@ namespace PPeX
         public FileSource(string Filename)
         {
             this.Filename = Filename;
-            Size = (uint)new FileInfo(Filename).Length;
         }
 
         public override byte[] Md5
@@ -57,6 +56,17 @@ namespace PPeX
         public override Stream GetStream()
         {
             return new FileStream(Filename, FileMode.Open, FileAccess.Read);
+        }
+
+        protected ulong _size = ulong.MaxValue;
+        public override ulong Size {
+            get
+            {
+                if (_size == ulong.MaxValue)
+                    _size = (ulong)new FileInfo(Filename).Length;
+
+                return _size;
+            }
         }
 
         public override void Dispose()
