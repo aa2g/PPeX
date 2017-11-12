@@ -134,7 +134,7 @@ namespace PPeXM64
                 var loadedPP = Cache.TotalFiles.Select(x => x.ArchiveName).Distinct();
 
                 if (loadedPP.Count() > 0)
-                    handler.WriteString(loadedPP.Aggregate((a, b) => a.Replace(".pp", "") + " " + b.Replace(".pp", "")));
+                    handler.WriteString(loadedPP.Aggregate((a, b) => a + " " + b));
                 else
                     handler.WriteString("");
             }

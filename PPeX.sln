@@ -3,24 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2008
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AAUnlimitedDll", "AAUnlimited\AAUnlimited.vcxproj", "{AA2A22EF-17CB-4B53-B921-05C18036AD15}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AAUnlimitedExe", "AAUnlimitedExe\AAUnlimitedExe.vcxproj", "{4A7115E6-6CB3-44C3-81EE-FBA875E81F1C}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeX", "PPeX\PPeX.csproj", "{A611A988-D477-4E16-AF2F-D3A661B909A9}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PPeXIL", "PPeXIL\PPeXIL.vcxproj", "{EE9698ED-F742-4326-B580-4086DC023F3D}"
-	ProjectSection(ProjectDependencies) = postProject
-		{323D0096-28E8-4F69-AFE0-A6C60E6C9837} = {323D0096-28E8-4F69-AFE0-A6C60E6C9837}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeXUI", "PPeXUI\PPeXUI.csproj", "{38A09514-215B-490E-B73F-F66894BF7AC9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeXTests", "PPeXTests\PPeXTests.csproj", "{201A8C09-A18A-4C32-B112-292387AA24E9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeXM64", "PPeXM64\PPeXM64.csproj", "{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeX.Manager", "PPeX.Manager\PPeX.Manager.csproj", "{323D0096-28E8-4F69-AFE0-A6C60E6C9837}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeX-CLI", "PPeX-CLI\PPeX-CLI.csproj", "{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}"
 EndProject
@@ -31,21 +20,12 @@ Global
 		Wine|Mixed = Wine|Mixed
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AA2A22EF-17CB-4B53-B921-05C18036AD15}.Debug|Mixed.ActiveCfg = Debug|Win32
-		{AA2A22EF-17CB-4B53-B921-05C18036AD15}.Release|Mixed.ActiveCfg = Release|Win32
-		{AA2A22EF-17CB-4B53-B921-05C18036AD15}.Wine|Mixed.ActiveCfg = Release|x64
-		{4A7115E6-6CB3-44C3-81EE-FBA875E81F1C}.Debug|Mixed.ActiveCfg = Debug|Win32
-		{4A7115E6-6CB3-44C3-81EE-FBA875E81F1C}.Release|Mixed.ActiveCfg = Release|Win32
-		{4A7115E6-6CB3-44C3-81EE-FBA875E81F1C}.Wine|Mixed.ActiveCfg = Release|x64
 		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Debug|Mixed.ActiveCfg = Debug|Any CPU
 		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Debug|Mixed.Build.0 = Debug|Any CPU
 		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Release|Mixed.ActiveCfg = Release|Any CPU
 		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Release|Mixed.Build.0 = Release|Any CPU
 		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Wine|Mixed.ActiveCfg = Wine|Any CPU
 		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Wine|Mixed.Build.0 = Wine|Any CPU
-		{EE9698ED-F742-4326-B580-4086DC023F3D}.Debug|Mixed.ActiveCfg = Debug|Win32
-		{EE9698ED-F742-4326-B580-4086DC023F3D}.Release|Mixed.ActiveCfg = Release|Win32
-		{EE9698ED-F742-4326-B580-4086DC023F3D}.Wine|Mixed.ActiveCfg = Release|x64
 		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|Mixed.ActiveCfg = Debug|Any CPU
 		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|Mixed.Build.0 = Debug|Any CPU
 		{38A09514-215B-490E-B73F-F66894BF7AC9}.Release|Mixed.ActiveCfg = Release|Any CPU
@@ -64,9 +44,6 @@ Global
 		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Release|Mixed.Build.0 = Release|x64
 		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Wine|Mixed.ActiveCfg = Release|Any CPU
 		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Wine|Mixed.Build.0 = Release|Any CPU
-		{323D0096-28E8-4F69-AFE0-A6C60E6C9837}.Debug|Mixed.ActiveCfg = Debug|Any CPU
-		{323D0096-28E8-4F69-AFE0-A6C60E6C9837}.Release|Mixed.ActiveCfg = Release|Any CPU
-		{323D0096-28E8-4F69-AFE0-A6C60E6C9837}.Wine|Mixed.ActiveCfg = Release|Any CPU
 		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Debug|Mixed.ActiveCfg = Debug|Any CPU
 		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Debug|Mixed.Build.0 = Debug|Any CPU
 		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Release|Mixed.ActiveCfg = Release|Any CPU
