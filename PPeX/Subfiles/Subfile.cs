@@ -52,10 +52,13 @@ namespace PPeX
             Source = source;
             Type = type;
 
-            using (IEncoder encoder = EncoderFactory.GetEncoder(Source, Type))
-            {
-                Name = encoder.NameTransform(name);
-            }
+            if (Type == ArchiveFileType.Xx3Mesh)
+                Name = name.Replace(".xx", ".xx3");
+            else
+                using (IEncoder encoder = EncoderFactory.GetGenericEncoder(Source, Type))
+                {
+                    Name = encoder.NameTransform(name);
+                }
         }
 
         public Subfile(IDataSource source, string name, string archiveName) : this(source, name, archiveName, ArchiveFileType.Raw)
@@ -67,10 +70,13 @@ namespace PPeX
             else
                 Type = ArchiveFileType.Raw;
 
-            using (IEncoder encoder = EncoderFactory.GetEncoder(Source, Type))
-            {
-                Name = encoder.NameTransform(name);
-            }
+            if (Type == ArchiveFileType.Xx3Mesh)
+                Name = name.Replace(".xx", ".xx3");
+            else
+                using (IEncoder encoder = EncoderFactory.GetGenericEncoder(Source, Type))
+                {
+                    Name = encoder.NameTransform(name);
+                }
         }
     }
 }

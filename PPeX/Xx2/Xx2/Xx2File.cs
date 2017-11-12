@@ -9,7 +9,7 @@ namespace PPeX.Xx2
 {
     public class Xx2File
     {
-        public int Version { get; protected set; }
+        public int Version;
 
         public byte[] HeaderUnknown;
 

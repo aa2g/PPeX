@@ -41,6 +41,7 @@ namespace PPeX.Xx2
             texref.Depth = texture.Depth;
             texref.ImageFileFormat = texture.ImageFileFormat;
             texref.MipLevels = texture.MipLevels;
+            texref.Format = texture.Format;
             texref.ResourceType = texture.ResourceType;
             texref.Width = texture.Width;
             texref.Unknown = texture.Unknown;

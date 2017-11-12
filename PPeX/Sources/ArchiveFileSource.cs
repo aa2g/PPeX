@@ -52,7 +52,7 @@ namespace PPeX
 
         public uint LinkID { get; protected set; }
 
-        protected ExtendedArchive baseArchive;
+        public ExtendedArchive BaseArchive { get; protected set; }
 
         ExtendedArchiveChunk _indexedChunk = null;
 
@@ -61,7 +61,7 @@ namespace PPeX
             get
             {
                 if (_indexedChunk == null)
-                    _indexedChunk = baseArchive.Chunks.First(x => x.ID == ChunkID);
+                    _indexedChunk = BaseArchive.Chunks.First(x => x.ID == ChunkID);
 
                 return _indexedChunk;
             }
@@ -79,7 +79,7 @@ namespace PPeX
         public static ArchiveFileSource ReadFromTable(BinaryReader reader, ExtendedArchive archive)
         {
             ArchiveFileSource file = new ArchiveFileSource();
-            file.baseArchive = archive;
+            file.BaseArchive = archive;
 
             ushort len = reader.ReadUInt16();
             file.ArchiveName = System.Text.Encoding.Unicode.GetString(reader.ReadBytes(len));
@@ -114,7 +114,7 @@ namespace PPeX
                 Chunk.GetStream(),
                 (long)Offset,
                 (long)Size))
-            using (var decoder = EncoderFactory.GetDecoder(stream, Type))
+            using (var decoder = EncoderFactory.GetDecoder(stream, BaseArchive, Type))
             using (Stream output = decoder.Decode())
             {
                 MemoryStream temp = new MemoryStream();

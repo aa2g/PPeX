@@ -25,8 +25,13 @@ namespace PPeX.Encoders
         {
             xxParser parser = new xxParser(Source.GetStream());
             Xx2File file = new Xx2File(parser);
+            Xx2Writer writer;
 
-            Xx2Writer writer = new Xx2Writer(Core.Settings.Xx2Precision);
+            if (Core.Settings.Xx2IsUsingQuality)
+                writer = new Xx2Writer(Core.Settings.Xx2Quality);
+            else
+                writer = new Xx2Writer(Core.Settings.Xx2Precision);
+
 
             encodedXx2 = new MemoryStream();
 
@@ -61,12 +66,12 @@ namespace PPeX.Encoders
 
         public override ArchiveFileType Encoding => ArchiveFileType.Xx2Mesh;
 
-        MemoryStream mem = new MemoryStream();
-
+        
         public override Stream Decode()
         {
             Xx2File file = Xx2Reader.Read(BaseStream);
 
+            MemoryStream mem = new MemoryStream();
             file.DecodeToXX(mem);
 
             mem.Position = 0;

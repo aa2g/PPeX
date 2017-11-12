@@ -19,6 +19,24 @@ namespace PPeX.Xx2
             writer.Write(Data.Length);
             writer.Write(Data);
         }
+
+        public static IndexedTexture Read(Stream stream)
+        {
+            using (BinaryReader reader = new BinaryReader(stream, Encoding.Default, true))
+                return Read(reader);
+        }
+
+        public static IndexedTexture Read(BinaryReader reader)
+        {
+            IndexedTexture tex = new IndexedTexture();
+
+            tex.Checksum = reader.ReadBytes(16);
+
+            int length = reader.ReadInt32();
+            tex.Data = reader.ReadBytes(length);
+
+            return tex;
+        }
     }
 
     public class TextureBank
