@@ -100,15 +100,15 @@ namespace PPeX.Tests
             int failed = 0;
 
             using (MemoryStream mem = new MemoryStream(TestData))
-                if (!Utility.CompareBytes(TestArchive.Files.First(x => x.Name == "test1").Md5, Utility.GetMd5(mem)))
+                if (!Utility.CompareBytes(TestArchive.RawFiles.First(x => x.Name == "test1").Md5, Utility.GetMd5(mem)))
                         failed++;
 
             using (MemoryStream mem = new MemoryStream(TestData))
-                if (!Utility.CompareBytes(TestArchive.Files.First(x => x.Name == "test2").Md5, Utility.GetMd5(mem)))
+                if (!Utility.CompareBytes(TestArchive.RawFiles.First(x => x.Name == "test2").Md5, Utility.GetMd5(mem)))
                         failed++;
 
             using (MemoryStream mem = new MemoryStream(TestData2))
-                if (!Utility.CompareBytes(TestArchive.Files.First(x => x.Name == "test3").Md5, Utility.GetMd5(mem)))
+                if (!Utility.CompareBytes(TestArchive.RawFiles.First(x => x.Name == "test3").Md5, Utility.GetMd5(mem)))
                         failed++;
 
             Assert.IsTrue(failed == 0, "File hash is not consistent. (" + failed + " / " + TestArchive.Files.Count + " failed)");
@@ -120,7 +120,7 @@ namespace PPeX.Tests
             int failed = 0;
 
             using (MemoryStream mem = new MemoryStream())
-            using (Stream decomp = TestArchive.Files.First(x => x.Name == "test1").GetStream())
+            using (Stream decomp = TestArchive.RawFiles.First(x => x.Name == "test1").GetStream())
             {
                 decomp.CopyTo(mem);
 
@@ -129,7 +129,7 @@ namespace PPeX.Tests
             }
 
             using (MemoryStream mem = new MemoryStream())
-            using (Stream decomp = TestArchive.Files.First(x => x.Name == "test2").GetStream())
+            using (Stream decomp = TestArchive.RawFiles.First(x => x.Name == "test2").GetStream())
             {
                 decomp.CopyTo(mem);
 
@@ -138,7 +138,7 @@ namespace PPeX.Tests
             }
 
             using (MemoryStream mem = new MemoryStream())
-            using (Stream decomp = TestArchive.Files.First(x => x.Name == "test3").GetStream())
+            using (Stream decomp = TestArchive.RawFiles.First(x => x.Name == "test3").GetStream())
             {
                 decomp.CopyTo(mem);
 

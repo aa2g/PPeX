@@ -267,5 +267,26 @@ namespace PPeXTests
                     Assert.AreEqual(original[i].ImageData[x], saved[i].ImageData[x], "Texture image data does not match.");
             }
         }
+
+        public static void VerifyFile(Xx3File original, Xx3File saved)
+        {
+            //verify version
+            Assert.AreEqual(original.Version, saved.Version, "Version does not match.");
+
+            //verify unknown
+            Assert.AreEqual(original.HeaderUnknown.Length, saved.HeaderUnknown.Length, "Header unknown length does not match.");
+
+            for (int x = 0; x < original.HeaderUnknown.Length; x++)
+                Assert.AreEqual(original.HeaderUnknown[x], saved.HeaderUnknown[x], "Header unknown does not match.");
+
+            //verify object
+            VerifyObject(original.RootObject, saved.RootObject);
+
+            //verify unencoded data
+            Assert.AreEqual(original.UnencodedData.Length, saved.UnencodedData.Length, "Unencoded data length does not match.");
+
+            for (int x = 0; x < original.UnencodedData.Length; x++)
+                Assert.AreEqual(original.UnencodedData[x], saved.UnencodedData[x], "Unencoded data does not match.");
+        }
     }
 }

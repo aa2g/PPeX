@@ -9,6 +9,7 @@ using Crc32C;
 using PPeX.Encoders;
 using System.Collections.Concurrent;
 using System.Threading;
+using PPeX.Xx2;
 
 namespace PPeX
 {
@@ -63,6 +64,8 @@ namespace PPeX
         protected BlockingCollection<HybridChunkWriter> QueuedChunks;
 
         protected List<ChunkReceipt> CompletedChunks;
+
+        public TextureBank TextureBank = new TextureBank();
 
         /// <summary>
         /// Creates a new extended archive writer.
@@ -123,7 +126,7 @@ namespace PPeX
 
             total = fileList.Count;
 
-            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3);
+            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
 
             while (fileList.Count > 0)
             {
@@ -131,13 +134,16 @@ namespace PPeX
 
                 ISubfile file = fileList.Dequeue();
 
+                if (file.Source.Size == 0)
+                    continue;
+
                 if (!currentChunk.TryAddFile(file, ChunkSizeLimit))
                 {
                     //cut off the chunk here
                     chunks.Add(currentChunk);
 
                     //create a new chunk
-                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3);
+                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
                     currentChunk.AddFile(file);
                 }
             }
@@ -151,7 +157,7 @@ namespace PPeX
             ProgressPercentage.Report(0);
 
             //Create a LST chunk
-            HybridChunkWriter LSTWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Generic);
+            HybridChunkWriter LSTWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Generic, this);
 
 
             //bunch duplicate files together
@@ -163,7 +169,7 @@ namespace PPeX
 
             total = fileList.Count;
 
-            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Generic);
+            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Generic, this);
 
             while (fileList.Count > 0)
             {
@@ -181,7 +187,7 @@ namespace PPeX
                 {
                     //non-compressable data, assign it and any duplicates to a new chunk
 
-                    HybridChunkWriter tempChunk = new HybridChunkWriter(ID++, ArchiveChunkCompression.Uncompressed, ChunkType.Generic);
+                    HybridChunkWriter tempChunk = new HybridChunkWriter(ID++, ArchiveChunkCompression.Uncompressed, ChunkType.Generic, this);
 
                     tempChunk.AddFile(file);
 
@@ -216,7 +222,7 @@ namespace PPeX
                     chunks.Add(currentChunk);
 
                     //create a new chunk
-                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Generic);
+                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Generic, this);
                     currentChunk.AddFile(file);
                 }
             }
@@ -228,24 +234,31 @@ namespace PPeX
                 chunks.Add(LSTWriter);
 
             //write texture bank chunk
-            if (Xx3Encoder.texBank.Textures.Count > 0)
+            if (TextureBank.Textures.Count > 0)
             {
                 ProgressStatus.Report("Writing texture bank...\r\n");
-                var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3);
+                var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
 
                 int i = 0;
-                foreach (var texture in Xx3Encoder.texBank.Textures)
+                foreach (var texture in TextureBank.Textures)
                 {
                     using (var textureData = new MemoryStream())
                     using (var textureWriter = new BinaryWriter(textureData))
                     {
                         texture.Write(textureWriter);
 
-                        textureBankWriter.AddFile(
-                                            new Subfile(
-                                                new MemorySource(textureData.ToArray()),
-                                                (i++).ToString() + ".tex",
-                                                "_xx3_TextureBank"));
+                        var file = new Subfile(
+                            new MemorySource(textureData.ToArray()),
+                            (i++).ToString() + ".tex",
+                            "_xx3_TextureBank");
+
+                        if (!textureBankWriter.TryAddFile(file, ChunkSizeLimit))
+                        {
+                            chunks.Add(textureBankWriter);
+
+                            textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
+                            textureBankWriter.AddFile(file);
+                        }
                     }
                 }
                 
@@ -293,7 +306,7 @@ namespace PPeX
         /// <param name="progress">The progress callback object.</param>
         public void Write(IProgress<string> ProgressStatus, IProgress<int> ProgressPercentage)
         {
-            Xx3Encoder.texBank = new Xx2.TextureBank();
+            TextureBank = new TextureBank();
 
             QueuedChunks = new BlockingCollection<HybridChunkWriter>(Threads);
 
@@ -369,7 +382,7 @@ namespace PPeX
 
                 ulong fileTableOffset = (ulong)ArchiveStream.Position;
 
-                dataWriter.Write((uint)Files.Count);
+                dataWriter.Write((uint)CompletedChunks.Sum(x => x.FileReceipts.Count));
 
                 fileTableStream.Position = 0;
                 fileTableStream.CopyTo(ArchiveStream);
@@ -469,11 +482,14 @@ namespace PPeX
 
             ulong UncompressedSize { get; set; }
 
-            public HybridChunkWriter(uint id, ArchiveChunkCompression compression, ChunkType type)
+            protected ExtendedArchiveWriter writer;
+
+            public HybridChunkWriter(uint id, ArchiveChunkCompression compression, ChunkType type, ExtendedArchiveWriter writer)
             {
                 ID = id;
                 Compression = compression;
                 Type = type;
+                this.writer = writer;
             }
 
             protected MemoryStream UncompressedStream = new MemoryStream();
@@ -503,7 +519,7 @@ namespace PPeX
                     return;
                 }
 
-                using (IEncoder encoder = EncoderFactory.GetEncoder(file.Source, file.Type))
+                using (IEncoder encoder = EncoderFactory.GetEncoder(file.Source, writer, file.Type))
                 using (var encoded = encoder.Encode())
                 {
                     FileReceipt receipt = new FileReceipt
@@ -535,16 +551,16 @@ namespace PPeX
                     return true;
                 }
 
-                using (IEncoder encoder = EncoderFactory.GetEncoder(file.Source, file.Type))
+                using (IEncoder encoder = EncoderFactory.GetEncoder(file.Source, writer, file.Type))
                 using (var encoded = encoder.Encode())
                 {
                     if (UncompressedStream.Length == 0 ||
-                        (ulong)(encoded.Length + UncompressedStream.Length) <= maxChunkSize)
+                        (ulong)(encoder.EncodedLength + UncompressedStream.Length) <= maxChunkSize)
                     {
                         FileReceipt receipt = new FileReceipt
                         {
                             Md5 = hash,
-                            Length = (ulong)encoded.Length,
+                            Length = encoder.EncodedLength,
                             Offset = (ulong)UncompressedStream.Position,
                             Subfile = file
                         };

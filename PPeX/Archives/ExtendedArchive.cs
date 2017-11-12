@@ -59,15 +59,16 @@ namespace PPeX
         /// </summary>
         public IReadOnlyList<ExtendedArchiveChunk> Chunks => chunks.AsReadOnly();
 
-        protected List<ArchiveFileSource> files = new List<ArchiveFileSource>();
+        public List<ArchiveFileSource> RawFiles = new List<ArchiveFileSource>();
         /// <summary>
         /// Subfiles that are contained within the extended archive.
         /// </summary>
-        public IReadOnlyList<ArchiveFileSource> Files => files.AsReadOnly();
+        public List<ISubfile> Files = new List<ISubfile>();
 
         protected ulong ChunkTableOffset = 0;
         protected ulong FileTableOffset = 0;
-        
+
+        public Xx3Provider Xx3Provider { get; protected set; }
         /// <summary>
         /// Reads from a .ppx file.
         /// </summary>
@@ -120,8 +121,14 @@ namespace PPeX
                 {
                     var source = ArchiveFileSource.ReadFromTable(reader, this);
 
-                    files.Add(source);
+                    RawFiles.Add(source);
+                    //Files.Add(new ArchiveSubfile(source));
                 }
+
+                Xx3Provider = new Xx3Provider(chunks);
+                Files.AddRange(Xx3Provider.XX3Subfiles);
+
+                Files.AddRange(GenericProvider.Load(chunks));
             }
         }
 

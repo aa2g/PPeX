@@ -68,7 +68,7 @@ namespace PPeX
         {
             List<ArchiveSubfile> files = new List<ArchiveSubfile>();
 
-            foreach (ArchiveFileSource file in baseArchive.Files)
+            foreach (ArchiveFileSource file in baseArchive.RawFiles)
             {
                 if (file.ChunkID == ID)
                     files.Add(new ArchiveSubfile(file));

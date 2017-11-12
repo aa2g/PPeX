@@ -141,7 +141,11 @@ namespace PPeX.Xx2
             }
 
             //encode indicies
-            writer.Write(IntegerEncoder.Encode(verticies.Select(x => (uint)x.Index).ToArray()));
+            //writer.Write(IntegerEncoder.Encode(verticies.Select(x => (uint)x.Index).ToArray()));
+            for (int i = 0; i < verticies.Count; i++)
+            {
+                writer.Write(verticies[i].Index);
+            }
 
             //encode each position collated
             for (int i = 0; i < 3; i++)

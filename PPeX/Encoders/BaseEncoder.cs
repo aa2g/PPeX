@@ -54,12 +54,12 @@ namespace PPeX.Encoders
 
     public static class EncoderFactory
     {
-        public static IEncoder GetEncoder(this ISubfile subfile)
+        public static IEncoder GetEncoder(this ISubfile subfile, ExtendedArchiveWriter writer)
         {
-            return GetEncoder(subfile.Source, subfile.Type);
+            return GetEncoder(subfile.Source, writer, subfile.Type);
         }
 
-        public static IEncoder GetEncoder(IDataSource source, ArchiveFileType encoding)
+        public static IEncoder GetEncoder(IDataSource source, ExtendedArchiveWriter writer, ArchiveFileType encoding)
         {
             switch (encoding)
             {
@@ -68,7 +68,7 @@ namespace PPeX.Encoders
                 case ArchiveFileType.Xx2Mesh:
                     return new Xx2Encoder(source);
                 case ArchiveFileType.Xx3Mesh:
-                    return new Xx3Encoder(source);
+                    return new Xx3Encoder(source, writer.TextureBank);
                 case ArchiveFileType.Raw:
                     return new PassthroughEncoder(source.GetStream());
                 default:
@@ -76,7 +76,39 @@ namespace PPeX.Encoders
             }
         }
 
-        public static IDecoder GetDecoder(Stream stream, ArchiveFileType encoding)
+        public static IDecoder GetDecoder(Stream stream, ExtendedArchive archive, ArchiveFileType encoding)
+        {
+            switch (encoding)
+            {
+                case ArchiveFileType.XggAudio:
+                    return new XggDecoder(stream);
+                case ArchiveFileType.Xx2Mesh:
+                    return new Xx2Decoder(stream);
+                case ArchiveFileType.Xx3Mesh:
+                    return new Xx3Decoder(stream, archive.Xx3Provider);
+                case ArchiveFileType.Raw:
+                    return new PassthroughEncoder(stream);
+                default:
+                    throw new InvalidOperationException("Encoding type is invalid.");
+            }
+        }
+
+        public static IEncoder GetGenericEncoder(IDataSource source, ArchiveFileType encoding)
+        {
+            switch (encoding)
+            {
+                case ArchiveFileType.XggAudio:
+                    return new XggEncoder(source, true);
+                case ArchiveFileType.Xx2Mesh:
+                    return new Xx2Encoder(source);
+                case ArchiveFileType.Raw:
+                    return new PassthroughEncoder(source.GetStream());
+                default:
+                    throw new InvalidOperationException("Encoding type is invalid.");
+            }
+        }
+
+        public static IDecoder GetGenericDecoder(Stream stream, ArchiveFileType encoding)
         {
             switch (encoding)
             {

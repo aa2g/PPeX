@@ -56,13 +56,13 @@ namespace PPeXTests
         [TestMethod]
         public void DuplicateIndexTest()
         {
-            Assert.AreEqual(8, TestArchive.Files.Count(x => x.LinkID == ArchiveFileSource.CanonLinkID), "Incorrect amount of canon files.");
+            Assert.AreEqual(8, TestArchive.RawFiles.Count(x => x.LinkID == ArchiveFileSource.CanonLinkID), "Incorrect amount of canon files.");
 
-            foreach (var file in TestArchive.Files)
+            foreach (var file in TestArchive.RawFiles)
             {
                 if (file.LinkID != ArchiveFileSource.CanonLinkID)
                 {
-                    var index = TestArchive.Files[(int)file.LinkID];
+                    var index = TestArchive.RawFiles[(int)file.LinkID];
 
                     Assert.IsTrue(index.LinkID == ArchiveFileSource.CanonLinkID, "Link ID links to an archive that is a duplicate.");
 
@@ -82,13 +82,13 @@ namespace PPeXTests
 
                 for (int i = (int)chunk.GlobalFileIndex; i < chunk.GlobalFileIndex + chunk.LocalFileCount; i++)
                 {
-                    Assert.IsTrue(TestArchive.Files[i].ChunkID == chunk.ID, "Referenced file does not belong to this chunk.");
+                    Assert.IsTrue(TestArchive.RawFiles[i].ChunkID == chunk.ID, "Referenced file does not belong to this chunk.");
                 }
 
                 int index = 0;
-                foreach (var file in TestArchive.Files)
+                foreach (var file in TestArchive.RawFiles)
                 {
-                    Assert.IsFalse(TestArchive.Files.Any(x => 
+                    Assert.IsFalse(TestArchive.RawFiles.Any(x => 
                         x.ChunkID == chunk.ID
                         && index < chunk.GlobalFileIndex
                         && index > chunk.GlobalFileIndex + chunk.LocalFileCount),

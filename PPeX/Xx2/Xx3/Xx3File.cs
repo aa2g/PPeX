@@ -9,7 +9,7 @@ namespace PPeX.Xx2
 {
     public class Xx3File
     {
-        public int Version { get; protected set; }
+        public int Version;
 
         public byte[] HeaderUnknown;
 
@@ -34,6 +34,11 @@ namespace PPeX.Xx2
             TextureRefs = parser.Textures.Select(x => xxTextureReference.FromTexture(x, bank)).ToList();
 
             UnencodedData = parser.UnencodedData;
+        }
+
+        public Xx3File()
+        {
+
         }
 
         public virtual void DecodeToXX(Stream stream, TextureBank bank)
