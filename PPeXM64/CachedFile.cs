@@ -72,7 +72,7 @@ namespace PPeXM64
             using (MemoryStream mem = new MemoryStream(CompressedData))
             using (IDecompressor decompressor = CompressorFactory.GetDecompressor(mem, Compression))
             {
-                IDecoder decoder = EncoderFactory.GetDecoder(decompressor.Decompress(), Type);
+                IDecoder decoder = EncoderFactory.GetDecoder(decompressor.Decompress(), Source.BaseArchive, Type);
 
                 Stream decoded = decoder.Decode();
                 decoded.Position = 0;

@@ -1,4 +1,5 @@
 ﻿using PPeX;
+using PPeX.Xx2;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,7 +45,7 @@ namespace PPeXM64
                     {
                         TotalFiles.Add(file);
 
-                        string name = PPeX.Encoders.EncoderFactory.GetDecoder(System.IO.Stream.Null, file.Type).NameTransform(file.Name);
+                        string name = PPeX.Encoders.EncoderFactory.GetDecoder(System.IO.Stream.Null, archive, file.Type).NameTransform(file.Name);
 
                         LoadedFiles[new FileEntry(file.ArchiveName, name)] = file;
                     }
