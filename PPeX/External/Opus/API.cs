@@ -6,46 +6,177 @@ namespace FragLabs.Audio.Codecs.Opus
     /// <summary>
     /// Wraps the Opus API.
     /// </summary>
-    internal class API
+    internal static class API
     {
-#if X86
-        public const string DllName = "opus32.dll";
-#elif X64
-        public const string DllName = "opus64.dll";
-#endif
+        static readonly bool Is64Bit;
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern IntPtr opus_encoder_create(int Fs, int channels, int application, out IntPtr error);
+        static API()
+        {
+            Is64Bit = Environment.Is64BitProcess;
+        }
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern void opus_encoder_destroy(IntPtr encoder);
+        #region Mixed
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int opus_encode(IntPtr st, byte[] pcm, int frame_size, IntPtr data, int max_data_bytes);
+        public static IntPtr opus_encoder_create(int Fs, int channels, int application, out IntPtr error)
+        {
+            if (Is64Bit)
+                return opus_encoder_create_64(Fs, channels, application, out error);
+            else
+                return opus_encoder_create_32(Fs, channels, application, out error);
+        }
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern IntPtr opus_decoder_create(int Fs, int channels, out IntPtr error);
+        public static void opus_encoder_destroy(IntPtr encoder)
+        {
+            if (Is64Bit)
+                opus_encoder_destroy_64(encoder);
+            else
+                opus_encoder_destroy_32(encoder);
+        }
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern void opus_decoder_destroy(IntPtr decoder);
+        public static int opus_encode(IntPtr st, byte[] pcm, int frame_size, IntPtr data, int max_data_bytes)
+        {
+            if (Is64Bit)
+                return opus_encode_64(st, pcm, frame_size, data, max_data_bytes);
+            else
+                return opus_encode_32(st, pcm, frame_size, data, max_data_bytes);
+        }
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int opus_decode(IntPtr st, byte[] data, int len, IntPtr pcm, int frame_size, int decode_fec);
+        public static IntPtr opus_decoder_create(int Fs, int channels, out IntPtr error)
+        {
+            if (Is64Bit)
+                return opus_decoder_create_64(Fs, channels, out error);
+            else
+                return opus_decoder_create_32(Fs, channels, out error);
+        }
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int opus_encoder_ctl(IntPtr st, Ctl request, int value);
+        public static void opus_decoder_destroy(IntPtr decoder)
+        {
+            if (Is64Bit)
+                opus_decoder_destroy_64(decoder);
+            else
+                opus_decoder_destroy_32(decoder);
+        }
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int opus_encoder_ctl(IntPtr st, Ctl request, out int value);
+        public static int opus_decode(IntPtr st, byte[] data, int len, IntPtr pcm, int frame_size, int decode_fec)
+        {
+            if (Is64Bit)
+                return opus_decode_64(st, data, len, pcm, frame_size, decode_fec);
+            else
+                return opus_decode_32(st, data, len, pcm, frame_size, decode_fec);
+        }
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int opus_packet_get_nb_channels(byte[] data);
+        public static int opus_encoder_ctl(IntPtr st, Ctl request, int value)
+        {
+            if (Is64Bit)
+                return opus_encoder_ctl_64(st, request, value);
+            else
+                return opus_encoder_ctl_32(st, request, value);
+        }
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int opus_packet_get_nb_frames(byte[] data, int len);
+        public static int opus_encoder_ctl(IntPtr st, Ctl request, out int value)
+        {
+            if (Is64Bit)
+                return opus_encoder_ctl_64(st, request, out value);
+            else
+                return opus_encoder_ctl_32(st, request, out value);
+        }
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)] 
-        internal static extern int opus_packet_get_nb_samples(byte[] data, int len, int freq);
+        public static int opus_packet_get_nb_channels(byte[] data)
+        {
+            if (Is64Bit)
+                return opus_packet_get_nb_channels_64(data);
+            else
+                return opus_packet_get_nb_channels_32(data);
+
+        }
+
+        public static int opus_packet_get_nb_frames(byte[] data, int len)
+        {
+            if (Is64Bit)
+                return opus_packet_get_nb_frames_64(data, len);
+            else
+                return opus_packet_get_nb_frames_32(data, len);
+        }
+
+        public static int opus_packet_get_nb_samples(byte[] data, int len, int freq)
+        {
+            if (Is64Bit)
+                return opus_packet_get_nb_samples_64(data, len, freq);
+            else
+                return opus_packet_get_nb_samples_32(data, len, freq);
+        }
+
+        #endregion
+
+        #region x86
+        [DllImport("opus32.dll", EntryPoint = "opus_encoder_create", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern IntPtr opus_encoder_create_32(int Fs, int channels, int application, out IntPtr error);
+
+        [DllImport("opus32.dll", EntryPoint = "opus_encoder_destroy", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern void opus_encoder_destroy_32(IntPtr encoder);
+
+        [DllImport("opus32.dll", EntryPoint = "opus_encode", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_encode_32(IntPtr st, byte[] pcm, int frame_size, IntPtr data, int max_data_bytes);
+
+        [DllImport("opus32.dll", EntryPoint = "opus_decoder_create", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern IntPtr opus_decoder_create_32(int Fs, int channels, out IntPtr error);
+
+        [DllImport("opus32.dll", EntryPoint = "opus_decoder_destroy", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern void opus_decoder_destroy_32(IntPtr decoder);
+
+        [DllImport("opus32.dll", EntryPoint = "opus_decode", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_decode_32(IntPtr st, byte[] data, int len, IntPtr pcm, int frame_size, int decode_fec);
+
+        [DllImport("opus32.dll", EntryPoint = "opus_encoder_ctl", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_encoder_ctl_32(IntPtr st, Ctl request, int value);
+
+        [DllImport("opus32.dll", EntryPoint = "opus_encoder_ctl", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_encoder_ctl_32(IntPtr st, Ctl request, out int value);
+
+        [DllImport("opus32.dll", EntryPoint = "opus_packet_get_nb_channels", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_packet_get_nb_channels_32(byte[] data);
+
+        [DllImport("opus32.dll", EntryPoint = "opus_packet_get_nb_frames", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_packet_get_nb_frames_32(byte[] data, int len);
+
+        [DllImport("opus32.dll", EntryPoint = "opus_packet_get_nb_samples", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_packet_get_nb_samples_32(byte[] data, int len, int freq);
+        #endregion
+
+        #region x64
+        [DllImport("opus64.dll", EntryPoint = "opus_encoder_create", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern IntPtr opus_encoder_create_64(int Fs, int channels, int application, out IntPtr error);
+
+        [DllImport("opus64.dll", EntryPoint = "opus_encoder_destroy", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern void opus_encoder_destroy_64(IntPtr encoder);
+
+        [DllImport("opus64.dll", EntryPoint = "opus_encode", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_encode_64(IntPtr st, byte[] pcm, int frame_size, IntPtr data, int max_data_bytes);
+
+        [DllImport("opus64.dll", EntryPoint = "opus_decoder_create", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern IntPtr opus_decoder_create_64(int Fs, int channels, out IntPtr error);
+
+        [DllImport("opus64.dll", EntryPoint = "opus_decoder_destroy", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern void opus_decoder_destroy_64(IntPtr decoder);
+
+        [DllImport("opus64.dll", EntryPoint = "opus_decode", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_decode_64(IntPtr st, byte[] data, int len, IntPtr pcm, int frame_size, int decode_fec);
+
+        [DllImport("opus64.dll", EntryPoint = "opus_encoder_ctl", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_encoder_ctl_64(IntPtr st, Ctl request, int value);
+
+        [DllImport("opus64.dll", EntryPoint = "opus_encoder_ctl", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_encoder_ctl_64(IntPtr st, Ctl request, out int value);
+
+        [DllImport("opus64.dll", EntryPoint = "opus_packet_get_nb_channels", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_packet_get_nb_channels_64(byte[] data);
+
+        [DllImport("opus64.dll", EntryPoint = "opus_packet_get_nb_frames", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_packet_get_nb_frames_64(byte[] data, int len);
+
+        [DllImport("opus64.dll", EntryPoint = "opus_packet_get_nb_samples", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_packet_get_nb_samples_64(byte[] data, int len, int freq);
+        #endregion
     }
 
     public enum Ctl : int
@@ -94,7 +225,7 @@ namespace FragLabs.Audio.Codecs.Opus
         /// <summary>
         /// The mode struct passed is invalid.
         /// </summary>
-        BufferToSmall   = -2,
+        BufferTooSmall   = -2,
         /// <summary>
         /// An internal error was detected.
         /// </summary>
