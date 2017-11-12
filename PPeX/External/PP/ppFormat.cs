@@ -450,7 +450,7 @@ namespace PPeX.External.PP
 
 		public override Stream ReadStream(Stream stream)
 		{
-			return new CryptoStream(stream, CryptoTransform(), CryptoStreamMode.Read);
+			return new SeekableCryptoStream(stream, CryptoTransform(), CryptoStreamMode.Read);
 		}
 
 		public override Stream WriteStream(Stream stream)

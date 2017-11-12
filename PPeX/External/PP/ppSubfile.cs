@@ -89,19 +89,19 @@ namespace PPeX.External.PP
 			get { return this.length; }
 		}
 
-		public override long Position
-		{
-			get
-			{
-				return stream.Position - offset;
-			}
-			set
-			{
-				Seek(value, SeekOrigin.Begin);
-			}
-		}
+        public override long Position
+        {
+            get
+            {
+                return stream.Position - offset;
+            }
+            set
+            {
+                stream.Position = value + offset;
+            }
+        }
 
-		public override int Read(byte[] buffer, int offset, int count)
+        public override int Read(byte[] buffer, int offset, int count)
 		{
 			if ((stream.Position + count) > end)
 			{
@@ -118,10 +118,24 @@ namespace PPeX.External.PP
 			}
 		}
 
-		public override long Seek(long offset, SeekOrigin origin)
-		{
-			throw new NotImplementedException();
-		}
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            switch (origin)
+            {
+                case SeekOrigin.Begin:
+                    Position = offset;
+                    break;
+                case SeekOrigin.Current:
+                    Position += offset;
+                    break;
+                case SeekOrigin.End:
+                    Position = length + offset;
+                    break;
+            }
+
+            return Position;
+        }
+
 
         public override void SetLength(long value)
 		{
