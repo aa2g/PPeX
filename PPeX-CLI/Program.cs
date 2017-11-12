@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using PPeX;
 using System.IO;
-using SB3Utility;
+using PPeX.External.PP;
 
 namespace PPeX_CLI
 {
@@ -67,13 +67,25 @@ Sets music (2 channel audio) bitrate
 (-c only)
 Sets voice (1 channel audio) bitrate
 
--xx2-precision 16
+-xx2-precision 0
 (-c only)
-Sets .xx2 bit precision. Set to 0 for lossless mode
+Sets .xx2 bit precision. Set to 0 for lossless mode. Cannot be used with -xx2-quality.
+
+-xx2-quality
+(-c only)
+Sets .xx2 encode quality. Not enabled by default. Cannot be used with -xx2-precision.
 
 -threads 1
 (-c only)
 Sets threads to be used during compression.
+
+-no-encode ""a^""
+(-c only)
+Defines which files should be left unencoded as a regex. Default is none.
+
+-decode off
+(-e only)
+Do not decode any encoded files on extraction, such as .xgg to .wav.
 
 -regex .+
 Sets a regex to use for compressing or extracting");
@@ -82,6 +94,7 @@ Sets a regex to use for compressing or extracting");
             }
 
             Regex regex = new Regex(".+");
+            Regex unencodedRegex = new Regex("a^");
 
             int argcounter = 1;
             int chunksize = ConvertFromReadable("16M");
@@ -112,6 +125,12 @@ Sets a regex to use for compressing or extracting");
                     else if (currentArg == "-xx2-precision")
                     {
                         Core.Settings.Xx2Precision = int.Parse(args[argcounter++]);
+                        Core.Settings.Xx2IsUsingQuality = false;
+                    }
+                    else if (currentArg == "-xx2-quality")
+                    {
+                        Core.Settings.Xx2Quality = float.Parse(args[argcounter++]);
+                        Core.Settings.Xx2IsUsingQuality = false;
                     }
                     else if (currentArg == "-threads")
                     {
@@ -133,6 +152,10 @@ Sets a regex to use for compressing or extracting");
                     {
                         regex = new Regex(args[argcounter++]);
                     }
+                    else if (currentArg == "-no-encode")
+                    {
+                        unencodedRegex = new Regex(args[argcounter++]);
+                    }
                 }
                 
                 using (FileStream fs = new FileStream(args.Last(), FileMode.Create))
@@ -149,7 +172,9 @@ Sets a regex to use for compressing or extracting");
                         writer.DefaultCompression = ArchiveChunkCompression.Uncompressed;
 
                     if (threads > 0)
-                        writer.Threads = threads;
+                        threads = 1;
+
+                    writer.Threads = threads;
 
 
                     foreach (string path in args.Skip(argcounter - 1).Take(args.Length - argcounter))
@@ -159,7 +184,7 @@ Sets a regex to use for compressing or extracting");
                             //.pp file
                             Console.WriteLine("Importing " + Path.GetFileName(path));
 
-                            ImportPP(path, writer, regex);
+                            ImportPP(path, writer, regex, unencodedRegex);
                         }
                         else if (Directory.Exists(path))
                         {
@@ -172,13 +197,28 @@ Sets a regex to use for compressing or extracting");
 
                             foreach (string file in files)
                             {
-                                if (regex.IsMatch(Path.GetFileName(file)))
+                                string fullName = name + "/" + Path.GetFileName(file);
+
+                                if (regex.IsMatch(fullName))
                                 {
-                                    writer.Files.Add(
-                                        new PPeX.Subfile(
-                                            new FileSource(file),
-                                            Path.GetFileName(file),
-                                            name));
+                                    if (unencodedRegex.IsMatch(fullName))
+                                    {
+                                        writer.Files.Add(
+                                            new PPeX.Subfile(
+                                                new FileSource(file),
+                                                Path.GetFileName(file),
+                                                name,
+                                                ArchiveFileType.Raw));
+                                    }
+                                    else
+                                    {
+                                        writer.Files.Add(
+                                            new PPeX.Subfile(
+                                                new FileSource(file),
+                                                Path.GetFileName(file),
+                                                name));
+                                    }
+                                    
 
                                     imported++;
                                 }
@@ -203,7 +243,7 @@ Sets a regex to use for compressing or extracting");
             }
         }
 
-        static void ImportPP(string filename, ExtendedArchiveWriter writer, Regex regex)
+        static void ImportPP(string filename, ExtendedArchiveWriter writer, Regex regex, Regex unencodedRegex)
         {
             ppParser pp = new ppParser(filename);
             
@@ -213,13 +253,27 @@ Sets a regex to use for compressing or extracting");
 
             foreach (IReadFile file in pp.Subfiles)
             {
-                if (regex.IsMatch(file.Name))
+                string fullName = name + "/" + file.Name;
+
+                if (regex.IsMatch(fullName))
                 {
-                    writer.Files.Add(
+                    if (unencodedRegex.IsMatch(fullName))
+                    {
+                        writer.Files.Add(
+                        new PPeX.Subfile(
+                            new PPSource(file),
+                            file.Name,
+                            name,
+                            ArchiveFileType.Raw));
+                    }
+                    else
+                    {
+                        writer.Files.Add(
                         new PPeX.Subfile(
                             new PPSource(file),
                             file.Name,
                             name));
+                    }
 
                     imported++;
                 }
