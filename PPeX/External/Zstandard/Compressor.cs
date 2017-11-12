@@ -13,24 +13,7 @@ namespace ZstdNet
 		{
 			Options = options;
 
-            cctx = ExternMethods.ZSTDMT_createCCtx(threads).EnsureZstdSuccess();
-
-            var result = ExternMethods.ZSTDMT_initCStream(cctx, options.CompressionLevel);
-
-            //result.EnsureZstdSuccess();
-
-
-
-            /*
-			cctx = ExternMethods.ZSTD_createCCtx().EnsureZstdSuccess();
-
-            ccparams = ExternMethods.ZSTD_createCCtxParams();
-
-            ExternMethods.ZSTD_initCCtxParams(ccparams, options.CompressionLevel).EnsureZstdSuccess();
-
-            var result = ExternMethods.ZSTD_CCtxParam_setParameter(ccparams, ZSTD_cParameter.ZSTD_p_nbThreads, 8).EnsureZstdSuccess();
-
-            ExternMethods.ZSTD_CCtx_setParametersUsingCCtxParams(cctx, ccparams);*/
+            cctx = ExternMethods.ZSTD_createCCtx().EnsureZstdSuccess();
         }
 
 		~Compressor()
@@ -49,8 +32,7 @@ namespace ZstdNet
 			if(disposed)
 				return;
 
-            //ExternMethods.ZSTD_freeCCtx(cctx);
-            ExternMethods.ZSTDMT_freeCCtx(cctx);
+            ExternMethods.ZSTD_freeCCtx(cctx);
 
             disposed = true;
 		}
@@ -103,31 +85,7 @@ namespace ZstdNet
 			using(var dstPtr = new ArraySegmentPtr(new ArraySegment<byte>(dst, offset, dstCapacity)))
 			{
 				if(Options.Cdict == IntPtr.Zero)
-					//dstSize = ExternMethods.ZSTD_compressCCtx(cctx, dstPtr, (size_t)dstCapacity, srcPtr, (size_t)src.Count, Options.CompressionLevel);
-                {
-
-                    dstSize = ExternMethods.ZSTDMT_compressCCtx(cctx, dstPtr, (size_t)dstCapacity, srcPtr, (size_t)src.Count, Options.CompressionLevel);
-
-                    // streaming code //
-                    /*
-                    var bSrc = new ExternMethods.ZSTD_Buffer
-                    {
-                        array = srcPtr,
-                        size = (size_t)((src.Count / 2) - 1),
-                        pos = (size_t)0
-                    };
-
-                    var bDst = new ExternMethods.ZSTD_Buffer
-                    {
-                        array = dstPtr,
-                        size = (size_t)dstCapacity,
-                        pos = (size_t)0
-                    };
-
-                    ExternMethods.ZSTDMT_compressStream_generic(cctx, ref bDst, ref bSrc, 2).EnsureZstdSuccess();
-
-                    dstSize = bDst.pos;*/
-                }
+					dstSize = ExternMethods.ZSTD_compressCCtx(cctx, dstPtr, (size_t)dstCapacity, srcPtr, (size_t)src.Count, Options.CompressionLevel);
 				else
 					dstSize = ExternMethods.ZSTD_compress_usingCDict(cctx, dstPtr, (size_t)dstCapacity, srcPtr, (size_t)src.Count, Options.Cdict);
 			}
@@ -138,7 +96,5 @@ namespace ZstdNet
 		public readonly CompressionOptions Options;
 
         private readonly IntPtr cctx;
-
-        private readonly IntPtr ccparams;
     }
 }

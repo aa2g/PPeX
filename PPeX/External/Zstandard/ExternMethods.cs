@@ -114,39 +114,5 @@ namespace ZstdNet
 		public static extern uint ZSTD_isError(size_t code);
 		[DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr ZSTD_getErrorName(size_t code);
-
-        //advanced API
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr ZSTD_createCCtxParams();
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void ZSTD_freeCCtxParams(IntPtr ccparam);
-
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern size_t ZSTD_initCCtxParams(IntPtr ccparam, int compressionLevel);
-
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern size_t ZSTD_CCtxParam_setParameter(IntPtr ccparam, ZSTD_cParameter parameter, uint value);
-
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern size_t ZSTD_CCtx_setParametersUsingCCtxParams(IntPtr cctx, IntPtr ccparam);
-
-
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern size_t ZSTD_compress_generic(IntPtr cctx, ZSTD_Buffer output, ZSTD_Buffer input, int endOp);
-
-
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr ZSTDMT_createCCtx(uint threads);
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr ZSTDMT_initCStream(IntPtr mtctx, int compressionLevel);
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern size_t ZSTDMT_freeCCtx(IntPtr mtctx);
-
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern size_t ZSTDMT_compressCCtx(IntPtr mtctx, IntPtr dst, size_t dstCapacity, IntPtr src, size_t srcSize, int compressionLevel);
-
-
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern size_t ZSTDMT_compressStream_generic(IntPtr cctx, ref ZSTD_Buffer output, ref ZSTD_Buffer input, int endOp);
     }
 }
