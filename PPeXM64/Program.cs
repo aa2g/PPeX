@@ -132,7 +132,7 @@ namespace PPeXM64
                 //Transfer the file
                 lock (Cache.LoadLock)
                 {
-                    string[] splitNames = argument.Split('/');
+                    string[] splitNames = argument.Replace("data/", "").Split('/');
                     FileEntry entry = new FileEntry(splitNames[0], splitNames[1]);
 
                     //Ensure we have the file
@@ -140,6 +140,10 @@ namespace PPeXM64
                     {
                         //We don't have the file
                         handler.WriteString("NotAvailable");
+
+                        if (LogFiles)
+                            Console.WriteLine("!" + argument);
+
                         return;
                     }
 
