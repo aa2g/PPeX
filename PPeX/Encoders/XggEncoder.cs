@@ -49,49 +49,59 @@ namespace PPeX.Encoders
             try
             {
                 using (var writer = new BinaryWriter(mem, System.Text.Encoding.ASCII, true))
-                using (var data = Source.GetStream())
-                using (var wav = new WaveFileReader(data))
+#if WINE
+                using (var original = Source.GetStream())
+                using (MemoryStream data = new MemoryStream())
                 {
-#warning need to add preserve stereo option
-                    byte channels = (byte)wav.WaveFormat.Channels;
-
-                    using (var res = new MediaFoundationResampler(wav, new WaveFormat(
-                        wav.WaveFormat.SampleRate < 24000 ? 24000 : 48000
-                        , channels)))
-                    using (var opus = OpusEncoder.Create(res.WaveFormat.SampleRate, channels, FragLabs.Audio.Codecs.Opus.Application.Audio))
+                    original.CopyTo(data);
+                    data.Position = 0;
+                    original.Dispose();
+#else
+                using (var data = Source.GetStream())
+                {
+#endif
+                    using (var wav = new WaveFileReader(data))
                     {
+#warning need to add preserve stereo option
+                        byte channels = (byte)wav.WaveFormat.Channels;
 
-                        opus.Bitrate = channels > 1 ? Core.Settings.XggMusicBitrate : Core.Settings.XggVoiceBitrate;
-                        int packetsize = (int)(res.WaveFormat.SampleRate * Core.Settings.XggFrameSize * 2 * channels);
-
-                        writer.Write(System.Text.Encoding.ASCII.GetBytes(Magic));
-                        writer.Write(Version);
-                        writer.Write(packetsize);
-                        writer.Write(opus.Bitrate);
-                        writer.Write(channels);
-
-                        long oldpos = mem.Position;
-                        uint count = 0;
-                        writer.Write(count);
-
-                        byte[] buffer = new byte[packetsize];
-                        int result = res.Read(buffer, 0, packetsize);
-                        while (result > 0)
+                        using (var res = new MediaFoundationResampler(wav, new WaveFormat(
+                            wav.WaveFormat.SampleRate < 24000 ? 24000 : 48000
+                            , channels)))
+                        using (var opus = OpusEncoder.Create(res.WaveFormat.SampleRate, channels, FragLabs.Audio.Codecs.Opus.Application.Audio))
                         {
-                            count++;
-                            int outlen = 0;
-                            byte[] output = opus.Encode(buffer, packetsize / (2 * channels), out outlen);
-                            writer.Write((uint)outlen);
-                            writer.Write(output, 0, outlen);
 
-                            result = res.Read(buffer, 0, packetsize);
+                            opus.Bitrate = channels > 1 ? Core.Settings.XggMusicBitrate : Core.Settings.XggVoiceBitrate;
+                            int packetsize = (int)(res.WaveFormat.SampleRate * Core.Settings.XggFrameSize * 2 * channels);
+
+                            writer.Write(System.Text.Encoding.ASCII.GetBytes(Magic));
+                            writer.Write(Version);
+                            writer.Write(packetsize);
+                            writer.Write(opus.Bitrate);
+                            writer.Write(channels);
+
+                            long oldpos = mem.Position;
+                            uint count = 0;
+                            writer.Write(count);
+
+                            byte[] buffer = new byte[packetsize];
+                            int result = res.Read(buffer, 0, packetsize);
+                            while (result > 0)
+                            {
+                                count++;
+                                int outlen = 0;
+                                byte[] output = opus.Encode(buffer, packetsize / (2 * channels), out outlen);
+                                writer.Write((uint)outlen);
+                                writer.Write(output, 0, outlen);
+
+                                result = res.Read(buffer, 0, packetsize);
+                            }
+
+                            mem.Position = oldpos;
+                            writer.Write(count);
                         }
-
-                        mem.Position = oldpos;
-                        writer.Write(count);
                     }
                 }
-
             }
             catch (Exception ex) when (ex is EndOfStreamException || ex is ArgumentException || ex is FormatException)
             {

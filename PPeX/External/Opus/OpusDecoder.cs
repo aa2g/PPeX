@@ -41,7 +41,6 @@ namespace FragLabs.Audio.Codecs
             _decoder = decoder;
             OutputSamplingRate = outputSamplingRate;
             OutputChannels = outputChannels;
-            MaxDataBytes = 8000;
         }
 
         /// <summary>
@@ -57,8 +56,8 @@ namespace FragLabs.Audio.Codecs
                 throw new ObjectDisposedException("OpusDecoder");
 
             IntPtr decodedPtr;
-            byte[] decoded = new byte[960 * 2 * 2];
-            int frameCount = 960 ;// FrameCount(MaxDataBytes * 2);
+            int frameCount = MaxDataBytes * OutputChannels;
+            byte[] decoded = new byte[frameCount * 2];
             int length = 0;
             fixed (byte* bdec = decoded)
             {
@@ -115,9 +114,9 @@ namespace FragLabs.Audio.Codecs
         public int OutputChannels { get; private set; }
 
         /// <summary>
-        /// Gets or sets the size of memory allocated for decoding data.
+        /// The base size of memory allocated for decoding data.
         /// </summary>
-        public int MaxDataBytes { get; set; }
+        public const int MaxDataBytes = 5760;
 
         /// <summary>
         /// Gets or sets whether forward error correction is enabled or not.
