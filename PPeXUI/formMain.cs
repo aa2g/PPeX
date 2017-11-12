@@ -901,6 +901,23 @@ namespace PPeXUI
         {
 
         }
+
+        private void verifyArchiveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CommonOpenFileDialog dialog = new CommonOpenFileDialog()
+            {
+                Multiselect = false
+            };
+            dialog.Filters.Add(new CommonFileDialogFilter("Extended PP archive", "*.ppx"));
+
+            var result = dialog.ShowDialog();
+
+            if (result != CommonFileDialogResult.Ok)
+                return;
+
+            var verifyForm = new formVerify(new ExtendedArchive(dialog.FileName));
+            verifyForm.ShowDialog();
+        }
     }
 
     public class SubfileHolder
