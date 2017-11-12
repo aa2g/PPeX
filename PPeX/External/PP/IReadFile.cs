@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace SB3Utility
+namespace PPeX.External.PP
 {
     public interface IReadFile
     {

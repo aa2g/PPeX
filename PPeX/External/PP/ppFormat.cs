@@ -5,7 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography;
 
-namespace SB3Utility
+namespace PPeX.External.PP
 {
 	public enum ppFormatIdx
 	{

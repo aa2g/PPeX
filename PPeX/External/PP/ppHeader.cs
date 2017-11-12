@@ -4,7 +4,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace SB3Utility
+namespace PPeX.External.PP
 {
 	public enum ppHeaderIdx
 	{

@@ -4,7 +4,7 @@ using System.Text;
 using System.IO;
 using System.IO.Compression;
 
-namespace SB3Utility
+namespace PPeX.External.PP
 {
 	public class JchStream : Stream
 	{

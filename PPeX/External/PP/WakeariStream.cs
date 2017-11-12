@@ -4,7 +4,7 @@ using System.Text;
 using System.IO;
 using System.Security.Cryptography;
 
-namespace SB3Utility
+namespace PPeX.External.PP
 {
     public class WakeariStream : CryptoStream
     {

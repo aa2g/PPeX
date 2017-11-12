@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace SB3Utility
+namespace PPeX.External.PP
 {
     public interface IWriteFile
     {

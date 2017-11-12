@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 
-namespace SB3Utility
+namespace PPeX.External.PP
 {
 	/// <summary>
 	/// If removed from a ppParser, CreateReadStream() is no longer guaranteed to work. The .pp file may have changed,
@@ -123,7 +123,7 @@ namespace SB3Utility
 			throw new NotImplementedException();
 		}
 
-		public override void SetLength(long value)
+        public override void SetLength(long value)
 		{
 			throw new NotImplementedException();
 		}
