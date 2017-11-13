@@ -2,6 +2,7 @@
 using PPeX.Xx2;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime;
 using System.Text;
@@ -26,6 +27,8 @@ namespace PPeXM64
 
         public List<ExtendedArchive> LoadedArchives = new List<ExtendedArchive>();
 
+        public TextureBank UniversalTexBank = new TextureBank();
+
         public CompressedCache(IEnumerable<ExtendedArchive> Archives) : this(Archives, new Progress<string>())
         {
 
@@ -37,7 +40,7 @@ namespace PPeXM64
             {
                 foreach (var chunk in archive.Chunks)
                 {
-                    var cachedChunk = new CachedChunk(chunk);
+                    var cachedChunk = new CachedChunk(chunk, this);
 
                     TotalChunks.Add(cachedChunk);
 
@@ -51,6 +54,16 @@ namespace PPeXM64
                     }
                 }
                 
+                foreach (var texture in archive.Xx3Provider.TextureFiles)
+                {
+                    using (Stream stream = texture.Value.GetRawStream())
+                    using (MemoryStream mem = new MemoryStream())
+                    {
+                        stream.CopyTo(mem);
+                        UniversalTexBank.Textures.Add(texture.Key, mem.ToArray());
+                    }
+                }
+
                 Status.Report("Loaded \"" + archive.Title + "\" (" + archive.Files.Count + " files)");
 
                 LoadedArchives.Add(archive);

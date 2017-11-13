@@ -20,6 +20,8 @@ namespace PPeXM64
 
         public ArchiveFileSource Source { get; protected set; }
 
+        public CompressedCache Cache { get; protected set; }
+
         public CachedChunk Chunk { get; protected set; }
 
         public byte[] MD5 => Source.Md5;
@@ -36,9 +38,10 @@ namespace PPeXM64
 
         public int Accesses { get; protected set; }
 
-        public CachedFile(ArchiveFileSource source, CachedChunk chunk)
+        public CachedFile(ArchiveFileSource source, CompressedCache cache, CachedChunk chunk)
         {
             Source = source;
+            Cache = cache;
             Chunk = chunk;
 
             Name = source.Name;
@@ -72,12 +75,24 @@ namespace PPeXM64
             using (MemoryStream mem = new MemoryStream(CompressedData))
             using (IDecompressor decompressor = CompressorFactory.GetDecompressor(mem, Compression))
             {
-                IDecoder decoder = EncoderFactory.GetDecoder(decompressor.Decompress(), Source.BaseArchive, Type);
+                if (Type == ArchiveFileType.Xx3Mesh)
+                {
+                    IDecoder decoder = new Xx3Decoder(decompressor.Decompress(), Cache.UniversalTexBank);
+                    
+                    Stream decoded = decoder.Decode();
+                    decoded.Position = 0;
 
-                Stream decoded = decoder.Decode();
-                decoded.Position = 0;
+                    return decoded;
+                }
+                else
+                {
+                    IDecoder decoder = EncoderFactory.GetDecoder(decompressor.Decompress(), Source.BaseArchive, Type);
 
-                return decoded; 
+                    Stream decoded = decoder.Decode();
+                    decoded.Position = 0;
+
+                    return decoded;
+                }
             }
         }
     }

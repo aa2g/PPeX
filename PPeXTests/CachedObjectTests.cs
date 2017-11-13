@@ -14,6 +14,7 @@ namespace PPeXTests
         public static byte[] TestData = Encoding.UTF8.GetBytes("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ac purus id diam consectetur fermentum. Etiam nulla nisi, tincidunt sed sagittis nec, finibus vel elit. Pellentesque sodales massa eget tortor eleifend dictum. Ut finibus tellus efficitur nulla hendrerit convallis. Cras sed neque sed tellus luctus vehicula sed in sapien.");
         public static byte[] TestHash;
         public static ExtendedArchive TestArchive;
+        public static CompressedCache cache;
 
         [DeploymentItem("X64")]
         [ClassInitialize]
@@ -42,12 +43,15 @@ namespace PPeXTests
             arc.Close();
 
             TestArchive = new ExtendedArchive("test.ppx");
+            cache = new CompressedCache(new[] { TestArchive });
         }
 
         [TestMethod]
         public void AllocationTest()
         {
-            CachedChunk chunk = new CachedChunk(TestArchive.Chunks[0]);
+            
+
+            CachedChunk chunk = new CachedChunk(TestArchive.Chunks[0], cache);
 
             chunk.Allocate();
 
@@ -61,7 +65,7 @@ namespace PPeXTests
         [TestMethod]
         public void DeallocationTest()
         {
-            CachedChunk chunk = new CachedChunk(TestArchive.Chunks[0]);
+            CachedChunk chunk = new CachedChunk(TestArchive.Chunks[0], cache);
 
             chunk.Allocate();
 
@@ -73,7 +77,7 @@ namespace PPeXTests
         [TestMethod]
         public void FileDataTest()
         {
-            CachedChunk chunk = new CachedChunk(TestArchive.Chunks[0]);
+            CachedChunk chunk = new CachedChunk(TestArchive.Chunks[0], cache);
             CachedFile file = chunk.Files[0];
 
             using (MemoryStream mem = new MemoryStream())
