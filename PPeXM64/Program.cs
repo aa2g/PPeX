@@ -127,11 +127,11 @@ namespace PPeXM64
 
                 handler.WriteString(IsLoaded.ToString());
             }
-            if (request == "matchfiles")
+            else if (request == "matchfiles")
             {
                 //Send a list of all loaded .pp files
 
-                string path = handler.ReadString();
+                Console.WriteLine("!!LOADED FILELIST!!");
 
                 var loadedPP = Cache.TotalFiles.Select(x => x.ArchiveName).Distinct();
                 
@@ -181,6 +181,7 @@ namespace PPeXM64
             {
                 //Unknown command
                 //Ignore instead of throwing exception
+                Console.WriteLine("Unknown request: " + request + " [:] " + argument);
             }
         }
 
