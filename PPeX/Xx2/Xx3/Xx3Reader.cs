@@ -27,7 +27,9 @@ namespace PPeX.Xx2
                 byte[] headerUnknown = reader.ReadBytes(unknownLength);
 
 
-                xxObject obj = ReadObject(reader);
+                int rootObjectLength = reader.ReadInt32();
+
+                byte[] rootObj = reader.ReadBytes(rootObjectLength);
 
                 //always length of 4
                 byte[] materialUnknown = reader.ReadBytes(4);
@@ -35,7 +37,12 @@ namespace PPeX.Xx2
 
                 int materialCount = reader.ReadInt32();
 
-                List<xxMaterial> materials = ReadMaterials(reader, materialCount);
+                //List<xxMaterial> materials = ReadMaterials(reader, materialCount);
+
+                List<xxMaterial> materials = new List<xxMaterial>();
+
+                for (int i = 0; i < materialCount; i++)
+                    materials.Add(new xxMaterial(reader, version));
 
 
                 int textureCount = reader.ReadInt32();
@@ -51,7 +58,7 @@ namespace PPeX.Xx2
                 {
                     Version = version,
                     HeaderUnknown = headerUnknown,
-                    RootObject = obj,
+                    RootObject = rootObj,
                     MaterialUnknown = materialUnknown,
                     Materials = materials,
                     TextureRefs = textures,
@@ -325,9 +332,6 @@ namespace PPeX.Xx2
 
                 //unknown is always 4 bytes long
                 textures[i].Unknown = reader.ReadBytes(4);
-
-                //read the data index
-                textures[i].Reference = reader.ReadInt32();
             }
 
             return textures;

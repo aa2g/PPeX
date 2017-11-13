@@ -152,6 +152,33 @@ namespace PPeX
                 chunks.Add(currentChunk);
 
 
+            //write texture bank chunk
+            if (TextureBank.Textures.Count > 0)
+            {
+                ProgressStatus.Report("Writing texture bank...\r\n");
+                var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
+
+                int i = 0;
+                foreach (var texture in TextureBank.Textures)
+                {
+                    var file = new Subfile(
+                        new MemorySource(texture.Value),
+                        texture.Key,
+                        "_TextureBank");
+
+                    if (!textureBankWriter.TryAddFile(file, ChunkSizeLimit))
+                    {
+                        chunks.Add(textureBankWriter);
+
+                        textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
+                        textureBankWriter.AddFile(file);
+                    }
+                }
+
+                chunks.Add(textureBankWriter);
+            }
+
+
             //GENERIC chunks
             ProgressStatus.Report("Allocating generic chunks...\r\n");
             ProgressPercentage.Report(0);
@@ -232,38 +259,6 @@ namespace PPeX
 
             if (LSTWriter.ContainsFiles)
                 chunks.Add(LSTWriter);
-
-            //write texture bank chunk
-            if (TextureBank.Textures.Count > 0)
-            {
-                ProgressStatus.Report("Writing texture bank...\r\n");
-                var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
-
-                int i = 0;
-                foreach (var texture in TextureBank.Textures)
-                {
-                    using (var textureData = new MemoryStream())
-                    using (var textureWriter = new BinaryWriter(textureData))
-                    {
-                        texture.Write(textureWriter);
-
-                        var file = new Subfile(
-                            new MemorySource(textureData.ToArray()),
-                            (i++).ToString() + ".tex",
-                            "_xx3_TextureBank");
-
-                        if (!textureBankWriter.TryAddFile(file, ChunkSizeLimit))
-                        {
-                            chunks.Add(textureBankWriter);
-
-                            textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
-                            textureBankWriter.AddFile(file);
-                        }
-                    }
-                }
-                
-                chunks.Add(textureBankWriter);
-            }
 
             chunks.CompleteAdding();
         }

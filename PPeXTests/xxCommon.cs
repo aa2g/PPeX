@@ -280,7 +280,7 @@ namespace PPeXTests
                 Assert.AreEqual(original.HeaderUnknown[x], saved.HeaderUnknown[x], "Header unknown does not match.");
 
             //verify object
-            VerifyObject(original.RootObject, saved.RootObject);
+            VerifyUnknowns(new[] { original.RootObject }, new[] { saved.RootObject });
 
             //verify unencoded data
             Assert.AreEqual(original.UnencodedData.Length, saved.UnencodedData.Length, "Unencoded data length does not match.");

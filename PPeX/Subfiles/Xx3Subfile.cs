@@ -24,7 +24,7 @@ namespace PPeX
             
             foreach (var texRef in file.TextureRefs)
             {
-                _size += provider.TextureFiles[texRef.Reference].Size;
+                _size += provider.TextureFiles[texRef.Name].Size;
             }
         }
 
@@ -45,15 +45,13 @@ namespace PPeX
             Xx3File file = Xx3Reader.Read(BaseSource.GetRawStream());
 
             TextureBank Bank = new TextureBank();
-            //fill up space so we can index properly
-            for (int i = 0; i < Provider.TextureFiles.Count; i++)
-                Bank.Textures.Add(null);
 
             foreach (var texRef in file.TextureRefs)
             {
-                int index = texRef.Reference;
-                using (Stream stream = Provider.TextureFiles[index].GetRawStream())
-                    Bank.Textures[index] = IndexedTexture.Read(stream);
+                string name = texRef.Name;
+                using (Stream stream = Provider.TextureFiles[name].GetRawStream())
+                using (BinaryReader reader = new BinaryReader(stream))
+                    Bank.Textures[name] = reader.ReadBytes((int)stream.Length);
             }
 
             MemoryStream mem = new MemoryStream();

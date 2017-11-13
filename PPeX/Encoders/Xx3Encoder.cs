@@ -92,19 +92,30 @@ namespace PPeX.Encoders
             if (texBank == null)
             {
                 texBank = new TextureBank();
-                //fill up space so we can index properly
-                for (int i = 0; i < provider.TextureFiles.Count; i++)
-                    texBank.Textures.Add(null);
 
                 foreach (var texRef in file.TextureRefs)
                 {
-                    int index = texRef.Reference;
-                    using (Stream stream = provider.TextureFiles[index].GetRawStream())
-                        texBank.Textures[index] = IndexedTexture.Read(stream);
+                    string name = texRef.Name;
+                    using (Stream stream = provider.TextureFiles[name].GetRawStream())
+                    using (BinaryReader reader = new BinaryReader(stream))
+                        texBank.Textures[name] = reader.ReadBytes((int)stream.Length);
                 }
             }
 
             file.DecodeToXX(mem, texBank);
+
+            mem.Position = 0;
+
+            return mem;
+        }
+
+        public Stream DecodeBlankTextures()
+        {
+            Xx3File file = Xx3Reader.Read(BaseStream);
+
+            MemoryStream mem = new MemoryStream();
+
+            file.DecodeToBlankXX(mem);
 
             mem.Position = 0;
 
