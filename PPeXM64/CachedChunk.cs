@@ -1,6 +1,7 @@
 ﻿using PPeX;
 using PPeX.Compressors;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,18 +17,20 @@ namespace PPeXM64
     public class CachedChunk
     {
         public uint ID => BaseChunk.ID;
+        public CompressedCache BaseCache;
         public ExtendedArchiveChunk BaseChunk;
         public ArchiveChunkCompression RecompressionMethod = ArchiveChunkCompression.LZ4;
 
         public List<CachedFile> Files = new List<CachedFile>();
 
-        public CachedChunk(ExtendedArchiveChunk baseChunk)
+        public CachedChunk(ExtendedArchiveChunk baseChunk, CompressedCache cache)
         {
             BaseChunk = baseChunk;
+            BaseCache = cache;
 
             foreach (var file in baseChunk.Files)
             {
-                Files.Add(new CachedFile(file.Source as ArchiveFileSource, this));
+                Files.Add(new CachedFile(file.Source as ArchiveFileSource, cache, this));
             }
         }
 
