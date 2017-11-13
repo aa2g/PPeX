@@ -13,7 +13,7 @@ namespace PPeX.Xx2
 
         public byte[] HeaderUnknown;
 
-        public xxObject RootObject;
+        public byte[] RootObject;
 
         public byte[] MaterialUnknown;
 
@@ -27,7 +27,14 @@ namespace PPeX.Xx2
         {
             Version = parser.Version;
             HeaderUnknown = parser.HeaderUnknown;
-            RootObject = parser.RootObject;
+
+            using (MemoryStream mem = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(mem))
+            {
+                parser.RootObject.Write(writer, Version);
+                RootObject = mem.ToArray();
+            }
+
             MaterialUnknown = parser.MaterialUnknown;
             Materials = parser.Materials;
 
@@ -41,6 +48,32 @@ namespace PPeX.Xx2
 
         }
 
+        public virtual void DecodeToBlankXX(Stream stream)
+        {
+            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.ASCII, true))
+            {
+                writer.Write((int)Version);
+
+                writer.Write(HeaderUnknown);
+
+                writer.Write(RootObject);
+
+
+                writer.Write(MaterialUnknown);
+
+
+                writer.Write(Materials.Count);
+
+                for (int i = 0; i < Materials.Count; i++)
+                    Materials[i].Write(writer);
+
+                //zero textures
+                writer.Write((int)0);
+
+                writer.Write(UnencodedData);
+            }
+        }
+
         public virtual void DecodeToXX(Stream stream, TextureBank bank)
         {
             using (BinaryWriter writer = new BinaryWriter(stream, Encoding.ASCII, true))
@@ -49,7 +82,7 @@ namespace PPeX.Xx2
 
                 writer.Write(HeaderUnknown);
 
-                RootObject.Write(writer, Version);
+                writer.Write(RootObject);
 
 
                 writer.Write(MaterialUnknown);

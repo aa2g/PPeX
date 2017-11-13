@@ -28,8 +28,6 @@ namespace PPeX.Xx2
         public int ImageFileFormat;
 
         public byte Checksum;
-        
-        public int Reference;
 
         public static xxTextureReference FromTexture(xxTexture texture, TextureBank bank)
         {
@@ -46,7 +44,7 @@ namespace PPeX.Xx2
             texref.Width = texture.Width;
             texref.Unknown = texture.Unknown;
 
-            texref.Reference = bank.ProcessTexture(texture);
+            bank.ProcessTexture(texture);
 
             return texref;
         }
@@ -66,7 +64,7 @@ namespace PPeX.Xx2
             writer.Write(ImageFileFormat);
             writer.Write(Checksum);
 
-            byte[] imgData = bank.Textures[Reference].Data;
+            byte[] imgData = bank.Textures[Name];
 
             writer.Write((int)imgData.Length);
 

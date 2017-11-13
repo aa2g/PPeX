@@ -9,9 +9,9 @@ namespace PPeX
 {
     public class Xx3Provider
     {
-        protected List<ISubfile> textureSubfiles = new List<ISubfile>();
+        protected Dictionary<string, ISubfile> textureSubfiles = new Dictionary<string, ISubfile>();
 
-        public IReadOnlyList<ISubfile> TextureFiles => textureSubfiles.AsReadOnly();
+        public IReadOnlyDictionary<string, ISubfile> TextureFiles => textureSubfiles;
 
         public List<ISubfile> XX3Subfiles = new List<ISubfile>();
 
@@ -19,9 +19,9 @@ namespace PPeX
         {
             List<ExtendedArchiveChunk> xxChunks = Chunks.Where(x => x.Type == ChunkType.Xx3).ToList();
 
-            foreach (var textureFile in xxChunks.SelectMany(x => x.Files).Where(x => x.ArchiveName == "_xx3_TextureBank").OrderBy(x => int.Parse(x.Name.Remove(x.Name.Length - 4))))
+            foreach (var textureFile in xxChunks.SelectMany(x => x.Files).Where(x => x.ArchiveName == "_TextureBank"))
             {
-                textureSubfiles.Add(textureFile);
+                textureSubfiles.Add(textureFile.Name, textureFile);
             }
 
             

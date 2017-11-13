@@ -15,11 +15,18 @@ namespace PPeX
         public ArchiveSubfile(ArchiveFileSource source)
         {
             _source = source;
+            Name = _source.Name;
+        }
+
+        public ArchiveSubfile(ArchiveFileSource source, string name)
+        {
+            _source = source;
+            Name = name;
         }
 
         public string ArchiveName => _source.ArchiveName;
 
-        public string Name => _source.Name;
+        public string Name { get; protected set; }
 
         public ulong Size => (uint)_source.Size;
 

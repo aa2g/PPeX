@@ -617,7 +617,7 @@ namespace PPeXUI
 
             trvFiles.BeginUpdate();
 
-            foreach (var file in arc.Files)
+            foreach (var file in arc.RawFiles)
             {
                 TreeNode parent = parents.FirstOrDefault(x => x.Text == file.ArchiveName);
 
@@ -628,7 +628,7 @@ namespace PPeXUI
                 }
 
                 TreeNode node = parent.Nodes.Add(file.Name);
-                node.Tag = new SubfileHolder(file.Source, file.Name);
+                node.Tag = new SubfileHolder(file, file.Name);
                 SetAutoIcon(node);
             }
 
