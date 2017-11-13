@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PPeXM64
@@ -30,8 +31,56 @@ namespace PPeXM64
             }
         }
 
+        public static readonly int RecompressionThreads = 4;
+
+        protected Thread[] threads;
+        protected BlockingCollection<Tuple<IEnumerable<CachedFile>, byte[]>> QueuedFileSets;
+
+        protected void RecompressionCallback()
+        {
+            while (!QueuedFileSets.IsCompleted)
+            {
+                Tuple<IEnumerable<CachedFile>, byte[]> item;
+                bool result = QueuedFileSets.TryTake(out item, 50);
+
+                if (result)
+                {
+                    var possibleFiles = item.Item1;
+                    var uncompressed = item.Item2;
+
+                    //We don't want to recompress data that's already cached
+                    if (possibleFiles.Any(x => !x.Allocated))
+                    {
+                        using (MemoryStream uncomp = new MemoryStream(uncompressed))
+                        using (ICompressor compressor = CompressorFactory.GetCompressor(uncomp, RecompressionMethod))
+                        using (MemoryStream compressed = new MemoryStream())
+                        {
+                            compressor.WriteToStream(compressed);
+
+                            byte[] compressedArray = compressed.ToArray();
+
+                            foreach (var file in possibleFiles)
+                            {
+                                file.CompressedData = compressedArray;
+                                file.Compression = RecompressionMethod;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public void Allocate()
         {
+            QueuedFileSets = new BlockingCollection<Tuple<IEnumerable<CachedFile>, byte[]>>();
+            threads = new Thread[RecompressionThreads];
+
+            for (int i = 0; i < RecompressionThreads; i++)
+            {
+                threads[i] = new Thread(new ThreadStart(RecompressionCallback));
+                threads[i].Start();
+            }
+
             using (Stream fstream = BaseChunk.GetStream())
             {
                 while (fstream.Position < fstream.Length)
@@ -44,24 +93,15 @@ namespace PPeXM64
 
                     fstream.Read(uncompressed, 0, length);
 
-                    //We don't want to recompress data that's already cached
-                    if (possibleFiles.Any(x => !x.Allocated))
-                    {
-                        using (MemoryStream uncomp = new MemoryStream(uncompressed))
-                        using (ICompressor compressor = CompressorFactory.GetCompressor(uncomp, RecompressionMethod))
-                        using (MemoryStream compressed = new MemoryStream())
-                        {
-                            compressor.WriteToStream(compressed);
-
-                            foreach (var file in possibleFiles)
-                            {
-                                file.CompressedData = compressed.ToArray();
-                                file.Compression = RecompressionMethod;
-                            }
-                        }
-                    }
+                    QueuedFileSets.Add(new Tuple<IEnumerable<CachedFile>, byte[]>(possibleFiles, uncompressed));
                 }
+
+                QueuedFileSets.CompleteAdding();
             }
+
+            //wait for threads
+            for (int i = 0; i < RecompressionThreads; i++)
+                threads[i].Join();
         }
 
         public void Deallocate()
