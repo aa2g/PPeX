@@ -578,18 +578,25 @@ namespace PPeXUI
                                 File.WriteAllBytes("HashCache.md5.zs", comp.Wrap(Encoding.ASCII.GetBytes(rawCache)));
                             }
                         }
+
+                    this.Invoke(new MethodInvoker(() =>
+                    {
+                        currentlyOpenedFile = Path.GetFileName(txtSaveLocation.Text);
+                        IsModified = false;
+                        btnSave.Enabled = true;
+                    }));
                 }
+
+
             });
 
-            currentlyOpenedFile = Path.GetFileName(txtSaveLocation.Text);
-            IsModified = false;
+            
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
             btnSave.Enabled = false;
             Save();
-            btnSave.Enabled = true;
         }
 
         public void Open()
@@ -722,7 +729,9 @@ namespace PPeXUI
                     );
             });
 
+            trvFiles.BeginUpdate();
             progform.ShowDialog(this);
+            trvFiles.EndUpdate();
         }
 
         public void ImportFolder(string path)
@@ -786,6 +795,8 @@ namespace PPeXUI
         private void trvFiles_DragDrop(object sender, DragEventArgs e)
         {
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+            trvFiles.BeginUpdate();
 
             List<string> PPs = new List<string>();
 
@@ -851,6 +862,8 @@ namespace PPeXUI
 
                 progform.ShowDialog(this);
             }
+
+            trvFiles.EndUpdate();
         }
 
         private void convertxggTowavToolStripMenuItem_Click(object sender, EventArgs e)
