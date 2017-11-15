@@ -60,7 +60,7 @@ namespace PPeXM64
                     using (MemoryStream mem = new MemoryStream())
                     {
                         stream.CopyTo(mem);
-                        UniversalTexBank.Textures.Add(texture.Key, mem.ToArray());
+                        UniversalTexBank.Textures[texture.Key] = mem.ToArray();
                     }
                 }
 
