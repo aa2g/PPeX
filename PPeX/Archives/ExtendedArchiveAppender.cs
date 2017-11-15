@@ -499,6 +499,11 @@ namespace PPeX
             }
         }
 
+        public void Write()
+        {
+            Write(new Progress<string>(), new Progress<int>());
+        }
+
         public void Write(string filename, IProgress<string> ProgressStatus, IProgress<int> ProgressPercentage)
         {
 #warning need to implement

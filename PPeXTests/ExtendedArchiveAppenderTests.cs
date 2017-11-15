@@ -60,7 +60,7 @@ namespace PPeXTests
 
             appender.FilesToRemove.Add(appender.BaseArchive.RawFiles.Find(x => x.Name == "test1"));
 
-            appender.Write(new Progress<string>(), new Progress<int>());
+            appender.Write();
 
             TestArchive = new ExtendedArchive("test-append.ppx");
         }
