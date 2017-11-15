@@ -12,6 +12,24 @@ namespace PPeX
 {
     public static class Utility
     {
+        public static bool CompareBytes(byte[] arrayA, byte[] arrayB)
+        {
+            if (arrayA.Length != arrayB.Length)
+                return false;
+
+            for (int i = 0; i < arrayA.Length; i++)
+                if (arrayA[i] != arrayB[i])
+                    return false;
+
+            return true;
+        }
+
+        public static Md5Hash GetMd5(byte[] data)
+        {
+            MD5 md5 = MD5.Create();
+            return md5.ComputeHash(data);
+        }
+
         public static Md5Hash GetMd5(Stream stream)
         {
             MD5 md5 = MD5.Create();
@@ -85,18 +103,6 @@ namespace PPeX
             return readable.ToString("0.### ") + suffix;
         }
 
-        public static bool CompareBytes(byte[] arrayA, byte[] arrayB)
-        {
-            if (arrayA.Length != arrayB.Length)
-                return false;
-
-            for (int i = 0; i < arrayA.Length; i++)
-                if (arrayA[i] != arrayB[i])
-                    return false;
-
-            return true;
-        }
-
         public static void GCCompress()
         {
             //Collect garbage and compact the heap
@@ -105,7 +111,7 @@ namespace PPeX
         }
     }
 
-    class ByteArrayComparer : IComparer<byte[]>
+    public class ByteArrayComparer : IComparer<byte[]>
     {
         public int Compare(byte[] x, byte[] y)
         {
@@ -125,6 +131,19 @@ namespace PPeX
             }
 
             return 0;
+        }
+    }
+
+    public class ByteEqualityComparer : IEqualityComparer<byte[]>
+    {
+        public bool Equals(byte[] x, byte[] y)
+        {
+            return Utility.CompareBytes(x, y);
+        }
+
+        public int GetHashCode(byte[] obj)
+        {
+            return obj.Sum(x => x.GetHashCode());
         }
     }
 }

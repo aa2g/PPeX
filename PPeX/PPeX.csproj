@@ -84,7 +84,6 @@
     <Compile Include="Xx2\IntegerEncoder.cs" />
     <Compile Include="Xx2\Md5Hash.cs" />
     <Compile Include="Xx2\TextureBank.cs" />
-    <Compile Include="Xx2\Utility.cs" />
     <Compile Include="Xx2\Xx2\Xx2File.cs" />
     <Compile Include="Xx2\Xx2\Xx2Reader.cs" />
     <Compile Include="Xx2\Xx2\Xx2Writer.cs" />
