@@ -156,16 +156,17 @@ namespace PPeX
             if (TextureBank.Textures.Count > 0)
             {
                 ProgressStatus.Report("Writing texture bank...\r\n");
+                var textureFiles = TextureBank.Textures.Select(texture => new Subfile(
+                        new MemorySource(texture.Value),
+                        texture.Key,
+                        "_TextureBank"))
+                    .OrderBy(x => x.Source.Md5, new ByteArrayComparer());
+
                 var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
 
                 int i = 0;
-                foreach (var texture in TextureBank.Textures)
+                foreach (var file in textureFiles)
                 {
-                    var file = new Subfile(
-                        new MemorySource(texture.Value),
-                        texture.Key,
-                        "_TextureBank");
-
                     if (!textureBankWriter.TryAddFile(file, ChunkSizeLimit))
                     {
                         chunks.Add(textureBankWriter);
