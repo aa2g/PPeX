@@ -54,12 +54,12 @@ namespace PPeX.Encoders
 
     public static class EncoderFactory
     {
-        public static IEncoder GetEncoder(this ISubfile subfile, ExtendedArchiveWriter writer)
+        public static IEncoder GetEncoder(this ISubfile subfile, IArchiveWriter writer)
         {
             return GetEncoder(subfile.Source, writer, subfile.Type);
         }
 
-        public static IEncoder GetEncoder(IDataSource source, ExtendedArchiveWriter writer, ArchiveFileType encoding)
+        public static IEncoder GetEncoder(IDataSource source, IArchiveWriter writer, ArchiveFileType encoding)
         {
             switch (encoding)
             {

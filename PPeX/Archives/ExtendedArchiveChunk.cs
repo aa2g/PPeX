@@ -106,7 +106,7 @@ namespace PPeX
 
         public Stream GetRawStream()
         {
-            Stream stream = new FileStream(baseArchive.Filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+            Stream stream = new FileStream(baseArchive.Filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
             return new Substream(stream, (long)Offset, (long)CompressedLength);
         }

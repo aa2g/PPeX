@@ -9,32 +9,32 @@ namespace PPeX
 {
     public class ArchiveSubfile : ISubfile
     {
-        protected ArchiveFileSource _source;
-        public IDataSource Source => _source;
+        public ArchiveFileSource RawSource { get; protected set; }
+        public IDataSource Source => RawSource;
 
         public ArchiveSubfile(ArchiveFileSource source)
         {
-            _source = source;
-            Name = _source.Name;
+            RawSource = source;
+            Name = RawSource.Name;
         }
 
         public ArchiveSubfile(ArchiveFileSource source, string name)
         {
-            _source = source;
+            RawSource = source;
             Name = name;
         }
 
-        public string ArchiveName => _source.ArchiveName;
+        public string ArchiveName => RawSource.ArchiveName;
 
         public string Name { get; protected set; }
 
-        public ulong Size => (uint)_source.Size;
+        public ulong Size => (uint)RawSource.Size;
 
-        public ArchiveFileType Type => _source.Type;
+        public ArchiveFileType Type => RawSource.Type;
 
         public Stream GetRawStream()
         {
-            return _source.GetStream();
+            return RawSource.GetStream();
         }
     }
 }

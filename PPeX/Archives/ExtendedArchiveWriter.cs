@@ -16,7 +16,7 @@ namespace PPeX
     /// <summary>
     /// A writer for extended archives, to .ppx files.
     /// </summary>
-    public class ExtendedArchiveWriter
+    public class ExtendedArchiveWriter : IArchiveWriter
     {
         /*
         0 - magic PPEX
@@ -61,11 +61,11 @@ namespace PPeX
 
         protected bool leaveOpen;
 
-        protected BlockingCollection<HybridChunkWriter> QueuedChunks;
+        internal BlockingCollection<HybridChunkWriter> QueuedChunks;
 
         protected List<ChunkReceipt> CompletedChunks;
 
-        public TextureBank TextureBank = new TextureBank();
+        public TextureBank TextureBank { get; protected set; }
 
         /// <summary>
         /// Creates a new extended archive writer.
@@ -77,6 +77,7 @@ namespace PPeX
             this.ArchiveStream = File;
             this.Name = Name;
             DefaultCompression = ArchiveChunkCompression.Zstandard;
+            TextureBank = new TextureBank();
 
             ChunkSizeLimit = 16 * 1024 * 1024;
             Threads = 1;
@@ -95,7 +96,7 @@ namespace PPeX
             Write(progress1, progress2);
         }
 
-        protected void AllocateBlocking(IProgress<string> ProgressStatus, IProgress<int> ProgressPercentage, BlockingCollection<HybridChunkWriter> chunks)
+        internal void AllocateBlocking(IProgress<string> ProgressStatus, IProgress<int> ProgressPercentage, BlockingCollection<HybridChunkWriter> chunks)
         {
             uint ID = 0;
 
@@ -466,180 +467,192 @@ namespace PPeX
 
             fileOffset += (uint)chunkReceipt.FileReceipts.Count;
         }
+    }
 
+    public class FileReceipt
+    {
+        public ISubfile Subfile;
 
-        protected class HybridChunkWriter : IDisposable
+        public Md5Hash Md5;
+        public ulong Offset;
+        public ulong Length;
+        //public int Index;
+
+        public static FileReceipt CreateDuplicate(FileReceipt original, ISubfile subfile)
         {
-            public uint ID { get; protected set; }
+            FileReceipt receipt = original.MemberwiseClone() as FileReceipt;
 
-            public ChunkType Type { get; protected set; }
+            receipt.Subfile = subfile;
 
-            public ArchiveChunkCompression Compression { get; protected set; }
+            return receipt;
+        }
+    }
 
-            ulong UncompressedSize { get; set; }
+    public class ChunkReceipt
+    {
+        public uint ID;
+        public ChunkType Type;
+        public ArchiveChunkCompression Compression;
+        public uint CRC;
+        public ulong CompressedSize;
+        public ulong UncompressedSize;
 
-            protected ExtendedArchiveWriter writer;
+        public ICollection<FileReceipt> FileReceipts;
+    }
 
-            public HybridChunkWriter(uint id, ArchiveChunkCompression compression, ChunkType type, ExtendedArchiveWriter writer)
+    internal class HybridChunkWriter : IDisposable
+    {
+        public uint ID { get; protected set; }
+
+        public ChunkType Type { get; protected set; }
+
+        public ArchiveChunkCompression Compression { get; protected set; }
+
+        ulong UncompressedSize { get; set; }
+
+        protected IArchiveWriter writer;
+
+        public HybridChunkWriter(uint id, ArchiveChunkCompression compression, ChunkType type, IArchiveWriter writer)
+        {
+            ID = id;
+            Compression = compression;
+            Type = type;
+            this.writer = writer;
+        }
+
+        protected MemoryStream UncompressedStream = new MemoryStream();
+
+        public bool IsReady => CompressedStream != null;
+
+        public bool ContainsFiles => fileReceipts.Count > 0;
+
+        public MemoryStream CompressedStream { get; protected set; }
+
+        protected List<FileReceipt> fileReceipts = new List<FileReceipt>();
+
+        public ChunkReceipt Receipt { get; protected set; }
+
+        public void AddFile(ISubfile file)
+        {
+            Md5Hash hash = file.Source.Md5;
+
+            if (fileReceipts.Any(x => x.Md5 == hash))
             {
-                ID = id;
-                Compression = compression;
-                Type = type;
-                this.writer = writer;
+                FileReceipt original = fileReceipts.First(x => x.Md5 == hash);
+
+                FileReceipt duplicate = FileReceipt.CreateDuplicate(original, file);
+
+                fileReceipts.Add(duplicate);
+
+                return;
             }
 
-            protected MemoryStream UncompressedStream = new MemoryStream();
-
-            public bool IsReady => CompressedStream != null;
-
-            public bool ContainsFiles => fileReceipts.Count > 0;
-
-            public MemoryStream CompressedStream { get; protected set; }
-
-            protected List<FileReceipt> fileReceipts = new List<FileReceipt>();
-
-            public ChunkReceipt Receipt { get; protected set; }
-
-            public void AddFile(ISubfile file)
+            using (IEncoder encoder = EncoderFactory.GetEncoder(file.Source, writer, file.Type))
+            using (var encoded = encoder.Encode())
             {
-                Md5Hash hash = file.Source.Md5;
-
-                if (fileReceipts.Any(x => x.Md5 == hash))
+                FileReceipt receipt = new FileReceipt
                 {
-                    FileReceipt original = fileReceipts.First(x => x.Md5 == hash);
+                    Md5 = hash,
+                    Length = (ulong)encoded.Length,
+                    Offset = (ulong)UncompressedStream.Position,
+                    Subfile = file
+                };
 
-                    FileReceipt duplicate = FileReceipt.CreateDuplicate(original, file);
+                fileReceipts.Add(receipt);
 
-                    fileReceipts.Add(duplicate);
+                encoded.CopyTo(UncompressedStream);
+            }
+        }
 
-                    return;
-                }
+        public bool TryAddFile(ISubfile file, ulong maxChunkSize)
+        {
+            Md5Hash hash = file.Source.Md5;
 
-                using (IEncoder encoder = EncoderFactory.GetEncoder(file.Source, writer, file.Type))
-                using (var encoded = encoder.Encode())
+            if (fileReceipts.Any(x => x.Md5 == hash))
+            {
+                FileReceipt original = fileReceipts.First(x => x.Md5 == hash);
+
+                FileReceipt duplicate = FileReceipt.CreateDuplicate(original, file);
+
+                fileReceipts.Add(duplicate);
+
+                return true;
+            }
+
+            IEncoder encoder = EncoderFactory.GetEncoder(file.Source, writer, file.Type);
+            Stream dataStream;
+
+            if (file.Source is ArchiveFileSource &&
+                file.Type == ArchiveFileType.XggAudio)
+            {
+                //don't need to reencode
+                dataStream = (file.Source as ArchiveFileSource).GetRawStream();
+            }
+            else
+            {
+                dataStream = encoder.Encode();
+            }
+            
+            using (dataStream)
+            {
+                if (UncompressedStream.Length == 0 ||
+                    (ulong)(encoder.EncodedLength + UncompressedStream.Length) <= maxChunkSize)
                 {
                     FileReceipt receipt = new FileReceipt
                     {
                         Md5 = hash,
-                        Length = (ulong)encoded.Length,
+                        Length = (ulong)dataStream.Length,
                         Offset = (ulong)UncompressedStream.Position,
                         Subfile = file
                     };
 
                     fileReceipts.Add(receipt);
 
-                    encoded.CopyTo(UncompressedStream);
-                }
-            }
-
-            public bool TryAddFile(ISubfile file, ulong maxChunkSize)
-            {
-                Md5Hash hash = file.Source.Md5;
-
-                if (fileReceipts.Any(x => x.Md5 == hash))
-                {
-                    FileReceipt original = fileReceipts.First(x => x.Md5 == hash);
-
-                    FileReceipt duplicate = FileReceipt.CreateDuplicate(original, file);
-
-                    fileReceipts.Add(duplicate);
+                    dataStream.CopyTo(UncompressedStream);
 
                     return true;
                 }
-
-                using (IEncoder encoder = EncoderFactory.GetEncoder(file.Source, writer, file.Type))
-                using (var encoded = encoder.Encode())
-                {
-                    if (UncompressedStream.Length == 0 ||
-                        (ulong)(encoder.EncodedLength + UncompressedStream.Length) <= maxChunkSize)
-                    {
-                        FileReceipt receipt = new FileReceipt
-                        {
-                            Md5 = hash,
-                            Length = encoder.EncodedLength,
-                            Offset = (ulong)UncompressedStream.Position,
-                            Subfile = file
-                        };
-
-                        fileReceipts.Add(receipt);
-
-                        encoded.CopyTo(UncompressedStream);
-
-                        return true;
-                    }
-                }
-                return false;
             }
-
-            public void Compress()
-            {
-                UncompressedStream.Position = 0;
-
-                using (UncompressedStream)
-                using (ICompressor compressor = CompressorFactory.GetCompressor(UncompressedStream, Compression))
-                {
-                    CompressedStream = new MemoryStream();
-
-                    compressor.WriteToStream(CompressedStream);
-
-                    uint crc = Crc32CAlgorithm.Compute(CompressedStream.ToArray());
-
-                    Receipt = new ChunkReceipt
-                    {
-                        ID = this.ID,
-                        Compression = this.Compression,
-                        Type = this.Type,
-                        CRC = crc,
-                        UncompressedSize = (ulong)UncompressedStream.Length,
-                        CompressedSize = (ulong)CompressedStream.Length,
-                        FileReceipts = fileReceipts
-                    };
-
-                    CompressedStream.Position = 0;
-                }
-
-                //FinishedWriters.Enqueue(this);
-            }
-
-            public void Dispose()
-            {
-                if (UncompressedStream != null)
-                    UncompressedStream.Dispose();
-
-                if (CompressedStream != null)
-                    CompressedStream.Dispose();
-            }
+            return false;
         }
 
-        public class FileReceipt
+        public void Compress()
         {
-            public ISubfile Subfile;
+            UncompressedStream.Position = 0;
 
-            public Md5Hash Md5;
-            public ulong Offset;
-            public ulong Length;
-            //public int Index;
-
-            public static FileReceipt CreateDuplicate(FileReceipt original, ISubfile subfile)
+            using (UncompressedStream)
+            using (ICompressor compressor = CompressorFactory.GetCompressor(UncompressedStream, Compression))
             {
-                FileReceipt receipt = original.MemberwiseClone() as FileReceipt;
+                CompressedStream = new MemoryStream();
 
-                receipt.Subfile = subfile;
+                compressor.WriteToStream(CompressedStream);
 
-                return receipt;
+                uint crc = Crc32CAlgorithm.Compute(CompressedStream.ToArray());
+
+                Receipt = new ChunkReceipt
+                {
+                    ID = this.ID,
+                    Compression = this.Compression,
+                    Type = this.Type,
+                    CRC = crc,
+                    UncompressedSize = (ulong)UncompressedStream.Length,
+                    CompressedSize = (ulong)CompressedStream.Length,
+                    FileReceipts = fileReceipts
+                };
+
+                CompressedStream.Position = 0;
             }
+
+            //FinishedWriters.Enqueue(this);
         }
 
-        public class ChunkReceipt
+        public void Dispose()
         {
-            public uint ID;
-            public ChunkType Type;
-            public ArchiveChunkCompression Compression;
-            public uint CRC;
-            public ulong CompressedSize;
-            public ulong UncompressedSize;
+            if (UncompressedStream != null)
+                UncompressedStream.Dispose();
 
-            public ICollection<FileReceipt> FileReceipts;
+            if (CompressedStream != null)
+                CompressedStream.Dispose();
         }
     }
 }
