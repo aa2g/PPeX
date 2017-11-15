@@ -67,6 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Archives\ExtendedArchiveAppender.cs" />
     <Compile Include="External\PP\SeekableCryptoStream.cs" />
     <Compile Include="External\Zstandard\ArraySegmentPtr.cs" />
     <Compile Include="External\Zstandard\CompressionOptions.cs" />
@@ -78,6 +79,7 @@
     <Compile Include="External\Zstandard\Parameters.cs" />
     <Compile Include="External\Zstandard\ThrowHelper.cs" />
     <Compile Include="FileProviders\GenericProvider.cs" />
+    <Compile Include="IArchiveWriter.cs" />
     <Compile Include="Subfiles\Xx3Subfile.cs" />
     <Compile Include="Xx2\EncoderCommon.cs" />
     <Compile Include="Xx2\FloatEncoder.cs" />
