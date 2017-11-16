@@ -85,7 +85,7 @@ Defines which files should be left unencoded as a regex. Default is none.
 
 -decode off
 (-e only)
-Do not decode any encoded files on extraction, such as .xgg to .wav.
+Do not decode any encoded files on extraction, such as .xx3 to .xx.
 
 -regex .+
 Sets a regex to use for compressing or extracting");
@@ -93,152 +93,199 @@ Sets a regex to use for compressing or extracting");
                 return;
             }
 
+            if (args[0].ToLower() == "-c")
+            {
+                CompressArg(args);
+            }
+
+            if (args[0].ToLower() == "-e")
+            {
+                CompressArg(args);
+            }
+        }
+
+        static void CompressArg(string[] args)
+        {
             Regex regex = new Regex(".+");
             Regex unencodedRegex = new Regex("a^");
 
             int argcounter = 1;
             int chunksize = ConvertFromReadable("16M");
-            int threads = -1;
+            int threads = 1;
             string name = Path.GetFileNameWithoutExtension(args.Last());
             string compression = "zstd";
+            string currentArg;
 
-            if (args[0].ToLower() == "-c")
+            while ((currentArg = args[argcounter++]).StartsWith("-"))
             {
-                string currentArg;
+                currentArg = currentArg.ToLower();
 
-                while ((currentArg = args[argcounter++]).StartsWith("-"))
+                if (currentArg == "-chunksize")
                 {
-                    currentArg = currentArg.ToLower();
+                    chunksize = ConvertFromReadable(args[argcounter++]);
+                }
+                else if (currentArg == "-xgg-music")
+                {
+                    Core.Settings.XggMusicBitrate = ConvertFromReadable(args[argcounter++]);
+                }
+                else if (currentArg == "-xgg-voice")
+                {
+                    Core.Settings.XggVoiceBitrate = ConvertFromReadable(args[argcounter++]);
+                }
+                else if (currentArg == "-xx2-precision")
+                {
+                    Core.Settings.Xx2Precision = int.Parse(args[argcounter++]);
+                    Core.Settings.Xx2IsUsingQuality = false;
+                }
+                else if (currentArg == "-xx2-quality")
+                {
+                    Core.Settings.Xx2Quality = float.Parse(args[argcounter++]);
+                    Core.Settings.Xx2IsUsingQuality = false;
+                }
+                else if (currentArg == "-threads")
+                {
+                    threads = int.Parse(args[argcounter++]);
+                }
+                else if (currentArg == "-compression")
+                {
+                    compression = args[argcounter++].ToLower();
+                }
+                else if (currentArg == "-zstd-level")
+                {
+                    Core.Settings.ZstdCompressionLevel = int.Parse(args[argcounter++]);
+                }
+                else if (currentArg == "-name")
+                {
+                    name = args[argcounter++];
+                }
+                else if (currentArg == "-regex")
+                {
+                    regex = new Regex(args[argcounter++]);
+                }
+                else if (currentArg == "-no-encode")
+                {
+                    unencodedRegex = new Regex(args[argcounter++]);
+                }
+            }
 
-                    if (currentArg == "-chunksize")
+            using (FileStream fs = new FileStream(args.Last(), FileMode.Create))
+            {
+                ExtendedArchiveWriter writer = new ExtendedArchiveWriter(fs, name);
+
+                writer.ChunkSizeLimit = (ulong)chunksize;
+                writer.Threads = threads;
+
+                if (compression == "zstd")
+                    writer.DefaultCompression = ArchiveChunkCompression.Zstandard;
+                else if (compression == "lz4")
+                    writer.DefaultCompression = ArchiveChunkCompression.LZ4;
+                else if (compression == "uncompressed")
+                    writer.DefaultCompression = ArchiveChunkCompression.Uncompressed;
+
+
+                foreach (string path in args.Skip(argcounter - 1).Take(args.Length - argcounter))
+                {
+                    if (path.EndsWith(".pp") && File.Exists(path))
                     {
-                        chunksize = ConvertFromReadable(args[argcounter++]);
+                        //.pp file
+                        Console.WriteLine("Importing " + Path.GetFileName(path));
+
+                        ImportPP(path, writer, regex, unencodedRegex);
                     }
-                    else if (currentArg == "-xgg-music")
+                    else if (Directory.Exists(path))
                     {
-                        Core.Settings.XggMusicBitrate = ConvertFromReadable(args[argcounter++]);
-                    }
-                    else if (currentArg == "-xgg-voice")
-                    {
-                        Core.Settings.XggVoiceBitrate = ConvertFromReadable(args[argcounter++]);
-                    }
-                    else if (currentArg == "-xx2-precision")
-                    {
-                        Core.Settings.Xx2Precision = int.Parse(args[argcounter++]);
-                        Core.Settings.Xx2IsUsingQuality = false;
-                    }
-                    else if (currentArg == "-xx2-quality")
-                    {
-                        Core.Settings.Xx2Quality = float.Parse(args[argcounter++]);
-                        Core.Settings.Xx2IsUsingQuality = false;
-                    }
-                    else if (currentArg == "-threads")
-                    {
-                        threads = int.Parse(args[argcounter++]);
-                    }
-                    else if (currentArg == "-compression")
-                    {
-                        compression = args[argcounter++].ToLower();
-                    }
-                    else if (currentArg == "-zstd-level")
-                    {
-                        Core.Settings.ZstdCompressionLevel = int.Parse(args[argcounter++]);
-                    }
-                    else if (currentArg == "-name")
-                    {
-                        name = args[argcounter++];
-                    }
-                    else if (currentArg == "-regex")
-                    {
-                        regex = new Regex(args[argcounter++]);
-                    }
-                    else if (currentArg == "-no-encode")
-                    {
-                        unencodedRegex = new Regex(args[argcounter++]);
+                        name = Path.GetFileNameWithoutExtension(path) + ".pp";
+
+                        Console.WriteLine("Importing \'" + path + "\" as \"" + name + "\"");
+
+                        int imported = 0;
+                        var files = Directory.EnumerateFiles(path, "*.*", SearchOption.TopDirectoryOnly).ToArray();
+
+                        foreach (string file in files)
+                        {
+                            string fullName = name + "/" + Path.GetFileName(file);
+
+                            if (regex.IsMatch(fullName))
+                            {
+                                if (unencodedRegex.IsMatch(fullName))
+                                {
+                                    writer.Files.Add(
+                                        new PPeX.Subfile(
+                                            new FileSource(file),
+                                            Path.GetFileName(file),
+                                            name,
+                                            ArchiveFileType.Raw));
+                                }
+                                else
+                                {
+                                    writer.Files.Add(
+                                        new PPeX.Subfile(
+                                            new FileSource(file),
+                                            Path.GetFileName(file),
+                                            name));
+                                }
+
+
+                                imported++;
+                            }
+                        }
+
+                        Console.WriteLine("Imported " + imported + "/" + files.Length + " files");
                     }
                 }
-                
-                using (FileStream fs = new FileStream(args.Last(), FileMode.Create))
+
+                int lastProgress = 0;
+
+                object progressLock = new object();
+                bool isUpdating = true;
+
+                Console.CursorVisible = false;
+
+                Progress<string> progressStatus = new Progress<string>(x =>
                 {
-                    ExtendedArchiveWriter writer = new ExtendedArchiveWriter(fs, name);
+                    if (!isUpdating)
+                        return;
 
-                    writer.ChunkSizeLimit = (ulong)chunksize;
-
-                    if (compression == "zstd")
-                        writer.DefaultCompression = ArchiveChunkCompression.Zstandard;
-                    else if (compression == "lz4")
-                        writer.DefaultCompression = ArchiveChunkCompression.LZ4;
-                    else if (compression == "uncompressed")
-                        writer.DefaultCompression = ArchiveChunkCompression.Uncompressed;
-
-                    if (threads > 0)
-                        threads = 1;
-
-                    writer.Threads = threads;
-
-
-                    foreach (string path in args.Skip(argcounter - 1).Take(args.Length - argcounter))
+                    lock (progressLock)
                     {
-                        if (path.EndsWith(".pp") && File.Exists(path))
-                        {
-                            //.pp file
-                            Console.WriteLine("Importing " + Path.GetFileName(path));
+                        Console.SetCursorPosition(0, Console.CursorTop);
 
-                            ImportPP(path, writer, regex, unencodedRegex);
-                        }
-                        else if (Directory.Exists(path))
-                        {
-                            name = Path.GetFileNameWithoutExtension(path) + ".pp";
+                        for (int i = 0; i < Console.WindowWidth - 1; i++)
+                            Console.Write(" ");
 
-                            Console.WriteLine("Importing \'" + path + "\" as \"" + name + "\"");
+                        Console.SetCursorPosition(0, Console.CursorTop);
 
-                            int imported = 0;
-                            var files = Directory.EnumerateFiles(path, "*.*", SearchOption.TopDirectoryOnly).ToArray();
-
-                            foreach (string file in files)
-                            {
-                                string fullName = name + "/" + Path.GetFileName(file);
-
-                                if (regex.IsMatch(fullName))
-                                {
-                                    if (unencodedRegex.IsMatch(fullName))
-                                    {
-                                        writer.Files.Add(
-                                            new PPeX.Subfile(
-                                                new FileSource(file),
-                                                Path.GetFileName(file),
-                                                name,
-                                                ArchiveFileType.Raw));
-                                    }
-                                    else
-                                    {
-                                        writer.Files.Add(
-                                            new PPeX.Subfile(
-                                                new FileSource(file),
-                                                Path.GetFileName(file),
-                                                name));
-                                    }
-                                    
-
-                                    imported++;
-                                }
-                            }
-
-                            Console.WriteLine("Imported " + imported + "/" + files.Length + " files");
-                        }
-                    }
-
-                    Progress<string> progressStatus = new Progress<string>(x =>
-                    {
                         Console.WriteLine(x.Trim());
-                    });
 
-                    Progress<int> progressPercentage = new Progress<int>(x =>
+                        Console.Write("[" + lastProgress + "% complete]");
+                    }
+                });
+
+                Progress<int> progressPercentage = new Progress<int>(x =>
+                {
+                    if (!isUpdating)
+                        return;
+
+                    lock (progressLock)
                     {
-                        //"[" + x.Item2 + "%] " + 
-                    });
+                        lastProgress = x;
 
-                    writer.Write(progressStatus, progressPercentage);
+                        Console.SetCursorPosition(0, Console.CursorTop);
+
+                        Console.Write("[" + lastProgress + "% complete]");
+                    }
+                });
+
+                writer.Write(progressStatus, progressPercentage);
+
+                //wait for progress to update
+                while (lastProgress != 100)
+                    System.Threading.Thread.Sleep(50);
+
+                lock (progressPercentage)
+                {
+                    isUpdating = false;
+                    Console.CursorVisible = true;
                 }
             }
         }
