@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using PPeX;
 using System.IO;
 using PPeX.External.PP;
+using PPeX.Encoders;
 
 namespace PPeX_CLI
 {
@@ -36,7 +37,7 @@ Shows this help dialog
 ppex-cli -c [options] folder1 file2.pp output.ppx
 Compresses a .ppx archive
 
-ppex-cli -e [options] input.ppx output
+ppex-cli -e [options] input.ppx output-directory/
 Extracts a .ppx archive
 
 
@@ -83,12 +84,13 @@ Sets threads to be used during compression.
 (-c only)
 Defines which files should be left unencoded as a regex. Default is none.
 
--decode off
+-decode on
 (-e only)
-Do not decode any encoded files on extraction, such as .xx3 to .xx.
+Sets rules for decoding any encoded files on extraction, such as .xx3 to .xx.
+Default is on, available options are 'on' and 'off'.
 
--regex .+
-Sets a regex to use for compressing or extracting");
+-regex "".+""
+Sets a regex to use for compressing or extracting.");
 
                 return;
             }
@@ -97,13 +99,13 @@ Sets a regex to use for compressing or extracting");
             {
                 CompressArg(args);
             }
-
             if (args[0].ToLower() == "-e")
             {
-                CompressArg(args);
+                DecompressArg(args);
             }
         }
 
+        #region Compress
         static void CompressArg(string[] args)
         {
             Regex regex = new Regex(".+");
@@ -167,6 +169,8 @@ Sets a regex to use for compressing or extracting");
                     unencodedRegex = new Regex(args[argcounter++]);
                 }
             }
+
+            compression = compression.ToLower();
 
             using (FileStream fs = new FileStream(args.Last(), FileMode.Create))
             {
@@ -328,5 +332,113 @@ Sets a regex to use for compressing or extracting");
 
             Console.WriteLine("Imported " + imported + "/" + pp.Subfiles.Count + " files");
         }
+        #endregion
+
+        #region Decompress
+        static void DecompressArg(string[] args)
+        {
+            Regex regex = new Regex(".+");
+
+            int argcounter = 1;
+            string decode = "on";
+            string currentArg;
+
+            while ((currentArg = args[argcounter++]).StartsWith("-"))
+            {
+                currentArg = currentArg.ToLower();
+
+                if (currentArg == "-decode")
+                {
+                    decode = args[argcounter++];
+                }
+                else if (currentArg == "-regex")
+                {
+                    regex = new Regex(args[argcounter++]);
+                }
+            }
+
+            decode = decode.ToLower();
+
+            ExtendedArchive archive = new ExtendedArchive(currentArg);
+            DirectoryInfo outputDirectory = new DirectoryInfo(args[argcounter++]);
+
+            if (!outputDirectory.Exists)
+                outputDirectory.Create();
+
+            if (decode == "off")
+            {
+                //decoding raw entries
+                foreach (var file in archive.RawFiles)
+                {
+                    string fullname = file.ArchiveName + "/" + file.Name;
+                    string arcname = file.ArchiveName.Replace(".pp", "");
+
+                    if (!Directory.Exists(outputDirectory.FullName + "\\" + arcname))
+                        Directory.CreateDirectory(outputDirectory.FullName + "\\" + arcname);
+
+                    if (regex.IsMatch(fullname))
+                    {
+                        Console.WriteLine("Exporting " + fullname);
+
+                        using (FileStream fs = new FileStream(outputDirectory.FullName + "\\" + arcname + "\\" + file.Name, FileMode.Create))
+                        using (Stream subfileStream = file.GetRawStream())
+                        {
+                            subfileStream.CopyTo(fs);
+                        }
+                    }
+                }
+            }
+            else if (decode == "on" || decode == "full")
+            {
+                //decoding raw entries
+                foreach (var file in archive.Files)
+                {
+                    string fullname = file.ArchiveName + "/" + file.Name;
+                    string arcname = file.ArchiveName.Replace(".pp", "");
+
+                    if (!Directory.Exists(outputDirectory.FullName + "\\" + arcname))
+                        Directory.CreateDirectory(outputDirectory.FullName + "\\" + arcname);
+
+                    if (regex.IsMatch(fullname))
+                    {
+                        Console.WriteLine("Exporting " + fullname);
+
+                        if (decode == "full" && file.Type == ArchiveFileType.XggAudio)
+                        {
+                            string fileName = file.Name.Replace(".xgg", ".wav");
+
+                            using (FileStream fs = new FileStream(outputDirectory.FullName + "\\" + arcname + "\\" + fileName, FileMode.Create))
+                            using (Stream stream = file.GetRawStream())
+                            {
+                                stream.CopyTo(fs);
+                            }
+                        }
+                        else if (file.Type != ArchiveFileType.XggAudio)
+                        {
+                            string fileName;
+
+                            using (IDecoder nameExchanger = EncoderFactory.GetDecoder(Stream.Null, archive, file.Type))
+                                fileName = nameExchanger.NameTransform(file.Name);
+
+                            using (FileStream fs = new FileStream(outputDirectory.FullName + "\\" + arcname + "\\" + fileName, FileMode.Create))
+                            using (Stream stream = file.GetRawStream())
+                            {
+                                stream.CopyTo(fs);
+                            }
+                        }
+                        else
+                        {
+                            using (FileStream fs = new FileStream(outputDirectory.FullName + "\\" + arcname + "\\" + file.Name, FileMode.Create))
+                            using (Stream stream = (file as ArchiveSubfile).RawSource.GetRawStream())
+                            {
+                                stream.CopyTo(fs);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        #endregion
+
     }
 }
