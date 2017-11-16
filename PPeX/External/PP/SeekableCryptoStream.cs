@@ -29,8 +29,13 @@ namespace PPeX.External.PP
             }
         }
 
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            return _stream.Seek(offset, origin);
+        }
+
         public override long Length => _stream.Length;
 
-        public override bool CanSeek => _stream.CanSeek;
+        public override bool CanSeek => true;
     }
 }
