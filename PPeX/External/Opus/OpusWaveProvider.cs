@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NAudio;
 using NAudio.Wave;
 using System.IO;
 
 namespace FragLabs.Audio.Codecs
 {
-    public class OpusWaveProvider : IWaveProvider, IDisposable
+    public class OpusWaveProvider : IDisposable
     {
         public MemoryStream InternalStream { get; protected set; }
 
@@ -46,11 +45,6 @@ namespace FragLabs.Audio.Codecs
         public void Dispose()
         {
             ((IDisposable)InternalStream).Dispose();
-        }
-
-        public int Read(byte[] buffer, int offset, int count)
-        {
-            return InternalStream.Read(buffer, offset, count);
         }
 
         public void ExportWAVToStream(Stream stream)
