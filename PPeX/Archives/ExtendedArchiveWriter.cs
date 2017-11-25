@@ -164,8 +164,7 @@ namespace PPeX
                     .OrderBy(x => x.Source.Md5, new ByteArrayComparer());
 
                 var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
-
-                int i = 0;
+                
                 foreach (var file in textureFiles)
                 {
                     if (!textureBankWriter.TryAddFile(file, ChunkSizeLimit))
@@ -191,9 +190,40 @@ namespace PPeX
 
             //bunch duplicate files together
             //going to assume OrderBy is a stable sort
-            fileList = new Queue<ISubfile>(
-                GenericFiles.OrderBy(x => x.Source.Md5, new ByteArrayComparer()) //first sort all similar hashes together
+            LinkedList<ISubfile> linkedSubfileList = new LinkedList<ISubfile>(
+                GenericFiles
+                .OrderBy(x => x.Name) //order by file name first
                 .OrderBy(x => Path.GetExtension(x.Name) ?? x.Name)); //then we order by file type, preserving duplicate file order
+
+            Dictionary<Md5Hash, LinkedListNode<ISubfile>> HashList = new Dictionary<Md5Hash, LinkedListNode<ISubfile>>();
+
+            var node = linkedSubfileList.First;
+
+            while (node.Next != null)
+            {
+                ISubfile file = node.Value;
+                Md5Hash hash = file.Source.Md5;
+
+                if (HashList.ContainsKey(hash))
+                {
+                    var nextNode = node.Next;
+
+                    var originalNode = HashList[hash];
+
+                    linkedSubfileList.Remove(node);
+                    linkedSubfileList.AddAfter(originalNode, file);
+
+                    node = nextNode;
+                }
+                else
+                {
+                    HashList.Add(hash, node);
+
+                    node = node.Next;
+                }
+            }
+
+            fileList = new Queue<ISubfile>(linkedSubfileList);
 
 
             total = fileList.Count;
