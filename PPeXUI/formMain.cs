@@ -42,6 +42,10 @@ namespace PPeXUI
         {
             cmbCompression.SelectedIndex = 2;
 
+#if !DEBUG
+            verifyArchiveToolStripMenuItem.Enabled = false;
+#endif
+
             //Find the physical amount of cores
             int coreCount = 0;
             foreach (var item in new System.Management.ManagementObjectSearcher("Select * from Win32_Processor").Get())
@@ -649,6 +653,9 @@ namespace PPeXUI
                 item.SubItems.Add(chunk.Files.Count.ToString());
                 item.SubItems.Add(chunk.Offset.ToString());
                 item.SubItems.Add(chunk.Compression.ToString());
+
+                if (chunk.Files.Any(x => x.ArchiveName.Contains("TextureBank")))
+                    item.BackColor = Color.LightSalmon;
             }
 
             lblFileCount.Text = "Total files: " + arc.Chunks.Sum(x => x.Files.Count) + " - " + PPeX.Utility.GetBytesReadable(arc.Chunks.Sum(x => (long)x.UncompressedLength));

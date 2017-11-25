@@ -50,6 +50,7 @@
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.convertxggTowavToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.verifyArchiveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.lsvSource = new System.Windows.Forms.ListView();
@@ -100,7 +101,6 @@
             this.label2 = new System.Windows.Forms.Label();
             this.numBitrate = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
-            this.verifyArchiveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -310,7 +310,7 @@
             this.toolStripDropDownButton1.Image = global::PPeXUI.Properties.Resources.bricks;
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
-            this.toolStripDropDownButton1.Size = new System.Drawing.Size(29, 20);
+            this.toolStripDropDownButton1.Size = new System.Drawing.Size(29, 22);
             this.toolStripDropDownButton1.Text = "Plugins";
             // 
             // toolStripSeparator3
@@ -324,6 +324,13 @@
             this.convertxggTowavToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
             this.convertxggTowavToolStripMenuItem.Text = "Convert .xgg to .wav";
             this.convertxggTowavToolStripMenuItem.Click += new System.EventHandler(this.convertxggTowavToolStripMenuItem_Click);
+            // 
+            // verifyArchiveToolStripMenuItem
+            // 
+            this.verifyArchiveToolStripMenuItem.Name = "verifyArchiveToolStripMenuItem";
+            this.verifyArchiveToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.verifyArchiveToolStripMenuItem.Text = "Verify Archive";
+            this.verifyArchiveToolStripMenuItem.Click += new System.EventHandler(this.verifyArchiveToolStripMenuItem_Click);
             // 
             // tabControl1
             // 
@@ -525,6 +532,7 @@
             this.columnHeader5,
             this.columnHeader6});
             this.lsvChunks.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lsvChunks.FullRowSelect = true;
             this.lsvChunks.GridLines = true;
             this.lsvChunks.LargeImageList = this.trvImageList;
             this.lsvChunks.Location = new System.Drawing.Point(3, 3);
@@ -872,13 +880,6 @@
             this.label9.Size = new System.Drawing.Size(123, 13);
             this.label9.TabIndex = 0;
             this.label9.Text = "Audio bitrate (0 for auto):";
-            // 
-            // verifyArchiveToolStripMenuItem
-            // 
-            this.verifyArchiveToolStripMenuItem.Name = "verifyArchiveToolStripMenuItem";
-            this.verifyArchiveToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
-            this.verifyArchiveToolStripMenuItem.Text = "Verify Archive";
-            this.verifyArchiveToolStripMenuItem.Click += new System.EventHandler(this.verifyArchiveToolStripMenuItem_Click);
             // 
             // formMain
             // 
