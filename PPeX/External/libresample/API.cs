@@ -11,7 +11,7 @@ namespace PPeX.External.libresample
     {
         private const string dll64 = "libresample64.dll";
         private const string dll32 = "libresample32.dll";
-        private const string linuxso = "libresample.so";
+        private const string linuxso = "libresample.so.1";
 
         private enum Platform
         {
@@ -35,7 +35,7 @@ namespace PPeX.External.libresample
                 throw new PlatformNotSupportedException();
         }
 
-        #region auto
+        #region Auto
 
         public static IntPtr resample_open(int highQuality, double minFactor, double maxFactor)
         {
@@ -87,7 +87,7 @@ namespace PPeX.External.libresample
 
         #endregion
 
-        #region win32
+        #region Win32
 
         [DllImport(dll32, EntryPoint = "resample_open", CallingConvention = CallingConvention.Cdecl)]
         static extern IntPtr resample_open_32(int highQuality, double minFactor, double maxFactor);
@@ -100,7 +100,7 @@ namespace PPeX.External.libresample
 
         #endregion
 
-        #region win64
+        #region Win64
 
         [DllImport(dll64, EntryPoint = "resample_open", CallingConvention = CallingConvention.Cdecl)]
         static extern IntPtr resample_open_64(int highQuality, double minFactor, double maxFactor);
@@ -113,7 +113,7 @@ namespace PPeX.External.libresample
 
         #endregion
 
-        #region linux
+        #region Linux
 
         [DllImport(linuxso, EntryPoint = "resample_open", CallingConvention = CallingConvention.Cdecl)]
         static extern IntPtr resample_open_so(int highQuality, double minFactor, double maxFactor);
