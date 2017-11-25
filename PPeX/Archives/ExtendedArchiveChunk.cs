@@ -1,10 +1,5 @@
-﻿using Crc32C;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using PPeX.Compressors;
 
 namespace PPeX
@@ -26,7 +21,7 @@ namespace PPeX
 
         public ArchiveChunkCompression Compression { get; protected set; }
 
-        public uint CRC32C { get; protected set; }
+        public uint CRC32 { get; protected set; }
 
         public ulong Offset { get; protected set; }
 
@@ -54,7 +49,7 @@ namespace PPeX
             chunk.ID = reader.ReadUInt32();
             chunk.Type = (ChunkType)reader.ReadByte();
             chunk.Compression = (ArchiveChunkCompression)reader.ReadByte();
-            chunk.CRC32C = reader.ReadUInt32();
+            chunk.CRC32 = reader.ReadUInt32();
             chunk.Offset = reader.ReadUInt64();
             chunk.CompressedLength = reader.ReadUInt64();
             chunk.UncompressedLength = reader.ReadUInt64();
@@ -121,15 +116,10 @@ namespace PPeX
 
             using (Stream source = GetRawStream())
             {
-                byte[] buffer = new byte[Core.Settings.BufferSize];
-                int length = 0;
-                while ((length = source.Read(buffer, 0, (int)Core.Settings.BufferSize)) > 0)
-                {
-                    crc = Crc32CAlgorithm.Append(crc, buffer, 0, length);
-                }
+                crc = External.CRC32.CRC32.Compute(source);
             }
 
-            return crc == CRC32C;
+            return crc == CRC32;
         }
     }
 }

@@ -1,15 +1,11 @@
 ﻿using PPeX;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Crc32C;
 using System.IO;
+using PPeX.External.CRC32;
 
 namespace PPeXUI
 {
@@ -46,7 +42,7 @@ namespace PPeXUI
                     lsvChunkHash.Invoke(new MethodInvoker(() =>
                     {
                         item = lsvChunkHash.Items.Add(chunk.ID.ToString());
-                        item.SubItems.Add(chunk.CRC32C.ToString("X8"));
+                        item.SubItems.Add(chunk.CRC32.ToString("X8"));
                     }));
 
                     uint crc;
@@ -56,13 +52,13 @@ namespace PPeXUI
                     {
                         stream.CopyTo(mem);
                         mem.Position = 0;
-                        crc = Crc32CAlgorithm.Compute(mem.ToArray());
+                        crc = CRC32.Compute(mem);
                     }
 
                     lsvChunkHash.Invoke(new MethodInvoker(() =>
                     {
                         item.SubItems.Add(crc.ToString("X8"));
-                        if (crc != chunk.CRC32C)
+                        if (crc != chunk.CRC32)
                         {
                             item.BackColor = Color.Red;
                             fails++;
