@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using PPeX.Compressors;
-using Crc32C;
+using PPeX.External.CRC32;
 using PPeX.Encoders;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -627,7 +627,7 @@ namespace PPeX
 
                 compressor.WriteToStream(CompressedStream);
 
-                uint crc = Crc32CAlgorithm.Compute(CompressedStream.ToArray());
+                uint crc = CRC32.Compute(CompressedStream.ToArray());
 
                 Receipt = new ChunkReceipt
                 {
