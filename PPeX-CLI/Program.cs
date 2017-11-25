@@ -118,6 +118,9 @@ Sets a regex to use for compressing or extracting.");
             string compression = "zstd";
             string currentArg;
 
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+                Core.Settings.XggFrameSize = 0.060;
+
             while ((currentArg = args[argcounter++]).StartsWith("-"))
             {
                 currentArg = currentArg.ToLower();
