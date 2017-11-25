@@ -68,6 +68,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Archives\ExtendedArchiveAppender.cs" />
+    <Compile Include="External\libresample\API.cs" />
+    <Compile Include="External\libresample\LibResampler.cs" />
     <Compile Include="External\PP\SeekableCryptoStream.cs" />
     <Compile Include="External\Zstandard\ArraySegmentPtr.cs" />
     <Compile Include="External\Zstandard\CompressionOptions.cs" />
@@ -153,6 +155,12 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="libresample32.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="libresample64.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="libzstd32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
