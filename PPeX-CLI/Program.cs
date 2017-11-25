@@ -95,6 +95,8 @@ Sets a regex to use for compressing or extracting.");
                 return;
             }
 
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
             if (args[0].ToLower() == "-c")
             {
                 CompressArg(args);
@@ -102,6 +104,29 @@ Sets a regex to use for compressing or extracting.");
             if (args[0].ToLower() == "-e")
             {
                 DecompressArg(args);
+            }
+        }
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Exception ex = (Exception)e.ExceptionObject;
+
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+
+                Console.WriteLine("-- UNHANDLED EXCEPTION --");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine($"-- USER DATA ({ex.Data.Count}) --");
+
+                foreach (var key in ex.Data.Keys)
+                {
+                    Console.WriteLine(key.ToString());
+                    Console.WriteLine(ex.Data[key].ToString());
+                }
+                
+                Console.WriteLine("-- STACK TRACE --");
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
@@ -442,6 +467,8 @@ Sets a regex to use for compressing or extracting.");
             }
         }
         #endregion
+
+
 
     }
 }

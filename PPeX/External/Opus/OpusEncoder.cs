@@ -44,7 +44,6 @@ namespace FragLabs.Audio.Codecs
             InputSamplingRate = inputSamplingRate;
             InputChannels = inputChannels;
             Application = application;
-            MaxDataBytes = 4000;
         }
 
         /// <summary>
@@ -59,6 +58,8 @@ namespace FragLabs.Audio.Codecs
             if (disposed)
                 throw new ObjectDisposedException("OpusEncoder");
 
+            int MaxDataBytes = sampleLength * InputChannels * sizeof(short);
+
             int frames = FrameCount(inputPcmSamples);
             IntPtr encodedPtr;
             byte[] encoded = new byte[MaxDataBytes];
@@ -70,7 +71,14 @@ namespace FragLabs.Audio.Codecs
             }
             encodedLength = length;
             if (length < 0)
-                throw new Exception("Encoding failed - " + ((Errors)length).ToString());
+            {
+                var exception = new Exception("Encoding failed - " + ((Errors)length).ToString());
+                exception.Data.Add("inputPcmSamples.Length", inputPcmSamples.Length.ToString());
+                exception.Data.Add("sampleLength", sampleLength.ToString());
+                exception.Data.Add("MaxDataBytes", MaxDataBytes.ToString());
+                exception.Data.Add("encodedPtr", BitConverter.ToString(BitConverter.GetBytes(encodedPtr.ToInt64())));
+                throw exception;
+            }
 
             return encoded;
         }
@@ -86,6 +94,8 @@ namespace FragLabs.Audio.Codecs
             if (disposed)
                 throw new ObjectDisposedException("OpusEncoder");
             
+            int MaxDataBytes = sampleLength * InputChannels * sizeof(float);
+
             IntPtr encodedPtr;
             byte[] encoded = new byte[MaxDataBytes];
             int length = 0;
@@ -96,7 +106,16 @@ namespace FragLabs.Audio.Codecs
             }
             encodedLength = length;
             if (length < 0)
-                throw new Exception("Encoding failed - " + ((Errors)length).ToString());
+            {
+                var exception = new Exception("Encoding failed - " + ((Errors)length));
+                exception.Data.Add("inputPcmSamples.Length", inputPcmSamples.Length);
+                exception.Data.Add("sampleLength", sampleLength);
+                exception.Data.Add("MaxDataBytes", MaxDataBytes);
+                exception.Data.Add("InputChannels", InputChannels);
+                exception.Data.Add("encodedPtr", BitConverter.ToString(BitConverter.GetBytes(encodedPtr.ToInt64())));
+
+                throw exception;
+            }
 
             return encoded;
         }
