@@ -11,7 +11,7 @@ namespace PPeX.External.libresample
     {
         private const string dll64 = "libresample64.dll";
         private const string dll32 = "libresample32.dll";
-        private const string linuxso = "libresample.so.1";
+        private const string linuxso = "libresample.so";
 
         private enum Platform
         {

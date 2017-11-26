@@ -10,7 +10,7 @@ namespace FragLabs.Audio.Codecs.Opus
     {
         const string dll32 = "opus32.dll";
         const string dll64 = "opus64.dll";
-        const string linuxso = "libopus.so.0";
+        const string linuxso = "libopus.so";
 
         private enum Platform
         {
