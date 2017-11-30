@@ -50,14 +50,14 @@ namespace PPeXUI
             convertxggTowavToolStripMenuItem.Visible = false;
 #endif
 
-            //Find the physical amount of cores
-            int coreCount = 0;
-            foreach (var item in new System.Management.ManagementObjectSearcher("Select * from Win32_Processor").Get())
-            {
-                coreCount += int.Parse(item["NumberOfCores"].ToString());
-            }
+            //aiming for 1/2 processor count, we get diminishing returns on higher thread counts
+            decimal threads = Math.Floor(Environment.ProcessorCount / (decimal)2);
 
-            numThreads.Value = Math.Min(8, coreCount);
+            //cap it between 1 and 8
+            threads = Math.Max(1, threads);
+            threads = Math.Min(threads, 8);
+
+            numThreads.Value = threads;
         }
 
         public void CloseFile()
