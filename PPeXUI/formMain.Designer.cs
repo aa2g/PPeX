@@ -91,6 +91,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.cmbCompression = new System.Windows.Forms.ComboBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.numMusicBitrate = new System.Windows.Forms.NumericUpDown();
+            this.label12 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btnClearCache = new System.Windows.Forms.Button();
             this.chkMd5Cache = new System.Windows.Forms.CheckBox();
@@ -100,7 +102,7 @@
             this.label11 = new System.Windows.Forms.Label();
             this.numChunkSize = new System.Windows.Forms.NumericUpDown();
             this.label2 = new System.Windows.Forms.Label();
-            this.numBitrate = new System.Windows.Forms.NumericUpDown();
+            this.numVoiceBitrate = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -114,11 +116,12 @@
             this.statusStrip1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMusicBitrate)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numXx2Precision)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numChunkSize)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numBitrate)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numVoiceBitrate)).BeginInit();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -312,7 +315,7 @@
             this.toolStripDropDownButton1.Image = global::PPeXUI.Properties.Resources.bricks;
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
-            this.toolStripDropDownButton1.Size = new System.Drawing.Size(29, 20);
+            this.toolStripDropDownButton1.Size = new System.Drawing.Size(29, 22);
             this.toolStripDropDownButton1.Text = "Plugins";
             // 
             // convertExtractedModToolStripMenuItem
@@ -721,6 +724,8 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.numMusicBitrate);
+            this.tabPage3.Controls.Add(this.label12);
             this.tabPage3.Controls.Add(this.groupBox1);
             this.tabPage3.Controls.Add(this.numXx2Precision);
             this.tabPage3.Controls.Add(this.label10);
@@ -728,7 +733,7 @@
             this.tabPage3.Controls.Add(this.label11);
             this.tabPage3.Controls.Add(this.numChunkSize);
             this.tabPage3.Controls.Add(this.label2);
-            this.tabPage3.Controls.Add(this.numBitrate);
+            this.tabPage3.Controls.Add(this.numVoiceBitrate);
             this.tabPage3.Controls.Add(this.label9);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
@@ -736,6 +741,42 @@
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Options";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // numMusicBitrate
+            // 
+            this.numMusicBitrate.Increment = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+            this.numMusicBitrate.Location = new System.Drawing.Point(386, 7);
+            this.numMusicBitrate.Maximum = new decimal(new int[] {
+            256,
+            0,
+            0,
+            0});
+            this.numMusicBitrate.Minimum = new decimal(new int[] {
+            16,
+            0,
+            0,
+            0});
+            this.numMusicBitrate.Name = "numMusicBitrate";
+            this.numMusicBitrate.Size = new System.Drawing.Size(82, 20);
+            this.numMusicBitrate.TabIndex = 8;
+            this.numMusicBitrate.Value = new decimal(new int[] {
+            66,
+            0,
+            0,
+            0});
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(257, 9);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(102, 13);
+            this.label12.TabIndex = 7;
+            this.label12.Text = "Music bitrate (kbps):";
             // 
             // groupBox1
             // 
@@ -772,7 +813,8 @@
             // 
             // numXx2Precision
             // 
-            this.numXx2Precision.Location = new System.Drawing.Point(135, 85);
+            this.numXx2Precision.Enabled = false;
+            this.numXx2Precision.Location = new System.Drawing.Point(134, 59);
             this.numXx2Precision.Maximum = new decimal(new int[] {
             24,
             0,
@@ -790,7 +832,7 @@
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(6, 87);
+            this.label10.Location = new System.Drawing.Point(5, 61);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(87, 13);
             this.label10.TabIndex = 4;
@@ -798,7 +840,7 @@
             // 
             // numThreads
             // 
-            this.numThreads.Location = new System.Drawing.Point(135, 59);
+            this.numThreads.Location = new System.Drawing.Point(134, 33);
             this.numThreads.Maximum = new decimal(new int[] {
             8,
             0,
@@ -813,7 +855,7 @@
             this.numThreads.Size = new System.Drawing.Size(82, 20);
             this.numThreads.TabIndex = 3;
             this.numThreads.Value = new decimal(new int[] {
-            2,
+            1,
             0,
             0,
             0});
@@ -821,7 +863,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(6, 61);
+            this.label11.Location = new System.Drawing.Point(5, 35);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(108, 13);
             this.label11.TabIndex = 0;
@@ -834,7 +876,7 @@
             0,
             0,
             0});
-            this.numChunkSize.Location = new System.Drawing.Point(135, 33);
+            this.numChunkSize.Location = new System.Drawing.Point(134, 7);
             this.numChunkSize.Maximum = new decimal(new int[] {
             64,
             0,
@@ -857,38 +899,47 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(6, 35);
+            this.label2.Location = new System.Drawing.Point(5, 9);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(83, 13);
             this.label2.TabIndex = 0;
             this.label2.Text = "Block size (MB):";
             // 
-            // numBitrate
+            // numVoiceBitrate
             // 
-            this.numBitrate.Enabled = false;
-            this.numBitrate.Increment = new decimal(new int[] {
-            32,
+            this.numVoiceBitrate.Increment = new decimal(new int[] {
+            8,
             0,
             0,
             0});
-            this.numBitrate.Location = new System.Drawing.Point(135, 7);
-            this.numBitrate.Maximum = new decimal(new int[] {
+            this.numVoiceBitrate.Location = new System.Drawing.Point(386, 33);
+            this.numVoiceBitrate.Maximum = new decimal(new int[] {
             256,
             0,
             0,
             0});
-            this.numBitrate.Name = "numBitrate";
-            this.numBitrate.Size = new System.Drawing.Size(82, 20);
-            this.numBitrate.TabIndex = 3;
+            this.numVoiceBitrate.Minimum = new decimal(new int[] {
+            16,
+            0,
+            0,
+            0});
+            this.numVoiceBitrate.Name = "numVoiceBitrate";
+            this.numVoiceBitrate.Size = new System.Drawing.Size(82, 20);
+            this.numVoiceBitrate.TabIndex = 3;
+            this.numVoiceBitrate.Value = new decimal(new int[] {
+            66,
+            0,
+            0,
+            0});
             // 
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(6, 9);
+            this.label9.Location = new System.Drawing.Point(257, 35);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(123, 13);
+            this.label9.Size = new System.Drawing.Size(101, 13);
             this.label9.TabIndex = 0;
-            this.label9.Text = "Audio bitrate (0 for auto):";
+            this.label9.Text = "Voice bitrate (kbps):";
             // 
             // formMain
             // 
@@ -920,12 +971,13 @@
             this.tabPage2.PerformLayout();
             this.tabPage3.ResumeLayout(false);
             this.tabPage3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMusicBitrate)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numXx2Precision)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numChunkSize)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numBitrate)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numVoiceBitrate)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -968,7 +1020,7 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TextBox txtFileInternal;
         private System.Windows.Forms.Label lblFileDispName;
-        private System.Windows.Forms.NumericUpDown numBitrate;
+        private System.Windows.Forms.NumericUpDown numVoiceBitrate;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.ContextMenuStrip cxtItems;
         private System.Windows.Forms.ToolStripMenuItem renameToolStripMenuItem;
@@ -1003,5 +1055,7 @@
         private System.Windows.Forms.CheckBox chkMd5Cache;
         private System.Windows.Forms.ToolStripMenuItem verifyArchiveToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem convertExtractedModToolStripMenuItem;
+        private System.Windows.Forms.NumericUpDown numMusicBitrate;
+        private System.Windows.Forms.Label label12;
     }
 }
