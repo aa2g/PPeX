@@ -158,18 +158,12 @@ namespace PPeXUI
                     trvFiles.SelectedNode :
                     trvFiles.SelectedNode.Parent;
 
-                CommonOpenFileDialog dialog = new CommonOpenFileDialog()
-                {
-                    Multiselect = true
-                };
-                dialog.Filters.Add(new CommonFileDialogFilter("All Files", "*.*"));
+                IEnumerable<string> paths = ShowOpenFileDialog("All Files|*.*", true);
 
-                var result = dialog.ShowDialog();
-
-                if (result != CommonFileDialogResult.Ok)
+                if (!paths.Any())
                     return;
 
-                foreach (string file in dialog.FileNames)
+                foreach (string file in paths)
                 {
                     var node = parent.Nodes.Add(Path.GetFileName(file));
 
@@ -298,18 +292,13 @@ namespace PPeXUI
                         .Select(x => x.Tag as SubfileHolder)
                         .ToList();
 
-                    CommonOpenFileDialog dialog = new CommonOpenFileDialog
-                    {
-                        IsFolderPicker = true,
-                        Multiselect = false
-                    };
-#warning somehow change the button text to save
+                    string path = ShowFolderDialog().FirstOrDefault();
 
-                    if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+                    if (string.IsNullOrEmpty(path))
                         return;
 
                     prgFileProgress.Value = 0;
-                    txtFileProg.AppendText("Beginning export to \"" + dialog.FileName + "\"...\n");
+                    txtFileProg.AppendText("Beginning export to \"" + path + "\"...\n");
 
                     int i = 0;
 
@@ -317,7 +306,7 @@ namespace PPeXUI
                     {
                         foreach (var item in items)
                         {
-                            string filename = Path.Combine(dialog.FileName, item.Name);
+                            string filename = Path.Combine(path, item.Name);
                             i++;
 
                             if (File.Exists(filename))
@@ -348,23 +337,20 @@ namespace PPeXUI
                 {
                     //Is a PP subfile node
                     SubfileHolder sh = trvFiles.SelectedNode.Tag as SubfileHolder;
-                    CommonSaveFileDialog dialog = new CommonSaveFileDialog()
-                    {
-                        DefaultFileName = sh.Name
-                    };
-                    dialog.Filters.Add(new CommonFileDialogFilter("All Files", "*.*"));
 
-                    if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+                    string path = ShowSaveFileDialog("All Files|*.*", sh.Name);
+
+                    if (string.IsNullOrEmpty(path))
                         return;
 
-                    using (FileStream fs = new FileStream(dialog.FileName, FileMode.Create))
+                    using (FileStream fs = new FileStream(path, FileMode.Create))
                     {
                         (sh.Source as ArchiveFileSource).GetRawStream().CopyTo(fs);
                         //sh.Source.GetStream().CopyTo(fs);
                     }
 
                     prgFileProgress.Value = 100;
-                    txtFileProg.AppendText("Exported " + Path.GetFileName(dialog.FileName) + " (" + sh.Source.Size + " bytes)\n");
+                    txtFileProg.AppendText("Exported " + Path.GetFileName(path) + " (" + sh.Source.Size + " bytes)\n");
                 }
 
 
@@ -605,24 +591,18 @@ namespace PPeXUI
 
         public void Open()
         {
-            CommonOpenFileDialog dialog = new CommonOpenFileDialog()
-            {
-                Multiselect = false
-            };
-            dialog.Filters.Add(new CommonFileDialogFilter("Extended PP archive", "*.ppx"));
+            string path = ShowOpenFileDialog("Extended PP archive|*.ppx").FirstOrDefault();
 
-            var result = dialog.ShowDialog();
-
-            if (result != CommonFileDialogResult.Ok)
+            if (string.IsNullOrEmpty(path))
                 return;
 
             CloseFile();
             OpenFile();
 
-            currentlyOpenedFile = Path.GetFileName(dialog.FileName);
+            currentlyOpenedFile = Path.GetFileName(path);
             IsModified = false;
 
-            ExtendedArchive arc = new ExtendedArchive(dialog.FileName);
+            ExtendedArchive arc = new ExtendedArchive(path);
             
             List<TreeNode> parents = new List<TreeNode>();
 
@@ -703,15 +683,9 @@ namespace PPeXUI
 
         private void btnImportPP_Click(object sender, EventArgs e)
         {
-            CommonOpenFileDialog dialog = new CommonOpenFileDialog()
-            {
-                Multiselect = true
-            };
-            dialog.Filters.Add(new CommonFileDialogFilter("PP archive files", "*.pp"));
+            IEnumerable<string> paths = ShowOpenFileDialog("PP archive files|*.pp", true);
 
-            var result = dialog.ShowDialog();
-
-            if (result != CommonFileDialogResult.Ok)
+            if (!paths.Any())
                 return;
 
             var progform = new formImporting();
@@ -720,12 +694,12 @@ namespace PPeXUI
 
             IProgress<int> progress = new Progress<int>((x) =>
             {
-                progform.SetProgress(100 * counter / dialog.FileNames.Count(), x);
+                progform.SetProgress(100 * counter / paths.Count(), x);
             });
 
             Task t = Task.Factory.StartNew(() =>
             {
-                foreach (string file in dialog.FileNames)
+                foreach (string file in paths)
                 {
                     counter++;
                     ImportPP(file, progress);
@@ -763,18 +737,12 @@ namespace PPeXUI
 
         private void btnImportFolder_Click(object sender, EventArgs e)
         {
-            CommonOpenFileDialog dialog = new CommonOpenFileDialog()
-            {
-                Multiselect = true,
-                IsFolderPicker = true
-            };
+            IEnumerable<string> paths = ShowFolderDialog("", true);
 
-            var result = dialog.ShowDialog();
-
-            if (result != CommonFileDialogResult.Ok)
+            if (!paths.Any())
                 return;
 
-            foreach (string file in dialog.FileNames)
+            foreach (string file in paths)
             {
                 ImportFolder(file);
             }
@@ -782,16 +750,12 @@ namespace PPeXUI
 
         private void btnBrowseSave_Click(object sender, EventArgs e)
         {
-            CommonSaveFileDialog dialog = new CommonSaveFileDialog()
-            {
-                OverwritePrompt = true
-            };
-            dialog.Filters.Add(new CommonFileDialogFilter("Extended PP archive", "*.ppx"));
+            string path = ShowSaveFileDialog("Extended PP archive|*.ppx");
 
-            if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+            if (string.IsNullOrEmpty(path))
                 return;
 
-            txtSaveLocation.Text = dialog.FileName;
+            txtSaveLocation.Text = path;
         }
 
         private void trvFiles_DragEnter(object sender, DragEventArgs e)
@@ -875,15 +839,9 @@ namespace PPeXUI
 
         private void convertxggTowavToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            CommonOpenFileDialog dialog = new CommonOpenFileDialog()
-            {
-                Multiselect = true
-            };
-            dialog.Filters.Add(new CommonFileDialogFilter("XGG audio file", "*.xgg"));
+            IEnumerable<string> paths = ShowOpenFileDialog("XGG audio file|*.xgg", true);
 
-            var result = dialog.ShowDialog();
-
-            if (result != CommonFileDialogResult.Ok)
+            if (!paths.Any())
                 return;
 
             var progform = new formImporting();
@@ -895,7 +853,7 @@ namespace PPeXUI
 
             Task t = Task.Factory.StartNew(() =>
             {
-                foreach (string file in dialog.FileNames)
+                foreach (string file in paths)
                 {
                     using (FileSource f = new FileSource(file))
                     using (PPeX.Encoders.XggDecoder decoder = new PPeX.Encoders.XggDecoder(f.GetStream()))
@@ -924,19 +882,170 @@ namespace PPeXUI
 
         private void verifyArchiveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            CommonOpenFileDialog dialog = new CommonOpenFileDialog()
-            {
-                Multiselect = false
-            };
-            dialog.Filters.Add(new CommonFileDialogFilter("Extended PP archive", "*.ppx"));
+            string path = ShowOpenFileDialog("Extended PP archive|*.ppx").FirstOrDefault();
 
-            var result = dialog.ShowDialog();
-
-            if (result != CommonFileDialogResult.Ok)
+            if (string.IsNullOrEmpty(path))
                 return;
 
-            var verifyForm = new formVerify(new ExtendedArchive(dialog.FileName));
+            var verifyForm = new formVerify(new ExtendedArchive(path));
             verifyForm.ShowDialog();
+        }
+
+        public string ShowSaveFileDialog(string filter, string defaultname = "")
+        {
+            string[][] filters = filter.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries)).ToArray();
+
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                CommonSaveFileDialog dialog = new CommonSaveFileDialog()
+                {
+                    OverwritePrompt = true
+                };
+
+                if (defaultname != "")
+                    dialog.DefaultFileName = defaultname;
+
+                foreach (string[] filterSet in filters)
+                    dialog.Filters.Add(new CommonFileDialogFilter(filterSet[0], filterSet[1]));
+
+                var result = dialog.ShowDialog();
+
+                if (result != CommonFileDialogResult.Ok)
+                    return "";
+
+                return dialog.FileName;
+            }
+            else
+            {
+                SaveFileDialog dialog = new SaveFileDialog()
+                {
+                    OverwritePrompt = true
+                };
+
+                if (defaultname != "")
+                    dialog.FileName = defaultname;
+
+                string fullfilter = "";
+                for (int i = 0; i < filters.Length; i++)
+                {
+                    if (i > 0)
+                        fullfilter += "|";
+
+                    fullfilter += $"{filters[i][0]} ({filters[i][1]})";
+                    fullfilter += $"|{filters[i][1]}";
+                }
+
+                dialog.Filter = fullfilter;
+
+                var result = dialog.ShowDialog();
+
+                if (result != DialogResult.OK)
+                    return "";
+
+                return dialog.FileName;
+            }
+        }
+
+        public static IEnumerable<string> ShowOpenFileDialog(string filter = "", bool multiple = false)
+        {
+            string[][] filters = filter.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries)).ToArray();
+
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                CommonOpenFileDialog dialog = new CommonOpenFileDialog()
+                {
+                    Multiselect = multiple,
+                    EnsureValidNames = true,
+                    EnsureFileExists = true,
+                    EnsurePathExists = true
+                };
+
+                foreach (string[] filterSet in filters)
+                    dialog.Filters.Add(new CommonFileDialogFilter(filterSet[0], filterSet[1]));
+
+                var result = dialog.ShowDialog();
+
+                if (result != CommonFileDialogResult.Ok)
+                    return new string[0];
+
+                return dialog.FileNames;
+            }
+            else
+            {
+                OpenFileDialog dialog = new OpenFileDialog()
+                {
+                    Multiselect = multiple,
+                    CheckFileExists = true,
+                    CheckPathExists = true,
+                    ValidateNames = true
+                };
+
+                string fullfilter = "";
+                for (int i = 0; i < filters.Length; i++)
+                {
+                    if (i > 0)
+                        fullfilter += "|";
+
+                    fullfilter += $"{filters[i][0]} ({filters[i][1]})";
+                    fullfilter += $"|{filters[i][1]}";
+                }
+
+                dialog.Filter = fullfilter;
+
+                var result = dialog.ShowDialog();
+
+                if (result != DialogResult.OK)
+                    return new string[0];
+
+                return dialog.FileNames;
+            }
+        }
+
+        public static IEnumerable<string> ShowFolderDialog(string title = "", bool multiple = false)
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                CommonOpenFileDialog dialog = new CommonOpenFileDialog()
+                {
+                    Multiselect = multiple,
+                    IsFolderPicker = true,
+                    EnsureValidNames = true,
+                    EnsurePathExists = true
+                };
+
+                if (title != "")
+                    dialog.Title = title;
+
+                var result = dialog.ShowDialog();
+
+                if (result != CommonFileDialogResult.Ok)
+                    return new string[0];
+
+                return dialog.FileNames;
+            }
+            else
+            {
+                FolderBrowserDialog dialog = new FolderBrowserDialog()
+                {
+                    SelectedPath = Environment.CurrentDirectory,
+
+                };
+
+                if (title != "")
+                    dialog.Description = title;
+
+                var result = dialog.ShowDialog();
+
+                if (result != DialogResult.OK)
+                    return new string[0];
+
+                return new[] { dialog.SelectedPath };
+            }
+        }
+                return;
+
         }
     }
 

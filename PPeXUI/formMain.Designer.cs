@@ -48,8 +48,9 @@
             this.btnImportPP = new System.Windows.Forms.ToolStripButton();
             this.btnImportFolder = new System.Windows.Forms.ToolStripButton();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.convertExtractedModToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.convertxggTowavToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.verifyArchiveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
@@ -304,31 +305,39 @@
             // 
             this.toolStripDropDownButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripDropDownButton1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripSeparator3,
+            this.convertExtractedModToolStripMenuItem,
             this.convertxggTowavToolStripMenuItem,
+            this.toolStripSeparator3,
             this.verifyArchiveToolStripMenuItem});
             this.toolStripDropDownButton1.Image = global::PPeXUI.Properties.Resources.bricks;
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
-            this.toolStripDropDownButton1.Size = new System.Drawing.Size(29, 22);
+            this.toolStripDropDownButton1.Size = new System.Drawing.Size(29, 20);
             this.toolStripDropDownButton1.Text = "Plugins";
             // 
-            // toolStripSeparator3
+            // convertExtractedModToolStripMenuItem
             // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(179, 6);
+            this.convertExtractedModToolStripMenuItem.Name = "convertExtractedModToolStripMenuItem";
+            this.convertExtractedModToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+            this.convertExtractedModToolStripMenuItem.Text = "Convert extracted mod";
+            this.convertExtractedModToolStripMenuItem.Click += new System.EventHandler(this.convertExtractedModToolStripMenuItem_Click);
             // 
             // convertxggTowavToolStripMenuItem
             // 
             this.convertxggTowavToolStripMenuItem.Name = "convertxggTowavToolStripMenuItem";
-            this.convertxggTowavToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.convertxggTowavToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
             this.convertxggTowavToolStripMenuItem.Text = "Convert .xgg to .wav";
             this.convertxggTowavToolStripMenuItem.Click += new System.EventHandler(this.convertxggTowavToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(192, 6);
             // 
             // verifyArchiveToolStripMenuItem
             // 
             this.verifyArchiveToolStripMenuItem.Name = "verifyArchiveToolStripMenuItem";
-            this.verifyArchiveToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.verifyArchiveToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
             this.verifyArchiveToolStripMenuItem.Text = "Verify Archive";
             this.verifyArchiveToolStripMenuItem.Click += new System.EventHandler(this.verifyArchiveToolStripMenuItem_Click);
             // 
@@ -993,5 +1002,6 @@
         private System.Windows.Forms.Button btnClearCache;
         private System.Windows.Forms.CheckBox chkMd5Cache;
         private System.Windows.Forms.ToolStripMenuItem verifyArchiveToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem convertExtractedModToolStripMenuItem;
     }
 }
