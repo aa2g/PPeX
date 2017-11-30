@@ -44,6 +44,10 @@ namespace PPeXUI
 
 #if !DEBUG
             verifyArchiveToolStripMenuItem.Enabled = false;
+            verifyArchiveToolStripMenuItem.Visible = false;
+
+            convertxggTowavToolStripMenuItem.Enabled = false;
+            convertxggTowavToolStripMenuItem.Visible = false;
 #endif
 
             //Find the physical amount of cores
@@ -1044,8 +1048,28 @@ namespace PPeXUI
                 return new[] { dialog.SelectedPath };
             }
         }
+
+        private void convertExtractedModToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string path;
+
+            if (string.IsNullOrEmpty(path = ShowFolderDialog().FirstOrDefault()))
                 return;
 
+            DirectoryInfo directory = new DirectoryInfo(path);
+
+            if (!directory.Exists)
+                return;
+
+            foreach (DirectoryInfo subdir in directory.EnumerateDirectories("*", SearchOption.TopDirectoryOnly))
+            {
+                if (subdir.Name.ToUpper() == "AA2_PLAY" ||
+                    subdir.Name.ToUpper() == "AA2_MAKE")
+                {
+                    foreach (DirectoryInfo ppdir in subdir.EnumerateDirectories("*", SearchOption.TopDirectoryOnly))
+                        ImportFolder(ppdir.FullName);
+                }
+            }
         }
     }
 
