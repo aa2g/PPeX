@@ -49,6 +49,9 @@ namespace PPeXUI
             convertxggTowavToolStripMenuItem.Enabled = false;
             convertxggTowavToolStripMenuItem.Visible = false;
 #endif
+            numVoiceBitrate.Value = Core.Settings.XggVoiceBitrate / 1000;
+            numMusicBitrate.Value = Core.Settings.XggMusicBitrate / 1000;
+            numXx2Precision.Value = Core.Settings.Xx2Precision;
 
             //aiming for 1/2 processor count, we get diminishing returns on higher thread counts
             decimal threads = Math.Floor(Environment.ProcessorCount / (decimal)2);
@@ -476,6 +479,7 @@ namespace PPeXUI
             if (txtArchiveName.Text == "" || txtSaveLocation.Text == "")
                 return;
 
+            btnSave.Enabled = false;
 
             FileStream arc = new FileStream(txtSaveLocation.Text, FileMode.Create);
             ExtendedArchiveWriter writer = new ExtendedArchiveWriter(arc, txtArchiveName.Text);
@@ -483,7 +487,10 @@ namespace PPeXUI
             writer.DefaultCompression = (ArchiveChunkCompression)cmbCompression.SelectedIndex;
             writer.ChunkSizeLimit = (ulong)numChunkSize.Value * 1024 * 1024;
             writer.Threads = (int)numThreads.Value;
+
             Core.Settings.Xx2Precision = (int)numXx2Precision.Value;
+            Core.Settings.XggMusicBitrate = (int)(numMusicBitrate.Value * 1000);
+            Core.Settings.XggVoiceBitrate = (int)(numVoiceBitrate.Value * 1000);
 
             IProgress<string> progressStatus = new Progress<string>(x =>
             {
@@ -589,7 +596,6 @@ namespace PPeXUI
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            btnSave.Enabled = false;
             Save();
         }
 
