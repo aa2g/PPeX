@@ -34,7 +34,7 @@ namespace PPeXM64
             }
         }
 
-        public static readonly int RecompressionThreads = 4;
+        public static readonly int RecompressionThreads = Environment.ProcessorCount;
 
         protected Thread[] threads;
         protected BlockingCollection<Tuple<IEnumerable<CachedFile>, byte[]>> QueuedFileSets;
