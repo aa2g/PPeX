@@ -20,7 +20,7 @@ namespace PPeXM64
 
         static PipeServer server;
 
-        static Timer timer = new Timer(10000);
+        static Timer timer = new Timer(3000);
 
         static void Main(string[] args)
         {
