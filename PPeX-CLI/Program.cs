@@ -128,6 +128,10 @@ Sets a regex to use for compressing or extracting.");
             {
                 DecompressArg(args);
             }
+            else
+            {
+                Console.WriteLine("No valid switch passed!");
+            }
 
 #if DEBUG
             Console.WriteLine();
