@@ -131,7 +131,8 @@ namespace PPeXM64
             {
                 //Send a list of all loaded .pp files
 
-                Console.WriteLine("!!LOADED FILELIST!!");
+                if (LogFiles)
+                    Console.WriteLine("!!LOADED FILELIST!!");
 
                 var loadedPP = Cache.TotalFiles.Select(x => x.ArchiveName).Distinct();
                 
