@@ -63,6 +63,7 @@
     <ProjectReference Include="..\PPeX\PPeX.csproj">
       <Project>{a611a988-d477-4e16-af2f-d3a661b909a9}</Project>
       <Name>PPeX</Name>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
