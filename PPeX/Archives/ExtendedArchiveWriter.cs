@@ -154,10 +154,10 @@ namespace PPeX
 
 
             //write texture bank chunk
-            if (TextureBank.Textures.Count > 0)
+            if (TextureBank.Count > 0)
             {
                 ProgressStatus.Report("Writing texture bank...\r\n");
-                var textureFiles = TextureBank.Textures.Select(texture => new Subfile(
+                var textureFiles = TextureBank.Select(texture => new Subfile(
                         new MemorySource(texture.Value),
                         texture.Key,
                         "_TextureBank"))

@@ -46,8 +46,6 @@ namespace PPeX.Encoders
 
             EncodedLength = (uint)encodedXx3.Length;
 
-            //File.WriteAllBytes("B:\\fucked.xx", encodedXx3.ToArray());
-
             encodedXx3.Position = 0;
 
             return encodedXx3;
@@ -98,7 +96,7 @@ namespace PPeX.Encoders
                     string name = texRef.Name;
                     using (Stream stream = provider.TextureFiles[name].GetRawStream())
                     using (BinaryReader reader = new BinaryReader(stream))
-                        texBank.Textures[name] = reader.ReadBytes((int)stream.Length);
+                        texBank[name] = reader.ReadBytes((int)stream.Length);
                 }
             }
 

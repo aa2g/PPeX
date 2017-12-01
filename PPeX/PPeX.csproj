@@ -80,6 +80,7 @@
     <Compile Include="FileProviders\GenericProvider.cs" />
     <Compile Include="IArchiveWriter.cs" />
     <Compile Include="Subfiles\Xx3Subfile.cs" />
+    <Compile Include="Xx2\CompressedTextureBank.cs" />
     <Compile Include="Xx2\EncoderCommon.cs" />
     <Compile Include="Xx2\FloatEncoder.cs" />
     <Compile Include="Xx2\IntegerEncoder.cs" />

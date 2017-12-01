@@ -20,8 +20,6 @@ namespace PPeX.Xx2
             {
                 int version = reader.ReadInt32();
 
-                //File.WriteAllBytes("B:\\fucked2.xx3", (stream as MemoryStream).ToArray());
-
                 int unknownLength = reader.ReadInt32();
 
                 byte[] headerUnknown = reader.ReadBytes(unknownLength);
