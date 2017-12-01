@@ -51,7 +51,7 @@ namespace PPeX
                 string name = texRef.Name;
                 using (Stream stream = Provider.TextureFiles[name].GetRawStream())
                 using (BinaryReader reader = new BinaryReader(stream))
-                    Bank.Textures[name] = reader.ReadBytes((int)stream.Length);
+                    Bank[name] = reader.ReadBytes((int)stream.Length);
             }
 
             MemoryStream mem = new MemoryStream();

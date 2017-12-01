@@ -67,9 +67,6 @@ namespace PPeXTests
 
                 byte[] encoded = mem.ToArray();
 
-                System.IO.File.WriteAllBytes("B:\\1.xx", data);
-                System.IO.File.WriteAllBytes("B:\\2.xx", encoded);
-
                 Assert.IsTrue(PPeX.Utility.CompareBytes(data, encoded));
             }
         }

@@ -64,7 +64,7 @@ namespace PPeX.Xx2
             writer.Write(ImageFileFormat);
             writer.Write(Checksum);
 
-            byte[] imgData = bank.Textures[Name];
+            byte[] imgData = bank[Name];
 
             writer.Write((int)imgData.Length);
 

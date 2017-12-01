@@ -19,7 +19,7 @@ namespace PPeXM64
         public uint ID => BaseChunk.ID;
         public CompressedCache BaseCache;
         public ExtendedArchiveChunk BaseChunk;
-        public ArchiveChunkCompression RecompressionMethod = ArchiveChunkCompression.LZ4;
+        public static readonly ArchiveChunkCompression RecompressionMethod = ArchiveChunkCompression.LZ4;
 
         public List<CachedFile> Files = new List<CachedFile>();
 

@@ -27,17 +27,42 @@ namespace PPeXM64
 
         public List<ExtendedArchive> LoadedArchives = new List<ExtendedArchive>();
 
-        public TextureBank UniversalTexBank = new TextureBank();
+        public CompressedTextureBank UniversalTexBank;
 
         public CompressedCache(IEnumerable<ExtendedArchive> Archives) : this(Archives, new Progress<string>())
         {
 
         }
 
+        protected void LoadTextures(Xx3Provider provider)
+        {
+            var chunks = provider.TextureFiles
+                .Select(x => (x.Value.Source as ArchiveFileSource).Chunk)
+                .Distinct();
+
+            foreach (var chunk in chunks)
+            {
+                CachedChunk cachedChunk = new CachedChunk(chunk, this);
+
+                cachedChunk.Allocate();
+
+                foreach (var file in cachedChunk.Files)
+                {
+                    UniversalTexBank.AddRaw(file.Name, file.CompressedData);
+                }
+
+                cachedChunk.Deallocate();
+            }
+        }
+
         public CompressedCache(IEnumerable<ExtendedArchive> Archives, IProgress<string> Status)
         {
+            UniversalTexBank = new CompressedTextureBank(CachedChunk.RecompressionMethod);
+
             foreach (ExtendedArchive archive in Archives)
             {
+                LoadTextures(archive.Xx3Provider);
+
                 foreach (var chunk in archive.Chunks)
                 {
                     var cachedChunk = new CachedChunk(chunk, this);
@@ -51,16 +76,6 @@ namespace PPeXM64
                         string name = PPeX.Encoders.EncoderFactory.GetDecoder(System.IO.Stream.Null, archive, file.Type).NameTransform(file.Name);
 
                         LoadedFiles[new FileEntry(file.ArchiveName, name)] = file;
-                    }
-                }
-                
-                foreach (var texture in archive.Xx3Provider.TextureFiles)
-                {
-                    using (Stream stream = texture.Value.GetRawStream())
-                    using (MemoryStream mem = new MemoryStream())
-                    {
-                        stream.CopyTo(mem);
-                        UniversalTexBank.Textures[texture.Key] = mem.ToArray();
                     }
                 }
 
