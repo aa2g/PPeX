@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using PPeX;
 using System.IO;
 using PPeX.External.PP;
@@ -25,8 +22,28 @@ namespace PPeX_CLI
                 return int.Parse(readable);
         }
 
+        static Version GetVersion()
+        {
+            return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        }
+
+        static string VersionToReadableString(Version version)
+        {
+            string text = version.ToString().TrimEnd(".0".ToCharArray());
+            if (text.Length == 1)
+                text += ".0";
+            return text;
+        }
+
         static void Main(string[] args)
         {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"PPeX-CLI v{VersionToReadableString(GetVersion())}");
+            Console.WriteLine($"PPeX base v{VersionToReadableString(PPeX.Core.GetVersion())}");
+            Console.ForegroundColor = ConsoleColor.Gray;
+
+            Console.WriteLine();
+
             if (args.Length < 1 || args[0].ToLower() == "-h")
             {
                 Console.WriteLine(@"Usage:
@@ -92,6 +109,12 @@ Default is on, available options are 'on' and 'off'.
 -regex "".+""
 Sets a regex to use for compressing or extracting.");
 
+#if DEBUG
+                Console.WriteLine();
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+#endif
+
                 return;
             }
 
@@ -105,6 +128,12 @@ Sets a regex to use for compressing or extracting.");
             {
                 DecompressArg(args);
             }
+
+#if DEBUG
+            Console.WriteLine();
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+#endif
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -130,7 +159,7 @@ Sets a regex to use for compressing or extracting.");
             }
         }
 
-        #region Compress
+#region Compress
         static void CompressArg(string[] args)
         {
             Regex regex = new Regex(".+");
@@ -367,9 +396,9 @@ Sets a regex to use for compressing or extracting.");
 
             Console.WriteLine("Imported " + imported + "/" + pp.Subfiles.Count + " files");
         }
-        #endregion
+#endregion
 
-        #region Decompress
+#region Decompress
         static void DecompressArg(string[] args)
         {
             Regex regex = new Regex(".+");
@@ -473,7 +502,7 @@ Sets a regex to use for compressing or extracting.");
                 }
             }
         }
-        #endregion
+#endregion
 
 
 
