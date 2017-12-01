@@ -34,7 +34,7 @@ namespace PPeX_CLI
 ppex-cli -h
 Shows this help dialog
 
-ppex-cli -c [options] folder1 file2.pp output.ppx
+ppex-cli -c [options] [folder1 file2.pp wildcard3*.pp ...] output.ppx
 Compresses a .ppx archive
 
 ppex-cli -e [options] input.ppx output-directory/
@@ -217,21 +217,28 @@ Sets a regex to use for compressing or extracting.");
 
                 foreach (string path in args.Skip(argcounter - 1).Take(args.Length - argcounter))
                 {
-                    if (path.EndsWith(".pp") && File.Exists(path))
-                    {
-                        //.pp file
-                        Console.WriteLine("Importing " + Path.GetFileName(path));
+                    string parentpath = Path.GetDirectoryName(path);
+                    string localpath = Path.GetFileName(path);
 
-                        ImportPP(path, writer, regex, unencodedRegex);
+                    foreach (string filepath in Directory.EnumerateFiles(parentpath, localpath, SearchOption.TopDirectoryOnly))
+                    {
+                        if (filepath.EndsWith(".pp"))
+                        {
+                            //.pp file
+                            Console.WriteLine("Importing " + Path.GetFileName(filepath));
+
+                            ImportPP(filepath, writer, regex, unencodedRegex);
+                        }
                     }
-                    else if (Directory.Exists(path))
-                    {
-                        name = Path.GetFileNameWithoutExtension(path) + ".pp";
 
-                        Console.WriteLine("Importing \'" + path + "\" as \"" + name + "\"");
+                    foreach (string dirpath in Directory.EnumerateDirectories(parentpath, localpath, SearchOption.TopDirectoryOnly))
+                    {
+                        name = Path.GetFileNameWithoutExtension(dirpath) + ".pp";
+
+                        Console.WriteLine("Importing \'" + dirpath + "\" as \"" + name + "\"");
 
                         int imported = 0;
-                        var files = Directory.EnumerateFiles(path, "*.*", SearchOption.TopDirectoryOnly).ToArray();
+                        var files = Directory.EnumerateFiles(dirpath, "*.*", SearchOption.TopDirectoryOnly).ToArray();
 
                         foreach (string file in files)
                         {
