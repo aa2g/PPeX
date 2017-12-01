@@ -179,7 +179,7 @@ namespace PPeXM64
                 }
                 else
                 {
-                    Console.WriteLine("Freed 0 files(s) (0 B)");
+                    //Console.WriteLine("Freed 0 files(s) (0 B)");
                 }
             }
 
