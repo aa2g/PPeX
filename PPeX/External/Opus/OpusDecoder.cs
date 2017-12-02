@@ -76,6 +76,41 @@ namespace FragLabs.Audio.Codecs
         }
 
         /// <summary>
+        /// Produces PCM samples from Opus encoded data.
+        /// </summary>
+        /// <param name="inputOpusData">Opus encoded data to decode, null for dropped packet.</param>
+        /// <param name="dataLength">Length of data to decode.</param>
+        /// <param name="decodedLength">Set to the length of the decoded sample data.</param>
+        /// <returns>PCM audio samples.</returns>
+        public unsafe float[] DecodeFloat(byte[] inputOpusData, int dataLength)
+        {
+            if (disposed)
+                throw new ObjectDisposedException("OpusDecoder");
+
+            IntPtr decodedPtr;
+            int frameCount = GetSamples(inputOpusData) * OutputChannels;
+            float[] decoded = new float[frameCount];
+            int length = 0;
+            fixed (float* bdec = decoded)
+            {
+                decodedPtr = new IntPtr((void*)bdec);
+
+                if (inputOpusData != null)
+                    length = API.opus_decode_float(_decoder, inputOpusData, dataLength, decodedPtr, frameCount, 0);
+                else
+                    length = API.opus_decode_float(_decoder, null, 0, decodedPtr, frameCount, (ForwardErrorCorrection) ? 1 : 0);
+            }
+
+            if (length < 0)
+                throw new Exception("Decoding failed - " + ((Errors)length).ToString());
+
+            //decodedCount = length * OutputChannels;
+            Array.Resize(ref decoded, length * OutputChannels);
+
+            return decoded;
+        }
+
+        /// <summary>
         /// Determines the number of frames that can fit into a buffer of the given size.
         /// </summary>
         /// <param name="bufferSize"></param>
