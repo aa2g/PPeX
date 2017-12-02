@@ -146,6 +146,21 @@ namespace FragLabs.Audio.Codecs.Opus
             throw new PlatformNotSupportedException();
         }
 
+        public static int opus_decode_float(IntPtr st, byte[] data, int len, IntPtr pcm, int frame_size, int decode_fec)
+        {
+            switch (currentPlatform)
+            {
+                case Platform.win32:
+                    return opus_decode_float_32(st, data, len, pcm, frame_size, decode_fec);
+                case Platform.win64:
+                    return opus_decode_float_64(st, data, len, pcm, frame_size, decode_fec);
+                case Platform.linux:
+                    return opus_decode_float_so(st, data, len, pcm, frame_size, decode_fec);
+            }
+
+            throw new PlatformNotSupportedException();
+        }
+
         public static int opus_encoder_ctl(IntPtr st, Ctl request, int value)
         {
             switch (currentPlatform)
@@ -244,6 +259,9 @@ namespace FragLabs.Audio.Codecs.Opus
         [DllImport(dll32, EntryPoint = "opus_decode", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         static extern int opus_decode_32(IntPtr st, byte[] data, int len, IntPtr pcm, int frame_size, int decode_fec);
 
+        [DllImport(dll32, EntryPoint = "opus_decode_float", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_decode_float_32(IntPtr st, byte[] data, int len, IntPtr pcm, int frame_size, int decode_fec);
+
         [DllImport(dll32, EntryPoint = "opus_encoder_ctl", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         static extern int opus_encoder_ctl_32(IntPtr st, Ctl request, int value);
 
@@ -282,6 +300,9 @@ namespace FragLabs.Audio.Codecs.Opus
         [DllImport(dll64, EntryPoint = "opus_decode", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         static extern int opus_decode_64(IntPtr st, byte[] data, int len, IntPtr pcm, int frame_size, int decode_fec);
 
+        [DllImport(dll64, EntryPoint = "opus_decode_float", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_decode_float_64(IntPtr st, byte[] data, int len, IntPtr pcm, int frame_size, int decode_fec);
+
         [DllImport(dll64, EntryPoint = "opus_encoder_ctl", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         static extern int opus_encoder_ctl_64(IntPtr st, Ctl request, int value);
 
@@ -319,6 +340,9 @@ namespace FragLabs.Audio.Codecs.Opus
 
         [DllImport(linuxso, EntryPoint = "opus_decode", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         static extern int opus_decode_so(IntPtr st, byte[] data, int len, IntPtr pcm, int frame_size, int decode_fec);
+
+        [DllImport(linuxso, EntryPoint = "opus_decode_float", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        static extern int opus_decode_float_so(IntPtr st, byte[] data, int len, IntPtr pcm, int frame_size, int decode_fec);
 
         [DllImport(linuxso, EntryPoint = "opus_encoder_ctl", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         static extern int opus_encoder_ctl_so(IntPtr st, Ctl request, int value);

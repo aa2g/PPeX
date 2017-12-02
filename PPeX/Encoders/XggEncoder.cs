@@ -212,8 +212,8 @@ namespace PPeX.Encoders
                 uint count = reader.ReadUInt32();
 
                 using (OpusWaveProvider wav = new OpusWaveProvider(BaseStream, count, Channels))
-                    //WaveFileWriter.WriteWavFileToStream(output, wav);
-                    wav.ExportWAVToStream(output);
+                    WaveFileWriter.WriteWavFileToStream(output, wav.ToWaveProvider16());
+                    //wav.ExportWAVToStream(output);
             }
         }
 
