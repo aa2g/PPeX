@@ -1,28 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using NAudio.Wave;
 using System.IO;
-using PPeX.External.libresample;
 
 namespace FragLabs.Audio.Codecs
 {
-    public class OpusWaveProvider : IDisposable, ISampleProvider
+    public class OpusWaveProvider : IWaveProvider, IDisposable
     {
-        protected List<float> floatList = new List<float>();
+        public MemoryStream InternalStream { get; protected set; }
+
+        public long WAVLength => InternalStream.Length + 44;
 
         public OpusWaveProvider(Stream stream, uint length, int channels)
         {
-            //WaveFormat = new WaveFormat(44100, 16, channels);
-            WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(44100, channels);
+            WaveFormat = new WaveFormat(48000, 16, channels);
 
-            MemoryStream temp = new MemoryStream();
-
-            using (BinaryWriter writer = new BinaryWriter(temp, Encoding.ASCII, true))
+            using (MemoryStream temp = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(temp))
             using (OpusDecoder decoder = OpusDecoder.Create(48000, channels))
             using (BinaryReader reader = new BinaryReader(stream))
-            using (LibResampler resampler = new LibResampler(48000, 44100, channels))
             {
                 for (int i = 0; i < length; i++)
                 {
@@ -33,12 +29,12 @@ namespace FragLabs.Audio.Codecs
                     int frames = decoder.GetFrames(frame);
                     int samples = decoder.GetSamples(frame);
 
-                    float[] output = decoder.DecodeFloat(frame, framesize);
-
-                    output = resampler.Resample(output, out int sampleBufferUsed);
-
-                    floatList.AddRange(output);
+                    int outputlen;
+                    byte[] output = decoder.Decode(frame, framesize, out outputlen);
+                    writer.Write(output, 0, outputlen);
                 }
+
+                InternalStream = new MemoryStream(temp.ToArray());
             }
         }
 
@@ -46,22 +42,40 @@ namespace FragLabs.Audio.Codecs
 
         public void Dispose()
         {
-            floatList.Clear();
+            ((IDisposable)InternalStream).Dispose();
         }
 
-        int position = 0;
-        public int Read(float[] buffer, int offset, int count)
+        public int Read(byte[] buffer, int offset, int count)
         {
-            int readCount = Math.Min(floatList.Count - position, count);
+            return InternalStream.Read(buffer, offset, count);
+        }
 
-            for (int i = 0; i < readCount; i++)
-            {
-                buffer[i + offset] = floatList[position + i];
-            }
+        public void ExportWAVToStream(Stream stream)
+        {
+            BinaryWriter writer = new BinaryWriter(stream, Encoding.ASCII);
+            //descriptor
+            writer.WriteString("RIFF");
+            writer.Write((uint)(36 + InternalStream.Length));
+            writer.WriteString("WAVE");
 
-            position += readCount;
+            //fmt subchunk
+            writer.WriteString("fmt ");
+            writer.Write((uint)16);
+            writer.Write((ushort)1);
+            writer.Write((ushort)WaveFormat.Channels);
+            writer.Write((uint)(WaveFormat.SampleRate));
+            writer.Write((uint)(WaveFormat.SampleRate * WaveFormat.Channels * (WaveFormat.BitsPerSample / 2)));
+            writer.Write((ushort)(WaveFormat.Channels * (WaveFormat.BitsPerSample / 2)));
+            writer.Write((ushort)(WaveFormat.BitsPerSample));
 
-            return readCount;
+            //data subchunk
+            writer.WriteString("data");
+            writer.Write((uint)InternalStream.Length);
+
+            writer.Flush();
+
+            InternalStream.Position = 0;
+            InternalStream.CopyTo(stream);
         }
     }
 }

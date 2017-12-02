@@ -64,9 +64,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Archives\ExtendedArchiveAppender.cs" />
+    <Compile Include="Encoders\Xgg\XggDecoder.cs" />
     <Compile Include="External\CRC32\CRC32.cs" />
     <Compile Include="External\libresample\API.cs" />
     <Compile Include="External\libresample\LibResampler.cs" />
+    <Compile Include="External\Opus\OpusSampleProvider.cs" />
+    <Compile Include="External\Opus\OpusWaveProvider.cs" />
     <Compile Include="External\PP\SeekableCryptoStream.cs" />
     <Compile Include="External\Zstandard\ArraySegmentPtr.cs" />
     <Compile Include="External\Zstandard\CompressionOptions.cs" />
@@ -111,14 +114,13 @@
     <Compile Include="Core.cs" />
     <Compile Include="Encoders\BaseEncoder.cs" />
     <Compile Include="Encoders\PassthroughEncoder.cs" />
-    <Compile Include="Encoders\XggEncoder.cs" />
+    <Compile Include="Encoders\Xgg\XggEncoder.cs" />
     <Compile Include="Encoders\Xx2Encoder.cs" />
     <Compile Include="Encoders\Xx3Encoder.cs" />
     <Compile Include="External\Opus\API.cs" />
     <Compile Include="External\Opus\Extensions.cs" />
     <Compile Include="External\Opus\OpusDecoder.cs" />
     <Compile Include="External\Opus\OpusEncoder.cs" />
-    <Compile Include="External\Opus\OpusWaveProvider.cs" />
     <Compile Include="External\PP\IReadFile.cs" />
     <Compile Include="External\PP\IWriteFile.cs" />
     <Compile Include="External\PP\JchStream.cs" />
