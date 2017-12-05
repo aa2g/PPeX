@@ -44,7 +44,7 @@ namespace PPeX.Xx2
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return Textures.Select(x => new KeyValuePair<string, byte[]>(x.Key, this[x.Key])).GetEnumerator();
+            return GetEnumerator();
         }
     }
 }

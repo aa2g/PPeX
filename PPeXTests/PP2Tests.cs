@@ -31,7 +31,7 @@ namespace PPeXTests
 
             //create archive
             FileStream arc = new FileStream("test_pp2.ppx", FileMode.Create);
-            var writer = new ExtendedArchiveWriter(arc, "test_pp2", true);
+            var writer = new ExtendedArchiveWriter("test_pp2", true);
 
             writer.ChunkSizeLimit = 1024;
 
@@ -46,7 +46,7 @@ namespace PPeXTests
                 }
             }
 
-            writer.Write();
+            writer.Write(arc);
 
             arc.Close();
 

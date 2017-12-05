@@ -21,7 +21,7 @@ namespace PPeXTests
         public static void Initialize(TestContext context)
         {
             FileStream arc = new FileStream("test.ppx", FileMode.Create);
-            var writer = new ExtendedArchiveWriter(arc, "test", true);
+            var writer = new ExtendedArchiveWriter("test", true);
 
             using (var mem = new MemoryStream(TestData))
                 TestHash = PPeX.Utility.GetMd5(mem);
@@ -38,7 +38,7 @@ namespace PPeXTests
                     "t",
                     ArchiveFileType.Raw));
 
-            writer.Write();
+            writer.Write(arc);
 
             arc.Close();
 

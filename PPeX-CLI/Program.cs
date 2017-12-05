@@ -233,132 +233,132 @@ Sets a regex to use for compressing or extracting.");
 
             compression = compression.ToLower();
 
-            using (FileStream fs = new FileStream(args.Last(), FileMode.Create))
+            string filename = args.Last();
+
+            ExtendedArchiveWriter writer = new ExtendedArchiveWriter(name);
+                
+            writer.ChunkSizeLimit = (ulong)chunksize;
+            writer.Threads = threads;
+
+            if (compression == "zstd")
+                writer.DefaultCompression = ArchiveChunkCompression.Zstandard;
+            else if (compression == "lz4")
+                writer.DefaultCompression = ArchiveChunkCompression.LZ4;
+            else if (compression == "uncompressed")
+                writer.DefaultCompression = ArchiveChunkCompression.Uncompressed;
+
+
+            foreach (string path in args.Skip(argcounter - 1).Take(args.Length - argcounter))
             {
-                ExtendedArchiveWriter writer = new ExtendedArchiveWriter(fs, name);
+                string parentpath = Path.GetDirectoryName(path);
+                string localpath = Path.GetFileName(path);
 
-                writer.ChunkSizeLimit = (ulong)chunksize;
-                writer.Threads = threads;
-
-                if (compression == "zstd")
-                    writer.DefaultCompression = ArchiveChunkCompression.Zstandard;
-                else if (compression == "lz4")
-                    writer.DefaultCompression = ArchiveChunkCompression.LZ4;
-                else if (compression == "uncompressed")
-                    writer.DefaultCompression = ArchiveChunkCompression.Uncompressed;
-
-
-                foreach (string path in args.Skip(argcounter - 1).Take(args.Length - argcounter))
+                foreach (string filepath in Directory.EnumerateFiles(parentpath, localpath, SearchOption.TopDirectoryOnly))
                 {
-                    string parentpath = Path.GetDirectoryName(path);
-                    string localpath = Path.GetFileName(path);
-
-                    foreach (string filepath in Directory.EnumerateFiles(parentpath, localpath, SearchOption.TopDirectoryOnly))
+                    if (filepath.EndsWith(".pp"))
                     {
-                        if (filepath.EndsWith(".pp"))
-                        {
-                            //.pp file
-                            Console.WriteLine("Importing " + Path.GetFileName(filepath));
+                        //.pp file
+                        Console.WriteLine("Importing " + Path.GetFileName(filepath));
 
-                            ImportPP(filepath, writer, regex, unencodedRegex);
-                        }
+                        ImportPP(filepath, writer, regex, unencodedRegex);
                     }
+                }
 
-                    foreach (string dirpath in Directory.EnumerateDirectories(parentpath, localpath, SearchOption.TopDirectoryOnly))
+                foreach (string dirpath in Directory.EnumerateDirectories(parentpath, localpath, SearchOption.TopDirectoryOnly))
+                {
+                    name = Path.GetFileNameWithoutExtension(dirpath) + ".pp";
+
+                    Console.WriteLine("Importing \'" + dirpath + "\" as \"" + name + "\"");
+
+                    int imported = 0;
+                    var files = Directory.EnumerateFiles(dirpath, "*.*", SearchOption.TopDirectoryOnly).ToArray();
+
+                    foreach (string file in files)
                     {
-                        name = Path.GetFileNameWithoutExtension(dirpath) + ".pp";
+                        string fullName = name + "/" + Path.GetFileName(file);
 
-                        Console.WriteLine("Importing \'" + dirpath + "\" as \"" + name + "\"");
-
-                        int imported = 0;
-                        var files = Directory.EnumerateFiles(dirpath, "*.*", SearchOption.TopDirectoryOnly).ToArray();
-
-                        foreach (string file in files)
+                        if (regex.IsMatch(fullName))
                         {
-                            string fullName = name + "/" + Path.GetFileName(file);
-
-                            if (regex.IsMatch(fullName))
+                            if (unencodedRegex.IsMatch(fullName))
                             {
-                                if (unencodedRegex.IsMatch(fullName))
-                                {
-                                    writer.Files.Add(
-                                        new PPeX.Subfile(
-                                            new FileSource(file),
-                                            Path.GetFileName(file),
-                                            name,
-                                            ArchiveFileType.Raw));
-                                }
-                                else
-                                {
-                                    writer.Files.Add(
-                                        new PPeX.Subfile(
-                                            new FileSource(file),
-                                            Path.GetFileName(file),
-                                            name));
-                                }
-
-
-                                imported++;
+                                writer.Files.Add(
+                                    new PPeX.Subfile(
+                                        new FileSource(file),
+                                        Path.GetFileName(file),
+                                        name,
+                                        ArchiveFileType.Raw));
                             }
+                            else
+                            {
+                                writer.Files.Add(
+                                    new PPeX.Subfile(
+                                        new FileSource(file),
+                                        Path.GetFileName(file),
+                                        name));
+                            }
+
+
+                            imported++;
                         }
-
-                        Console.WriteLine("Imported " + imported + "/" + files.Length + " files");
                     }
+
+                    Console.WriteLine("Imported " + imported + "/" + files.Length + " files");
                 }
+            }
 
-                int lastProgress = 0;
+            int lastProgress = 0;
 
-                object progressLock = new object();
-                bool isUpdating = true;
+            object progressLock = new object();
+            bool isUpdating = true;
 
-                Console.CursorVisible = false;
+            Console.CursorVisible = false;
 
-                Progress<string> progressStatus = new Progress<string>(x =>
+            Progress<string> progressStatus = new Progress<string>(x =>
+            {
+                if (!isUpdating)
+                    return;
+
+                lock (progressLock)
                 {
-                    if (!isUpdating)
-                        return;
+                    Console.SetCursorPosition(0, Console.CursorTop);
 
-                    lock (progressLock)
-                    {
-                        Console.SetCursorPosition(0, Console.CursorTop);
+                    for (int i = 0; i < Console.WindowWidth - 1; i++)
+                        Console.Write(" ");
 
-                        for (int i = 0; i < Console.WindowWidth - 1; i++)
-                            Console.Write(" ");
+                    Console.SetCursorPosition(0, Console.CursorTop);
 
-                        Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.WriteLine(x.Trim());
 
-                        Console.WriteLine(x.Trim());
-
-                        Console.Write("[" + lastProgress + "% complete]");
-                    }
-                });
-
-                Progress<int> progressPercentage = new Progress<int>(x =>
-                {
-                    if (!isUpdating)
-                        return;
-
-                    lock (progressLock)
-                    {
-                        lastProgress = x;
-
-                        Console.SetCursorPosition(0, Console.CursorTop);
-
-                        Console.Write("[" + lastProgress + "% complete]");
-                    }
-                });
-
-                writer.Write(progressStatus, progressPercentage);
-
-                //wait for progress to update
-                while (lastProgress != 100)
-                    System.Threading.Thread.Sleep(50);
-
-                lock (progressPercentage)
-                {
-                    isUpdating = false;
-                    Console.CursorVisible = true;
+                    Console.Write("[" + lastProgress + "% complete]");
                 }
+            });
+
+            Progress<int> progressPercentage = new Progress<int>(x =>
+            {
+                if (!isUpdating)
+                    return;
+
+                lock (progressLock)
+                {
+                    lastProgress = x;
+
+                    Console.SetCursorPosition(0, Console.CursorTop);
+
+                    Console.Write("[" + lastProgress + "% complete]");
+                }
+            });
+
+            using (FileStream fs = new FileStream(filename, FileMode.Create))
+                writer.Write(fs, progressStatus, progressPercentage);
+
+            //wait for progress to update
+            while (lastProgress != 100)
+                System.Threading.Thread.Sleep(50);
+
+            lock (progressPercentage)
+            {
+                isUpdating = false;
+                Console.CursorVisible = true;
             }
         }
 
