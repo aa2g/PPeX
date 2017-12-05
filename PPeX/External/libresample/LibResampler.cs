@@ -30,7 +30,7 @@ namespace PPeX.External.libresample
                 handles[i] = API.resample_open(resamplerQuality, factor, factor);
         }
 
-        public float[] Resample(float[] samples, out int sampleBufferUsed)
+        public float[] Resample(float[] samples, bool last, out int sampleBufferUsed)
         {
             if (samples.Length % Channels != 0)
                 throw new DataMisalignedException();
@@ -43,7 +43,7 @@ namespace PPeX.External.libresample
             {
                 float[] channel = GetNth(samples, Channels, i);
 
-                splitChannels[i] = ResampleStream(channel, i, out int localBufferUsed);
+                splitChannels[i] = ResampleStream(channel, i, last, out int localBufferUsed);
                 sampleBufferUsed += localBufferUsed;
             }
 
@@ -77,7 +77,7 @@ namespace PPeX.External.libresample
             return output;
         }
         
-        protected float[] ResampleStream(float[] samples, int channel, out int sampleBufferUsed)
+        protected float[] ResampleStream(float[] samples, int channel, bool last, out int sampleBufferUsed)
         {
             if (handles[channel] == IntPtr.Zero)
                 throw new ObjectDisposedException(nameof(handles));
@@ -87,7 +87,7 @@ namespace PPeX.External.libresample
 
             int processedSamples;
 
-            processedSamples = API.resample_process(handles[channel], factor, samples, samples.Length, 0, out sampleBufferUsed, outBuffer, estOutSamples);
+            processedSamples = API.resample_process(handles[channel], factor, samples, samples.Length, last ? 1 : 0, out sampleBufferUsed, outBuffer, estOutSamples);
 
             processedSamples = Math.Max(processedSamples, 0);
 

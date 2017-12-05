@@ -42,7 +42,7 @@ namespace FragLabs.Audio.Codecs
 
                     if (Environment.OSVersion.Platform != PlatformID.Win32NT)
                     {
-                        output = resampler.Resample(output, out int sampleBufferUsed);
+                        output = resampler.Resample(output, i == length - 1, out int sampleBufferUsed);
                     }
 
                     floatList.AddRange(output);
