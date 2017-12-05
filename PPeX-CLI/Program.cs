@@ -36,12 +36,33 @@ namespace PPeX_CLI
             return text;
         }
 
+        private static ConsoleColor BaseColor => ConsoleColor.Gray;
+        private static ConsoleColor AccentColor => ConsoleColor.Green;
+
+        static void WriteLineAlternating(params string[] args)
+        {
+            bool isColored = false;
+            foreach (string text in args)
+            {
+                if (isColored)
+                    Console.ForegroundColor = AccentColor;
+                else
+                    Console.ForegroundColor = BaseColor;
+
+                isColored = !isColored;
+
+                Console.Write(text);
+            }
+
+            Console.ForegroundColor = BaseColor;
+            Console.WriteLine();
+        }
+
         static void Main(string[] args)
         {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"PPeX-CLI v{VersionToReadableString(GetVersion())}");
-            Console.WriteLine($"PPeX base v{VersionToReadableString(PPeX.Core.GetVersion())}");
-            Console.ForegroundColor = ConsoleColor.Gray;
+            WriteLineAlternating("PPeX-CLI ", VersionToReadableString(GetVersion()));
+            WriteLineAlternating("PPeX base ", VersionToReadableString(PPeX.Core.GetVersion()));
+
 
             Console.WriteLine();
 
