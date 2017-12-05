@@ -65,8 +65,9 @@ namespace PPeX
         /// </summary>
         public List<ISubfile> Files = new List<ISubfile>();
 
-        protected ulong ChunkTableOffset = 0;
-        protected ulong FileTableOffset = 0;
+        internal ulong ChunkTableOffset = 0;
+        internal ulong FileTableOffset = 0;
+        internal ulong TableInfoOffset = 0;
 
         public Xx3Provider Xx3Provider { get; protected set; }
         /// <summary>
@@ -97,7 +98,10 @@ namespace PPeX
 
                 Title = Encoding.Unicode.GetString(reader.ReadBytes((int)strlen));
 
+
                 //Read chunk and file headers
+                TableInfoOffset = (ulong)arc.Position;
+
                 ChunkTableOffset = reader.ReadUInt64();
                 FileTableOffset = reader.ReadUInt64();
                 
