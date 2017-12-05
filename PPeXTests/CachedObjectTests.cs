@@ -59,7 +59,7 @@ namespace PPeXTests
 
             //Assert.AreEqual((int)chunk.BaseChunk.UncompressedLength, (int)chunk.Data.Length);
 
-            chunk.Deallocate();
+            //chunk.Deallocate();
         }
 
         [TestMethod]
