@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Archives\ExtendedArchiveAppender.cs" />
+    <Compile Include="Archives\HybridChunkWriter.cs" />
     <Compile Include="Encoders\Xgg\XggDecoder.cs" />
     <Compile Include="External\CRC32\CRC32.cs" />
     <Compile Include="External\libresample\API.cs" />

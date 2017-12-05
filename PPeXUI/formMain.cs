@@ -481,8 +481,7 @@ namespace PPeXUI
 
             btnSave.Enabled = false;
 
-            FileStream arc = new FileStream(txtSaveLocation.Text, FileMode.Create);
-            ExtendedArchiveWriter writer = new ExtendedArchiveWriter(arc, txtArchiveName.Text);
+            ExtendedArchiveWriter writer = new ExtendedArchiveWriter(txtArchiveName.Text);
 
             writer.DefaultCompression = (ArchiveChunkCompression)cmbCompression.SelectedIndex;
             writer.ChunkSizeLimit = (ulong)numChunkSize.Value * 1024 * 1024;
@@ -520,6 +519,8 @@ namespace PPeXUI
 
             Task.Run(() =>
             {
+                FileStream arc = new FileStream(txtSaveLocation.Text, FileMode.Create);
+
                 try
                 {
                     progressStatus.Report("Performing first pass...\r\n");
@@ -550,8 +551,7 @@ namespace PPeXUI
                         if (i % 20 == 0)
                             progressPercentage.Report(100 * i / total);
                     }
-
-                    writer.Write(progressStatus, progressPercentage);
+                    writer.Write(arc, progressStatus, progressPercentage);
 
                     btnSave.DynamicInvoke(() => btnSave.Enabled = true);
                 }

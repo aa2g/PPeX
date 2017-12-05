@@ -18,7 +18,7 @@ namespace PPeXTests
         public static void Initialize(TestContext context)
         {
             FileStream arc = new FileStream("test-append.ppx", FileMode.Create);
-            var writer = new ExtendedArchiveWriter(arc, "test", true);
+            var writer = new ExtendedArchiveWriter("test", true);
 
             writer.Files.Add(new Subfile(
                 new MemorySource(TestData),
@@ -38,13 +38,13 @@ namespace PPeXTests
                     "t",
                     ArchiveFileType.Raw));
 
-            writer.Write();
+            writer.Write(arc);
 
             arc.Close();
 
             ExtendedArchiveAppender appender = new ExtendedArchiveAppender("test-append.ppx");
 
-            appender.Title = "test-appended";
+            appender.Name = "test-appended";
 
             appender.FilesToAdd.Add(new Subfile(
                 new MemorySource(TestData2),
