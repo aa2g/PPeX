@@ -77,7 +77,7 @@ namespace PPeX
             this.ArchiveStream = File;
             this.Name = Name;
             DefaultCompression = ArchiveChunkCompression.Zstandard;
-            TextureBank = new TextureBank();
+            TextureBank = new CompressedTextureBank(ArchiveChunkCompression.LZ4);
 
             ChunkSizeLimit = 16 * 1024 * 1024;
             Threads = 1;
