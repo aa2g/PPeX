@@ -13,49 +13,11 @@ namespace PPeXTests
     [TestClass]
     public class PP2Tests
     {
-        public static ExtendedArchive TestArchive;
-        public static byte[][] TestData = new byte[8][];
-
-        [DeploymentItem("X64")]
-        [ClassInitialize]
-        public static void Initialize(TestContext context)
-        {
-            //generate random data
-            Random random = new Random();
-
-            for (int i = 0; i < 8; i++)
-            {
-                TestData[i] = new byte[512];
-                random.NextBytes(TestData[i]);
-            }
-
-            //create archive
-            FileStream arc = new FileStream("test_pp2.ppx", FileMode.Create);
-            var writer = new ExtendedArchiveWriter("test_pp2", true);
-
-            writer.ChunkSizeLimit = 1024;
-
-            //add files + duplicates
-            for (int i = 0; i < 8; i++)
-            {
-                for (int d = 0; d < 4; d++)
-                {
-                    ISubfile file = new Subfile(new MemorySource(TestData[i]), "test" + i.ToString() + d.ToString(), "test", ArchiveFileType.Raw);
-
-                    writer.Files.Add(file);
-                }
-            }
-
-            writer.Write(arc);
-
-            arc.Close();
-
-            TestArchive = new ExtendedArchive("test_pp2.ppx");
-        }
-
         [TestMethod]
         public void DuplicateIndexTest()
         {
+            ExtendedArchive TestArchive = TestCommon.GeneratePPX();
+
             Assert.AreEqual(8, TestArchive.RawFiles.Count(x => x.LinkID == ArchiveFileSource.CanonLinkID), "Incorrect amount of canon files.");
 
             foreach (var file in TestArchive.RawFiles)
@@ -69,11 +31,15 @@ namespace PPeXTests
                     Assert.IsTrue(Utility.CompareBytes(index.Md5, file.Md5), "Link ID links to a file that does not have a matching hash.");
                 }
             }
+
+            TestCommon.TeardownPPX(TestArchive);
         }
 
         [TestMethod]
         public void ReverseChunkIndexTest()
         {
+            ExtendedArchive TestArchive = TestCommon.GeneratePPX();
+
             Assert.AreEqual(512 * 8 / 1024, TestArchive.Chunks.Count, "Incorrect amount of chunks.");
 
             foreach (var chunk in TestArchive.Chunks)
@@ -97,6 +63,8 @@ namespace PPeXTests
                     index++;
                 }
             }
+
+            TestCommon.TeardownPPX(TestArchive);
         }
     }
 }
