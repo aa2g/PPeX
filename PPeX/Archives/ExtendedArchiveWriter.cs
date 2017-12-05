@@ -303,7 +303,11 @@ namespace PPeX
                     {
                         using (item)
                         {
+                            ulong chunkOffset = (ulong)context.ArchiveStream.Position;
+
                             item.CompressedStream.CopyTo(context.ArchiveStream);
+
+                            item.Receipt.FileOffset = chunkOffset;
 
                             CompletedChunks.Add(item.Receipt);
                         }
@@ -337,19 +341,18 @@ namespace PPeX
             return tableInfoOffset;
         }
 
-        protected void WriteTables(ulong chunkOffset, long tableInfoOffset, BinaryWriter chunkTableWriter, BinaryWriter fileTableWriter, BinaryWriter dataWriter)
+        protected void WriteTables(long tableInfoOffset, BinaryWriter chunkTableWriter, BinaryWriter fileTableWriter, BinaryWriter dataWriter)
         {
             //Write all metadata
             Stream ArchiveStream = dataWriter.BaseStream;
-
-            ulong currentChunkOffset = chunkOffset;
+            
             uint fileOffset = 0;
 
             int chunkCout = CompletedChunks.Count;
 
             foreach (var finishedChunk in CompletedChunks)
             {
-                WriteChunkTable(chunkTableWriter, finishedChunk, ref currentChunkOffset, fileOffset);
+                WriteChunkTable(chunkTableWriter, finishedChunk, fileOffset);
 
                 WriteFileTable(fileTableWriter, finishedChunk, ref fileOffset);
             }
@@ -455,7 +458,7 @@ namespace PPeX
 
                 WaitForThreadCompletion();
                 
-                WriteTables(chunkOffset, tableInfoOffset, chunkTableWriter, fileTableWriter, dataWriter);
+                WriteTables(tableInfoOffset, chunkTableWriter, fileTableWriter, dataWriter);
             }
 
             //Collect garbage and compress memory
@@ -465,7 +468,7 @@ namespace PPeX
             ProgressPercentage.Report(100);
         }
 
-        public static void WriteChunkTable(BinaryWriter chunkTableWriter, ChunkReceipt receipt, ref ulong chunkOffset, uint fileOffset)
+        public static void WriteChunkTable(BinaryWriter chunkTableWriter, ChunkReceipt receipt, uint fileOffset)
         {
             chunkTableWriter.Write(receipt.ID);
 
@@ -475,15 +478,13 @@ namespace PPeX
 
             chunkTableWriter.Write(receipt.CRC);
 
-            chunkTableWriter.Write(chunkOffset);
+            chunkTableWriter.Write(receipt.FileOffset);
             chunkTableWriter.Write(receipt.CompressedSize);
             chunkTableWriter.Write(receipt.UncompressedSize);
 
             //pp2 compatiblity
             chunkTableWriter.Write(fileOffset);
             chunkTableWriter.Write((uint)receipt.FileReceipts.Count);
-
-            chunkOffset += receipt.CompressedSize;
         }
 
         public static void WriteFileTable(BinaryWriter fileTableWriter, ChunkReceipt chunkReceipt, ref uint fileOffset)

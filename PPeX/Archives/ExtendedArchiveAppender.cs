@@ -130,7 +130,7 @@ namespace PPeX
                 using (BinaryWriter fileTableWriter = new BinaryWriter(new MemoryStream()))
                 using (BinaryWriter chunkTableWriter = new BinaryWriter(new MemoryStream()))
                 {
-                    WriteTables(chunkOffset, tableInfoOffset, chunkTableWriter, fileTableWriter, dataWriter);
+                    WriteTables(tableInfoOffset, chunkTableWriter, fileTableWriter, dataWriter);
                 }
 
                 Utility.GCCompress();

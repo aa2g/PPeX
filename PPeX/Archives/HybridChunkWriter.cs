@@ -191,6 +191,7 @@ namespace PPeX.Archives
         public ChunkType Type;
         public ArchiveChunkCompression Compression;
         public uint CRC;
+        public ulong FileOffset;
         public ulong CompressedSize;
         public ulong UncompressedSize;
 
