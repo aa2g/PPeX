@@ -5,6 +5,7 @@ using PPeX;
 using System.IO;
 using PPeX.External.PP;
 using PPeX.Encoders;
+using System.Collections.Generic;
 
 namespace PPeX_CLI
 {
@@ -57,48 +58,54 @@ Compresses a .ppx archive
 ppex-cli -e [options] input.ppx output-directory/
 Extracts a .ppx archive
 
+ppex-cli -a [options] [folder1 file2.pp wildcard3*.pp ...] appended.ppx
+Appends files to an already existing archive
+
+ppex-cli -d fragmented.ppx
+Defragments an archive
+
 
 [Options]
 (defaults listed as well)
 
 -name ""Display Name""
-(-c only)
+(-c, -a only)
 Sets the display name of the archive. Default is the output filename
 
 -compression zstd
-(-c only)
+(-c, -a only)
 Sets the compression method. Can be either 'zstd', 'lz4', or 'uncompressed'
 
 -zstd-level 22
-(-c only)
+(-c, -a only)
 Sets the Zstandard level of compression. Can be between 1 and 22
 
 -chunksize 16M
-(-c only)
+(-c, -a only)
 Sets chunk size of compressed data
 
 -xgg-music 44k
-(-c only)
+(-c, -a only)
 Sets music (2 channel audio) bitrate
 
 -xgg-voice 32k
-(-c only)
+(-c, -a only)
 Sets voice (1 channel audio) bitrate
 
 -xx2-precision 0
-(-c only)
+(-c, -a only)
 Sets .xx2 bit precision. Set to 0 for lossless mode. Cannot be used with -xx2-quality.
 
 -xx2-quality
-(-c only)
+(-c, -a only)
 Sets .xx2 encode quality. Not enabled by default. Cannot be used with -xx2-precision.
 
 -threads 1
-(-c only)
+(-c, -a only)
 Sets threads to be used during compression.
 
 -no-encode ""a^""
-(-c only)
+(-c, -a only)
 Defines which files should be left unencoded as a regex. Default is none.
 
 -decode on
@@ -260,7 +267,7 @@ Sets a regex to use for compressing or extracting.");
                         //.pp file
                         Console.WriteLine("Importing " + Path.GetFileName(filepath));
 
-                        ImportPP(filepath, writer, regex, unencodedRegex);
+                        ImportPP(filepath, writer.Files, regex, unencodedRegex);
                     }
                 }
 
@@ -362,7 +369,7 @@ Sets a regex to use for compressing or extracting.");
             }
         }
 
-        static void ImportPP(string filename, ExtendedArchiveWriter writer, Regex regex, Regex unencodedRegex)
+        static void ImportPP(string filename, IList<ISubfile> FilesAdding, Regex regex, Regex unencodedRegex)
         {
             ppParser pp = new ppParser(filename);
             
@@ -378,7 +385,7 @@ Sets a regex to use for compressing or extracting.");
                 {
                     if (unencodedRegex.IsMatch(fullName))
                     {
-                        writer.Files.Add(
+                        FilesAdding.Add(
                         new PPeX.Subfile(
                             new PPSource(file),
                             file.Name,
@@ -387,7 +394,7 @@ Sets a regex to use for compressing or extracting.");
                     }
                     else
                     {
-                        writer.Files.Add(
+                        FilesAdding.Add(
                         new PPeX.Subfile(
                             new PPSource(file),
                             file.Name,
@@ -506,9 +513,218 @@ Sets a regex to use for compressing or extracting.");
                 }
             }
         }
-#endregion
+        #endregion
+
+#region Append
+        static void AppendArg(string[] args)
+        {
+            Regex regex = new Regex(".+");
+            Regex unencodedRegex = new Regex("a^");
+
+            int argcounter = 1;
+            int chunksize = ConvertFromReadable("16M");
+            int threads = 1;
+            string name = Path.GetFileNameWithoutExtension(args.Last());
+            string compression = "zstd";
+            string currentArg;
+
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+                Core.Settings.XggFrameSize = 0.060;
+
+            while ((currentArg = args[argcounter++]).StartsWith("-"))
+            {
+                currentArg = currentArg.ToLower();
+
+                if (currentArg == "-chunksize")
+                {
+                    chunksize = ConvertFromReadable(args[argcounter++]);
+                }
+                else if (currentArg == "-xgg-music")
+                {
+                    Core.Settings.XggMusicBitrate = ConvertFromReadable(args[argcounter++]);
+                }
+                else if (currentArg == "-xgg-voice")
+                {
+                    Core.Settings.XggVoiceBitrate = ConvertFromReadable(args[argcounter++]);
+                }
+                else if (currentArg == "-xx2-precision")
+                {
+                    Core.Settings.Xx2Precision = int.Parse(args[argcounter++]);
+                    Core.Settings.Xx2IsUsingQuality = false;
+                }
+                else if (currentArg == "-xx2-quality")
+                {
+                    Core.Settings.Xx2Quality = float.Parse(args[argcounter++]);
+                    Core.Settings.Xx2IsUsingQuality = false;
+                }
+                else if (currentArg == "-threads")
+                {
+                    threads = int.Parse(args[argcounter++]);
+                }
+                else if (currentArg == "-compression")
+                {
+                    compression = args[argcounter++].ToLower();
+                }
+                else if (currentArg == "-zstd-level")
+                {
+                    Core.Settings.ZstdCompressionLevel = int.Parse(args[argcounter++]);
+                }
+                else if (currentArg == "-name")
+                {
+                    name = args[argcounter++];
+                }
+                else if (currentArg == "-regex")
+                {
+                    regex = new Regex(args[argcounter++]);
+                }
+                else if (currentArg == "-no-encode")
+                {
+                    unencodedRegex = new Regex(args[argcounter++]);
+                }
+            }
+
+            compression = compression.ToLower();
+
+            string filename = args.Last();
+
+            ExtendedArchiveAppender appender = new ExtendedArchiveAppender(filename);
+
+            appender.ChunkSizeLimit = (ulong)chunksize;
+            appender.Threads = threads;
+
+            if (compression == "zstd")
+                appender.DefaultCompression = ArchiveChunkCompression.Zstandard;
+            else if (compression == "lz4")
+                appender.DefaultCompression = ArchiveChunkCompression.LZ4;
+            else if (compression == "uncompressed")
+                appender.DefaultCompression = ArchiveChunkCompression.Uncompressed;
 
 
+            foreach (string path in args.Skip(argcounter - 1).Take(args.Length - argcounter))
+            {
+                string parentpath = Path.GetDirectoryName(path);
+                string localpath = Path.GetFileName(path);
 
+                foreach (string filepath in Directory.EnumerateFiles(parentpath, localpath, SearchOption.TopDirectoryOnly))
+                {
+                    if (filepath.EndsWith(".pp"))
+                    {
+                        //.pp file
+                        Console.WriteLine("Importing " + Path.GetFileName(filepath));
+
+                        ImportPP(filepath, appender.FilesToAdd, regex, unencodedRegex);
+                    }
+                }
+
+                foreach (string dirpath in Directory.EnumerateDirectories(parentpath, localpath, SearchOption.TopDirectoryOnly))
+                {
+                    name = Path.GetFileNameWithoutExtension(dirpath) + ".pp";
+
+                    Console.WriteLine("Importing \'" + dirpath + "\" as \"" + name + "\"");
+
+                    int imported = 0;
+                    var files = Directory.EnumerateFiles(dirpath, "*.*", SearchOption.TopDirectoryOnly).ToArray();
+
+                    foreach (string file in files)
+                    {
+                        string fullName = name + "/" + Path.GetFileName(file);
+
+                        if (regex.IsMatch(fullName))
+                        {
+                            if (unencodedRegex.IsMatch(fullName))
+                            {
+                                appender.Files.Add(
+                                    new PPeX.Subfile(
+                                        new FileSource(file),
+                                        Path.GetFileName(file),
+                                        name,
+                                        ArchiveFileType.Raw));
+                            }
+                            else
+                            {
+                                appender.Files.Add(
+                                    new PPeX.Subfile(
+                                        new FileSource(file),
+                                        Path.GetFileName(file),
+                                        name));
+                            }
+
+
+                            imported++;
+                        }
+                    }
+
+                    Console.WriteLine("Imported " + imported + "/" + files.Length + " files");
+                }
+            }
+
+            int lastProgress = 0;
+
+            object progressLock = new object();
+            bool isUpdating = true;
+
+            Console.CursorVisible = false;
+
+            Progress<string> progressStatus = new Progress<string>(x =>
+            {
+                if (!isUpdating)
+                    return;
+
+                lock (progressLock)
+                {
+                    Console.SetCursorPosition(0, Console.CursorTop);
+
+                    for (int i = 0; i < Console.WindowWidth - 1; i++)
+                        Console.Write(" ");
+
+                    Console.SetCursorPosition(0, Console.CursorTop);
+
+                    Console.WriteLine(x.Trim());
+
+                    Console.Write("[" + lastProgress + "% complete]");
+                }
+            });
+
+            Progress<int> progressPercentage = new Progress<int>(x =>
+            {
+                if (!isUpdating)
+                    return;
+
+                lock (progressLock)
+                {
+                    lastProgress = x;
+
+                    Console.SetCursorPosition(0, Console.CursorTop);
+
+                    Console.Write("[" + lastProgress + "% complete]");
+                }
+            });
+            
+            appender.Write(progressStatus, progressPercentage);
+
+            //wait for progress to update
+            while (lastProgress != 100)
+                System.Threading.Thread.Sleep(50);
+
+            lock (progressPercentage)
+            {
+                isUpdating = false;
+                Console.CursorVisible = true;
+            }
+        }
+        #endregion
+
+        #region Defragment
+        static void DefragmentArgs(string[] args)
+        {
+            string filename = args[0];
+
+            ExtendedArchiveAppender appender = new ExtendedArchiveAppender(filename);
+
+            appender.Defragment();
+
+            Console.WriteLine($"\"{appender.Name}\" defragmented.");
+        }
+        #endregion
     }
 }
