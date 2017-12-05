@@ -13,14 +13,33 @@ namespace PPeX
 {
     public class ExtendedArchiveAppender : ExtendedArchiveWriter
     {
+        Thread[] threadObjects;
+        IProgress<string> threadProgress;
+
         public ExtendedArchive BaseArchive { get; protected set; }
 
         public List<ISubfile> FilesToAdd { get; protected set; }
 
         public List<ArchiveFileSource> FilesToRemove { get; protected set; }
 
-        Thread[] threadObjects;
-        IProgress<string> threadProgress;
+        public bool WastedSpaceExists
+        {
+            get
+            {
+                var orderedChunks = BaseArchive.Chunks.OrderBy(x => x.Offset);
+                ulong expectedOffset = orderedChunks.First().Offset;
+
+                foreach (var chunk in orderedChunks)
+                {
+                    if (chunk.Offset != expectedOffset)
+                        return true;
+
+                    expectedOffset += chunk.CompressedLength;
+                }
+
+                return false;
+            }
+        }
 
         public ExtendedArchiveAppender(ExtendedArchive archive) : base(archive.Title)
         {
@@ -37,6 +56,13 @@ namespace PPeX
         protected bool IsChunkUnedited(ExtendedArchiveChunk chunk)
         {
             return !FilesToRemove.Any(x => x.ChunkID == chunk.ID);
+        }
+
+        protected void ResetAppender()
+        {
+            BaseArchive = new ExtendedArchive(BaseArchive.Filename);
+            FilesToAdd.Clear();
+            FilesToRemove.Clear();
         }
 
         protected ChunkReceipt CopyChunk(ExtendedArchiveChunk chunk, out IList<ISubfile> AddedDupes)
@@ -123,21 +149,19 @@ namespace PPeX
 
                 fs.Position = (long)chunkOffset;
 
-                AllocateBlocking(FilesAdding, ProgressStatus, ProgressPercentage, QueuedChunks);
+                AllocateBlocking(FilesAdding, ProgressStatus, ProgressPercentage, QueuedChunks, BaseArchive.Chunks.Select(x => x.ID).Max() + 1);
 
                 WaitForThreadCompletion();
 
-                using (BinaryWriter fileTableWriter = new BinaryWriter(new MemoryStream()))
-                using (BinaryWriter chunkTableWriter = new BinaryWriter(new MemoryStream()))
-                {
-                    WriteTables(tableInfoOffset, chunkTableWriter, fileTableWriter, dataWriter);
-                }
+                WriteTables(tableInfoOffset, dataWriter);
 
                 Utility.GCCompress();
 
                 ProgressStatus.Report("Finished.\r\n");
                 ProgressPercentage.Report(100);
             }
+
+            ResetAppender();
         }
 
         public void Write()
@@ -149,6 +173,47 @@ namespace PPeX
         {
 #warning need to implement
             throw new NotImplementedException();
+        }
+
+        public void Defragment()
+        {
+            CompletedChunks = new List<ChunkReceipt>();
+
+            using (FileStream fs = new FileStream(BaseArchive.Filename, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+            using (BinaryReader dataReader = new BinaryReader(fs))
+            using (BinaryWriter dataWriter = new BinaryWriter(fs))
+            {
+                var orderedChunks = BaseArchive.Chunks.OrderBy(x => x.Offset);
+                ulong expectedOffset = orderedChunks.First().Offset;
+
+                foreach (var chunk in orderedChunks)
+                {
+                    ChunkReceipt reciept = CopyChunk(chunk, out IList<ISubfile> AddedDupes);
+
+                    if (chunk.Offset != expectedOffset)
+                    {
+                        fs.Position = (long)chunk.Offset;
+
+                        using (MemoryStream buffer = new MemoryStream(dataReader.ReadBytes((int)chunk.CompressedLength)))
+                        {
+                            fs.Position = (long)expectedOffset;
+                            buffer.CopyTo(fs);
+                        }
+
+                        reciept.FileOffset = expectedOffset;
+                    }
+
+                    CompletedChunks.Add(reciept);
+
+                    expectedOffset += chunk.CompressedLength;
+                }
+
+                WriteTables((long)BaseArchive.TableInfoOffset, dataWriter);
+                
+                fs.SetLength(fs.Position);
+            }
+
+            ResetAppender();
         }
     }
 }

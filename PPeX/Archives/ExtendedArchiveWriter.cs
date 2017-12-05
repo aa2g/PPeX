@@ -341,43 +341,51 @@ namespace PPeX
             return tableInfoOffset;
         }
 
-        protected void WriteTables(long tableInfoOffset, BinaryWriter chunkTableWriter, BinaryWriter fileTableWriter, BinaryWriter dataWriter)
+        protected void WriteTables(long tableInfoOffset, BinaryWriter dataWriter)
         {
             //Write all metadata
             Stream ArchiveStream = dataWriter.BaseStream;
-            
-            uint fileOffset = 0;
 
-            int chunkCout = CompletedChunks.Count;
-
-            foreach (var finishedChunk in CompletedChunks)
+            using (BinaryWriter chunkTableWriter = new BinaryWriter(new MemoryStream()))
+            using (BinaryWriter fileTableWriter = new BinaryWriter(new MemoryStream()))
             {
-                WriteChunkTable(chunkTableWriter, finishedChunk, fileOffset);
+                uint fileOffset = 0;
 
-                WriteFileTable(fileTableWriter, finishedChunk, ref fileOffset);
+                int chunkCout = CompletedChunks.Count;
+
+                foreach (var finishedChunk in CompletedChunks)
+                {
+                    WriteChunkTable(chunkTableWriter, finishedChunk, fileOffset);
+
+                    WriteFileTable(fileTableWriter, finishedChunk, ref fileOffset);
+                }
+
+                ulong chunkTableOffset = (ulong)ArchiveStream.Position;
+
+                dataWriter.Write((uint)CompletedChunks.Count);
+
+                Stream chunkTableStream = chunkTableWriter.BaseStream;
+                chunkTableStream.Position = 0;
+                chunkTableStream.CopyTo(ArchiveStream);
+
+
+                ulong fileTableOffset = (ulong)ArchiveStream.Position;
+
+                dataWriter.Write((uint)CompletedChunks.Sum(x => x.FileReceipts.Count));
+
+                Stream fileTableStream = fileTableWriter.BaseStream;
+                fileTableStream.Position = 0;
+                fileTableStream.CopyTo(ArchiveStream);
+
+
+                long oldpos = ArchiveStream.Position;
+
+                ArchiveStream.Position = tableInfoOffset;
+                dataWriter.Write(chunkTableOffset);
+                dataWriter.Write(fileTableOffset);
+
+                ArchiveStream.Position = oldpos;
             }
-
-            ulong chunkTableOffset = (ulong)ArchiveStream.Position;
-
-            dataWriter.Write((uint)CompletedChunks.Count);
-
-            Stream chunkTableStream = chunkTableWriter.BaseStream;
-            chunkTableStream.Position = 0;
-            chunkTableStream.CopyTo(ArchiveStream);
-
-
-            ulong fileTableOffset = (ulong)ArchiveStream.Position;
-
-            dataWriter.Write((uint)CompletedChunks.Sum(x => x.FileReceipts.Count));
-
-            Stream fileTableStream = fileTableWriter.BaseStream;
-            fileTableStream.Position = 0;
-            fileTableStream.CopyTo(ArchiveStream);
-
-
-            ArchiveStream.Position = tableInfoOffset;
-            dataWriter.Write(chunkTableOffset);
-            dataWriter.Write(fileTableOffset);
         }
 
         protected void InitializeThreads(int threads, Stream ArchiveStream, IProgress<string> ProgressStatus)
@@ -441,8 +449,6 @@ namespace PPeX
 
             InitializeThreads(Threads, ArchiveStream, ProgressStatus);
             
-            using (BinaryWriter fileTableWriter = new BinaryWriter(new MemoryStream()))
-            using (BinaryWriter chunkTableWriter = new BinaryWriter(new MemoryStream()))
             using (BinaryWriter dataWriter = new BinaryWriter(ArchiveStream, Encoding.ASCII, leaveOpen))
             {
                 //Write header
@@ -458,7 +464,7 @@ namespace PPeX
 
                 WaitForThreadCompletion();
                 
-                WriteTables(tableInfoOffset, chunkTableWriter, fileTableWriter, dataWriter);
+                WriteTables(tableInfoOffset, dataWriter);
             }
 
             //Collect garbage and compress memory
