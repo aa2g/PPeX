@@ -56,7 +56,11 @@ namespace PPeX.Encoders
 
                         int resampleRate = wav.WaveFormat.SampleRate < 24000 ? 24000 : 48000;
 
-                        using (var opus = OpusEncoder.Create(resampleRate, channels, FragLabs.Audio.Codecs.Opus.Application.Audio))
+                        var application = channels > 1 ?
+                            FragLabs.Audio.Codecs.Opus.Application.Audio:
+                            FragLabs.Audio.Codecs.Opus.Application.Voip;
+
+                        using (var opus = OpusEncoder.Create(resampleRate, channels, application))
                         {
                             opus.Bitrate = channels > 1 ? Core.Settings.XggMusicBitrate : Core.Settings.XggVoiceBitrate;
                             int packetsize = (int)(resampleRate * Core.Settings.XggFrameSize * 2 * channels);
