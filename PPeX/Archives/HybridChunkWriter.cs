@@ -93,7 +93,7 @@ namespace PPeX.Archives
             Stream dataStream;
 
             if (file.Source is ArchiveFileSource &&
-                file.Type == ArchiveFileType.XggAudio)
+                file.Type == ArchiveFileType.OpusAudio)
             {
                 //don't need to reencode
                 dataStream = (file.Source as ArchiveFileSource).GetRawStream();

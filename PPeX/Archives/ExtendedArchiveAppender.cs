@@ -13,9 +13,6 @@ namespace PPeX
 {
     public class ExtendedArchiveAppender : ExtendedArchiveWriter
     {
-        Thread[] threadObjects;
-        IProgress<string> threadProgress;
-
         public ExtendedArchive BaseArchive { get; protected set; }
 
         public List<ISubfile> FilesToAdd { get; protected set; }

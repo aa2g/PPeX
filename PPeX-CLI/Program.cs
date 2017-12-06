@@ -105,11 +105,11 @@ Sets the Zstandard level of compression. Can be between 1 and 22
 (-c, -a only)
 Sets chunk size of compressed data
 
--xgg-music 44k
+-opus-music 44k
 (-c, -a only)
 Sets music (2 channel audio) bitrate
 
--xgg-voice 32k
+-opus-voice 32k
 (-c, -a only)
 Sets voice (1 channel audio) bitrate
 
@@ -205,7 +205,7 @@ Sets a regex to use for compressing or extracting.");
             string currentArg;
 
             if (Environment.OSVersion.Platform == PlatformID.Unix)
-                Core.Settings.XggFrameSize = 0.060;
+                Core.Settings.OpusFrameSize = 0.060;
 
             while ((currentArg = args[argcounter++]).StartsWith("-"))
             {
@@ -215,13 +215,13 @@ Sets a regex to use for compressing or extracting.");
                 {
                     chunksize = ConvertFromReadable(args[argcounter++]);
                 }
-                else if (currentArg == "-xgg-music")
+                else if (currentArg == "-opus-music")
                 {
-                    Core.Settings.XggMusicBitrate = ConvertFromReadable(args[argcounter++]);
+                    Core.Settings.OpusMusicBitrate = ConvertFromReadable(args[argcounter++]);
                 }
-                else if (currentArg == "-xgg-voice")
+                else if (currentArg == "-opus-voice")
                 {
-                    Core.Settings.XggVoiceBitrate = ConvertFromReadable(args[argcounter++]);
+                    Core.Settings.OpusVoiceBitrate = ConvertFromReadable(args[argcounter++]);
                 }
                 else if (currentArg == "-xx2-precision")
                 {
@@ -499,9 +499,9 @@ Sets a regex to use for compressing or extracting.");
                     {
                         Console.WriteLine("Exporting " + fullname);
 
-                        if (decode == "full" && file.Type == ArchiveFileType.XggAudio)
+                        if (decode == "full" && file.Type == ArchiveFileType.OpusAudio)
                         {
-                            string fileName = file.Name.Replace(".xgg", ".wav");
+                            string fileName = file.Name.Replace(".opus", ".wav");
 
                             using (FileStream fs = new FileStream(outputDirectory.FullName + "\\" + arcname + "\\" + fileName, FileMode.Create))
                             using (Stream stream = file.GetRawStream())
@@ -509,7 +509,7 @@ Sets a regex to use for compressing or extracting.");
                                 stream.CopyTo(fs);
                             }
                         }
-                        else if (file.Type != ArchiveFileType.XggAudio)
+                        else if (file.Type != ArchiveFileType.OpusAudio)
                         {
                             string fileName;
 
@@ -550,7 +550,7 @@ Sets a regex to use for compressing or extracting.");
             string currentArg;
 
             if (Environment.OSVersion.Platform == PlatformID.Unix)
-                Core.Settings.XggFrameSize = 0.060;
+                Core.Settings.OpusFrameSize = 0.060;
 
             while ((currentArg = args[argcounter++]).StartsWith("-"))
             {
@@ -560,13 +560,13 @@ Sets a regex to use for compressing or extracting.");
                 {
                     chunksize = ConvertFromReadable(args[argcounter++]);
                 }
-                else if (currentArg == "-xgg-music")
+                else if (currentArg == "-opus-music")
                 {
-                    Core.Settings.XggMusicBitrate = ConvertFromReadable(args[argcounter++]);
+                    Core.Settings.OpusMusicBitrate = ConvertFromReadable(args[argcounter++]);
                 }
-                else if (currentArg == "-xgg-voice")
+                else if (currentArg == "-opus-voice")
                 {
-                    Core.Settings.XggVoiceBitrate = ConvertFromReadable(args[argcounter++]);
+                    Core.Settings.OpusVoiceBitrate = ConvertFromReadable(args[argcounter++]);
                 }
                 else if (currentArg == "-xx2-precision")
                 {

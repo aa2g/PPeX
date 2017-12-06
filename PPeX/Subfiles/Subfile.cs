@@ -64,7 +64,7 @@ namespace PPeX
         public Subfile(IDataSource source, string name, string archiveName) : this(source, name, archiveName, ArchiveFileType.Raw)
         {
             if (name.EndsWith(".wav"))
-                Type = ArchiveFileType.XggAudio;
+                Type = ArchiveFileType.OpusAudio;
             else if (name.EndsWith(".xx"))
                 Type = ArchiveFileType.Xx3Mesh;
             else

@@ -4,6 +4,7 @@ using System.Text;
 using NAudio.Wave;
 using System.IO;
 using PPeX.External.libresample;
+using PPeX.External.Ogg;
 
 namespace FragLabs.Audio.Codecs
 {
@@ -11,39 +12,23 @@ namespace FragLabs.Audio.Codecs
     {
         protected List<float> floatList = new List<float>();
 
-        public OpusSampleProvider(Stream stream, uint length, int channels)
+        public OpusSampleProvider(OggReader reader)
         {
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-            {
-                WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(48000, channels);
-            }
-            else
-            {
-                WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(44100, channels);
-            }
+            WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(44100, reader.Channels);
 
             MemoryStream temp = new MemoryStream();
-
+            
             using (BinaryWriter writer = new BinaryWriter(temp, Encoding.ASCII, true))
-            using (OpusDecoder decoder = OpusDecoder.Create(48000, channels))
-            using (BinaryReader reader = new BinaryReader(stream))
-            using (LibResampler resampler = new LibResampler(48000, 44100, channels))
+            using (OpusDecoder decoder = OpusDecoder.Create(48000, reader.Channels))
+            using (LibResampler resampler = new LibResampler(48000, 44100, reader.Channels))
             {
-                for (int i = 0; i < length; i++)
+                while (!reader.IsStreamFinished)
                 {
-                    int framesize = (int)reader.ReadUInt32();
-                    byte[] frame = reader.ReadBytes(framesize);
+                    byte[] frame = reader.ReadPacket();
 
-                    int cchannels = decoder.GetChannels(frame);
-                    int frames = decoder.GetFrames(frame);
-                    int samples = decoder.GetSamples(frame);
+                    float[] output = decoder.DecodeFloat(frame, frame.Length);
 
-                    float[] output = decoder.DecodeFloat(frame, framesize);
-
-                    if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                    {
-                        output = resampler.Resample(output, i == length - 1, out int sampleBufferUsed);
-                    }
+                    output = resampler.Resample(output, reader.IsStreamFinished, out int sampleBufferUsed);
 
                     floatList.AddRange(output);
                 }

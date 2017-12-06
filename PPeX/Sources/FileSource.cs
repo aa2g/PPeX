@@ -33,7 +33,7 @@ namespace PPeX
                     //otherwise generate new cached hash
                     cached = CachedMd5.FromFile(Filename);
 
-                    Core.Settings.Md5Cache.Add(Filename, cached);
+                    Core.Settings.Md5Cache[Filename] = cached;
 
                     return cached.Hash;
                 }

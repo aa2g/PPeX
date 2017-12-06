@@ -49,8 +49,8 @@ namespace PPeXUI
             convertxggTowavToolStripMenuItem.Enabled = false;
             convertxggTowavToolStripMenuItem.Visible = false;
 #endif
-            numVoiceBitrate.Value = Core.Settings.XggVoiceBitrate / 1000;
-            numMusicBitrate.Value = Core.Settings.XggMusicBitrate / 1000;
+            numVoiceBitrate.Value = Core.Settings.OpusVoiceBitrate / 1000;
+            numMusicBitrate.Value = Core.Settings.OpusMusicBitrate / 1000;
             numXx2Precision.Value = Core.Settings.Xx2Precision;
 
             //aiming for 1/2 processor count, we get diminishing returns on higher thread counts
@@ -488,8 +488,8 @@ namespace PPeXUI
             writer.Threads = (int)numThreads.Value;
 
             Core.Settings.Xx2Precision = (int)numXx2Precision.Value;
-            Core.Settings.XggMusicBitrate = (int)(numMusicBitrate.Value * 1000);
-            Core.Settings.XggVoiceBitrate = (int)(numVoiceBitrate.Value * 1000);
+            Core.Settings.OpusMusicBitrate = (int)(numMusicBitrate.Value * 1000);
+            Core.Settings.OpusVoiceBitrate = (int)(numVoiceBitrate.Value * 1000);
 
             IProgress<string> progressStatus = new Progress<string>(x =>
             {
@@ -866,7 +866,7 @@ namespace PPeXUI
                 foreach (string file in paths)
                 {
                     using (FileSource f = new FileSource(file))
-                    using (PPeX.Encoders.XggDecoder decoder = new PPeX.Encoders.XggDecoder(f.GetStream()))
+                    using (PPeX.Encoders.OpusDecoder decoder = new PPeX.Encoders.OpusDecoder(f.GetStream()))
                     using (FileStream fs = new FileStream(file.Replace(".xgg", ".wav"), FileMode.Create))
                         decoder.Decode().CopyTo(fs);
                 }
@@ -1104,7 +1104,7 @@ namespace PPeXUI
             {
                 _name = value;
 
-                InternalName = _name.Replace(".wav", ".xgg");
+                InternalName = _name.Replace(".wav", ".opus");
             }
         }
 
@@ -1114,7 +1114,7 @@ namespace PPeXUI
         {
             get
             {
-                if (_name.EndsWith(".wav") || _name.EndsWith(".xgg"))
+                if (_name.EndsWith(".wav") || _name.EndsWith(".opus"))
                     return "Audio";
                 else if (_name.EndsWith(".bmp"))
                     return "Image";
