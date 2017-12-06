@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using NAudio.Wave;
+using PPeX.External.Wave;
 using FragLabs.Audio.Codecs;
 using PPeX.External.libresample;
 using System.Linq;
@@ -46,12 +46,12 @@ namespace PPeX.Encoders
             try
             {
                 using (var data = Source.GetStream())
-                using (var wav = new WaveFileReader(data))
+                using (var wav = new WaveReader(data))
                 {
 #warning need to add preserve stereo option
-                    byte channels = (byte)wav.WaveFormat.Channels;
+                    byte channels = (byte)wav.Channels;
 
-                    int resampleRate = wav.WaveFormat.SampleRate < 24000 ? 24000 : 48000;
+                    int resampleRate = wav.SampleRate < 24000 ? 24000 : 48000;
 
                     var application = channels > 1 ?
                         FragLabs.Audio.Codecs.Opus.Application.Audio :
@@ -69,12 +69,10 @@ namespace PPeX.Encoders
                         int rawSampleCount = (int)Math.Round(resampleRate * Core.Settings.OpusFrameSize);
                         int samplesToRead = rawSampleCount * channels;
 
-                        using (var resampler = new LibResampler(wav.WaveFormat.SampleRate, resampleRate, channels))
+                        using (var resampler = new LibResampler(wav.SampleRate, resampleRate, channels))
                         {
-                            var sampleProvider = wav.ToSampleProvider();
-
                             float[] inputSampleBuffer = new float[samplesToRead];
-                            int result = sampleProvider.Read(inputSampleBuffer, 0, samplesToRead);
+                            int result = wav.Read(inputSampleBuffer, 0, samplesToRead);
 
                             while (result > 0)
                             {
@@ -82,7 +80,7 @@ namespace PPeX.Encoders
 
                                 bufferedSamples.AddRange(outputBuffer);
 
-                                result = sampleProvider.Read(inputSampleBuffer, 0, samplesToRead);
+                                result = wav.Read(inputSampleBuffer, 0, samplesToRead);
                             }
                         }
 
