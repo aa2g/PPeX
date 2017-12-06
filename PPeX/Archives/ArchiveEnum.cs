@@ -17,9 +17,9 @@ namespace PPeX
         Raw = 0,
 
         /// <summary>
-        /// The file is audio data, encoded via <see cref="Encoders.XggEncoder"/>.
+        /// The file is audio data, encoded via <see cref="Encoders.OpusEncoder"/>.
         /// </summary>
-        XggAudio = 1,
+        OpusAudio = 1,
 
         /// <summary>
         /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx2Encoder"/>.

@@ -63,8 +63,8 @@ namespace PPeX.Encoders
         {
             switch (encoding)
             {
-                case ArchiveFileType.XggAudio:
-                    return new XggEncoder(source, true);
+                case ArchiveFileType.OpusAudio:
+                    return new OpusEncoder(source, true);
                 case ArchiveFileType.Xx2Mesh:
                     return new Xx2Encoder(source);
                 case ArchiveFileType.Xx3Mesh:
@@ -80,8 +80,8 @@ namespace PPeX.Encoders
         {
             switch (encoding)
             {
-                case ArchiveFileType.XggAudio:
-                    return new XggDecoder(stream);
+                case ArchiveFileType.OpusAudio:
+                    return new OpusDecoder(stream);
                 case ArchiveFileType.Xx2Mesh:
                     return new Xx2Decoder(stream);
                 case ArchiveFileType.Xx3Mesh:
@@ -97,8 +97,8 @@ namespace PPeX.Encoders
         {
             switch (encoding)
             {
-                case ArchiveFileType.XggAudio:
-                    return new XggEncoder(source, true);
+                case ArchiveFileType.OpusAudio:
+                    return new OpusEncoder(source, true);
                 case ArchiveFileType.Xx2Mesh:
                     return new Xx2Encoder(source);
                 case ArchiveFileType.Raw:
@@ -112,8 +112,8 @@ namespace PPeX.Encoders
         {
             switch (encoding)
             {
-                case ArchiveFileType.XggAudio:
-                    return new XggDecoder(stream);
+                case ArchiveFileType.OpusAudio:
+                    return new OpusDecoder(stream);
                 case ArchiveFileType.Xx2Mesh:
                     return new Xx2Decoder(stream);
                 case ArchiveFileType.Raw:

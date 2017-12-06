@@ -65,7 +65,10 @@
   <ItemGroup>
     <Compile Include="Archives\ExtendedArchiveAppender.cs" />
     <Compile Include="Archives\HybridChunkWriter.cs" />
-    <Compile Include="Encoders\Xgg\XggDecoder.cs" />
+    <Compile Include="External\Ogg\OggPage.cs" />
+    <Compile Include="External\Ogg\OggReader.cs" />
+    <Compile Include="External\Ogg\OggWrapper.cs" />
+    <Compile Include="Encoders\Opus\OpusDecoder.cs" />
     <Compile Include="External\CRC32\CRC32.cs" />
     <Compile Include="External\libresample\API.cs" />
     <Compile Include="External\libresample\LibResampler.cs" />
@@ -115,7 +118,7 @@
     <Compile Include="Core.cs" />
     <Compile Include="Encoders\BaseEncoder.cs" />
     <Compile Include="Encoders\PassthroughEncoder.cs" />
-    <Compile Include="Encoders\Xgg\XggEncoder.cs" />
+    <Compile Include="Encoders\Opus\OpusEncoder.cs" />
     <Compile Include="Encoders\Xx2Encoder.cs" />
     <Compile Include="Encoders\Xx3Encoder.cs" />
     <Compile Include="External\Opus\API.cs" />

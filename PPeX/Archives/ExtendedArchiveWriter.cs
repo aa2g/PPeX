@@ -228,7 +228,7 @@ namespace PPeX
                     continue;
                 }
 
-                if (file.Type == ArchiveFileType.XggAudio)
+                if (file.Type == ArchiveFileType.OpusAudio)
                 {
                     //non-compressable data, assign it and any duplicates to a new chunk
 

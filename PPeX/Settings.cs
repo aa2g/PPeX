@@ -15,17 +15,17 @@ namespace PPeX
         /// <summary>
         /// The frame size (in seconds) that the Opus encoder should use.
         /// </summary>
-        public double XggFrameSize = 0.120;
+        public double OpusFrameSize = 0.120;
 
         /// <summary>
         /// The bitrate that the Opus encoder should use.
         /// </summary>
-        public int XggMusicBitrate = 44000;
+        public int OpusMusicBitrate = 44000;
 
         /// <summary>
         /// The bitrate that the Opus encoder should use.
         /// </summary>
-        public int XggVoiceBitrate = 32000;
+        public int OpusVoiceBitrate = 32000;
 
         /// <summary>
         /// The bit precision that the mesh encoder should use. Set to 0 for lossless mode.
