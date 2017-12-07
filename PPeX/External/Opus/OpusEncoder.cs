@@ -175,10 +175,29 @@ namespace FragLabs.Audio.Codecs
             }
         }
 
-/// <summary>
-/// Gets the coding mode of the encoder.
-/// </summary>
-public Application Application { get; private set; }
+        /// <summary>
+        /// Gets the number of samples that need to be intially skipped.
+        /// </summary>
+        public int LookaheadSamples
+        {
+            get
+            {
+                if (disposed)
+                    throw new ObjectDisposedException("OpusEncoder");
+
+                var ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_GET_LOOKAHEAD_REQUEST, out int lookahead);
+
+                if (ret < 0)
+                    throw new Exception("Encoder error - " + ((Errors)ret).ToString());
+
+                return lookahead;
+            }
+        }
+
+        /// <summary>
+        /// Gets the coding mode of the encoder.
+        /// </summary>
+        public Application Application { get; private set; }
 
         /// <summary>
         /// Gets or sets the size of memory allocated for reading encoded data.
