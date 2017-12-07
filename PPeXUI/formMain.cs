@@ -327,7 +327,7 @@ namespace PPeXUI
 
                             using (FileStream fs = new FileStream(filename, FileMode.CreateNew))
                             {
-                                item.Source.GetStream().CopyTo(fs);
+                                (item.Source as ArchiveFileSource).GetRawStream().CopyTo(fs);
                             }
 
                             progress.Report(new Tuple<string, int>(
