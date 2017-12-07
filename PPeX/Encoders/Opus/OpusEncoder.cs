@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using PPeX.External.Wave;
 using FragLabs.Audio.Codecs;
 using PPeX.External.libresample;
 using System.Linq;
 using PPeX.External.Ogg;
+using PPeX.External.Wave;
 
 namespace PPeX.Encoders
 {
@@ -56,48 +56,45 @@ namespace PPeX.Encoders
                     var application = channels > 1 ?
                         FragLabs.Audio.Codecs.Opus.Application.Audio :
                         FragLabs.Audio.Codecs.Opus.Application.Voip;
-
-                    using (var wrapper = new OggWrapper(mem, channels, true))
+                    
                     using (var opus = FragLabs.Audio.Codecs.OpusEncoder.Create(resampleRate, channels, application))
+                    using (var wrapper = new OggWrapper(mem, channels, (ushort)opus.LookaheadSamples, true))
+                    using (var resampler = new LibResampler(wav.SampleRate, resampleRate, channels))
                     {
                         opus.Bitrate = channels > 1 ? Core.Settings.OpusMusicBitrate : Core.Settings.OpusVoiceBitrate;
                         int packetsize = (int)(resampleRate * Core.Settings.OpusFrameSize * 2 * channels);
-                            
-                        uint count = 0;
-
-                        List<float> bufferedSamples = new List<float>();
+                        
                         int rawSampleCount = (int)Math.Round(resampleRate * Core.Settings.OpusFrameSize);
+                        int inputSampleCount = (int)Math.Round(wav.SampleRate * Core.Settings.OpusFrameSize);
                         int samplesToRead = rawSampleCount * channels;
+                        int inputSamplesToRead = inputSampleCount * channels;
+                        
+                        float[] inputSampleBuffer = new float[inputSamplesToRead];
+                        int result = wav.Read(inputSampleBuffer, 0, inputSamplesToRead);
 
-                        using (var resampler = new LibResampler(wav.SampleRate, resampleRate, channels))
+                        while (result > 0)
                         {
-                            float[] inputSampleBuffer = new float[samplesToRead];
-                            int result = wav.Read(inputSampleBuffer, 0, samplesToRead);
-
-                            while (result > 0)
+                            if (result < inputSamplesToRead)
                             {
-                                float[] outputBuffer = resampler.Resample(inputSampleBuffer, result < samplesToRead, out int sampleBufferUsed);
+                                int newSize = result;
 
-                                bufferedSamples.AddRange(outputBuffer);
+                                if (channels == 2 && result % 2 == 1)
+                                    newSize++;
 
-                                result = wav.Read(inputSampleBuffer, 0, samplesToRead);
+                                Array.Resize(ref inputSampleBuffer, newSize);
                             }
-                        }
 
-                        while (bufferedSamples.Count > 0)
-                        {
-                            count++;
-
-                            int trueSamplesToRead = Math.Min(bufferedSamples.Count, samplesToRead);
-
-                            float[] outputBuffer = bufferedSamples.GetRange(0, trueSamplesToRead).ToArray();
-                            bufferedSamples.RemoveRange(0, trueSamplesToRead);
+                            float[] outputBuffer = resampler.Resample(inputSampleBuffer, result < inputSamplesToRead, out int sampleBufferUsed);
 
                             Array.Resize(ref outputBuffer, samplesToRead);
 
                             byte[] output = opus.Encode(outputBuffer, rawSampleCount, out int outlen);
 
-                            wrapper.WritePacket(output.Take(outlen).ToArray(), (int)(48000 * Core.Settings.OpusFrameSize), bufferedSamples.Count == 0);
+                            wrapper.WritePacket(output.Take(outlen).ToArray(), (int)(48000 * Core.Settings.OpusFrameSize), result < inputSamplesToRead);
+                                
+                            result = wav.Read(inputSampleBuffer, 0, inputSamplesToRead);
+
+                            Array.Clear(inputSampleBuffer, result, inputSampleBuffer.Length - result);
                         }
                     }
                 }

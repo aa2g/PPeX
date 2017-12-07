@@ -1,10 +1,11 @@
 ﻿using PPeX.Common;
 using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace PPeX.External.Wave
 {
@@ -15,7 +16,9 @@ namespace PPeX.External.Wave
 
         public int Channels { get; protected set; }
         public int SampleRate { get; protected set; }
-        public int BitsPerSample { get; protected set; }
+
+        protected int bitsPerSample;
+        public int BitsPerSample => bitsPerSample;
 
         public WaveReader(Stream stream)
         {
@@ -32,7 +35,7 @@ namespace PPeX.External.Wave
             if (reader.ReadString(4) != "fmt ")
                 throw new InvalidDataException("Not a valid .wav file.");
 
-            reader.ReadUInt32(); //file length
+            reader.ReadUInt32(); //chunk length
 
             ushort audioFormat = reader.ReadUInt16();
 
@@ -48,88 +51,114 @@ namespace PPeX.External.Wave
             reader.ReadInt32(); //byte rate
             reader.ReadInt16(); //block align
 
-            BitsPerSample = reader.ReadInt16();
-            
-            if (reader.ReadString(4) != "data")
-                throw new InvalidDataException("Not a valid .wav file.");
+            bitsPerSample = reader.ReadInt16();
+
+            string format = "";
+            while ((format = reader.ReadString(4)) != "data")
+                stream.Seek(reader.ReadUInt32(), SeekOrigin.Current);
 
             remainingData = reader.ReadUInt32();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte ReadByte()
         {
+            if (remainingData <= 0)
+                throw new EndOfStreamException();
+
+            remainingData--;
+
             return reader.ReadByte();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public short ReadInt16()
+        {
+            if (remainingData <= 1)
+                throw new EndOfStreamException();
+
+            remainingData -= 2;
+
+            return reader.ReadInt16();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int ReadSampleAsInt()
         {
-            if (BitsPerSample == 8)
+            if (bitsPerSample == 8)
             {
                 //unsigned 8 bit LE
+
                 return ReadByte();
             }
-            else if (BitsPerSample == 16)
+            else if (bitsPerSample == 16)
             {
                 //signed 16 bit LE
 
-                return reader.ReadInt16();
+                return ReadInt16();
             }
-            else if (BitsPerSample == 24)
+            else if (bitsPerSample == 24)
             {
                 //signed 24 bit LE
 
-                int sample = ReadByte();
-                sample |= ReadByte() << 8;
+                byte sample1 = ReadByte();
+                byte sample2 = ReadByte();
+                byte sample3 = ReadByte();
 
-                byte MSB = ReadByte();
+                //BitArray bitArray = new BitArray(new[] { sample1, sample2, sample3 });
+                //needs reversed???
 
-                sample |= (MSB & 0x7F) << 16;
+                BitArray bitArray = new BitArray(new[] { sample3, sample2, sample1 });
 
-                if ((MSB & 0x80) != 0)
-                    sample *= -1;
+                bitArray[0] = bitArray[8];
+                bitArray[8] = false;
 
-                return sample;
+                int[] value = new int[1];
+                bitArray.CopyTo(value, 0);
+
+                return value[0];
             }
 
             throw new NotSupportedException("Bits per sample value not supported.");
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float ReadSampleAsFloat()
         {
-            int sample = ReadSampleAsInt();
-
-            if (BitsPerSample == 8)
+            if (bitsPerSample == 8)
             {
                 //unsigned 8 bit LE
-                return (float)((sample - 128) / 128.0);
+                return (float)((ReadByte() - 128) / 128.0);
             }
-            else if (BitsPerSample == 16)
+            else if (bitsPerSample == 16)
             {
                 //signed 16 bit LE
 
-                return sample / (float)short.MaxValue;
+                return ReadInt16() / (float)short.MaxValue;
             }
-            else if (BitsPerSample == 24)
+            else if (bitsPerSample == 24)
             {
                 //signed 24 bit LE
                 
-                return sample / (float)0x7FFFFF;
+                return ReadSampleAsInt() / (float)0x7FFFFF;
             }
 
             throw new NotSupportedException("Bits per sample value not supported.");
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Read(byte[] buffer, int offset, int count)
         {
             return reader.BaseStream.Read(buffer, offset, count);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Read(float[] buffer, int offset, int count)
         {
             int read = 0;
             for (int i = 0; i < count; i++)
             {
-                if (reader.BaseStream.Position == reader.BaseStream.Length)
+                if (remainingData == 0)
                     return read;
 
                 read++;
