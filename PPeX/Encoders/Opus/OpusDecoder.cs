@@ -46,11 +46,26 @@ namespace PPeX.Encoders
             using (var decoder = FragLabs.Audio.Codecs.OpusDecoder.Create(48000, reader.Channels))
             using (LibResampler resampler = new LibResampler(48000, resampleRate, reader.Channels))
             {
+                bool isFirst = true;
+
                 while (!reader.IsStreamFinished)
                 {
                     byte[] frame = reader.ReadPacket();
 
                     float[] outputSamples = decoder.DecodeFloat(frame, frame.Length);
+
+                    if (isFirst)
+                    {
+                        //remove preskip
+                        int preskip = reader.Preskip;
+
+                        float[] newSamples = new float[outputSamples.Length - preskip];
+                        Buffer.BlockCopy(frame, preskip, newSamples, 0, outputSamples.Length - preskip);
+
+                        outputSamples = newSamples;
+
+                        isFirst = false;
+                    }
 
                     outputSamples = resampler.Resample(outputSamples, reader.IsStreamFinished, out int sampleBufferUsed);
 

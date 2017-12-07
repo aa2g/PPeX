@@ -13,6 +13,8 @@ namespace PPeX.External.Ogg
 
         public int Channels { get; protected set; }
 
+        public int Preskip { get; protected set; }
+
         public bool IsStreamFinished => reader.BaseStream.Position == reader.BaseStream.Length;
 
         public OggReader(Stream oggStream)
@@ -24,6 +26,8 @@ namespace PPeX.External.Ogg
 
 #warning Need to do this programatically
             Channels = headerPage.Data[9];
+
+            Preskip = BitConverter.ToUInt16(headerPage.Data, 10);
         }
 
         public byte[] ReadPacket()

@@ -13,11 +13,11 @@ namespace PPeX.External.Ogg
         protected int pageIndex = 2;
         protected ulong granulePosition = 0;
 
-        public OggWrapper(Stream outputStream, int channels, bool keepOpen = false)
+        public OggWrapper(Stream outputStream, int channels, ushort preskip = 0, bool keepOpen = false)
         {
             dataWriter = new BinaryWriter(outputStream, Encoding.ASCII, keepOpen);
 
-            WritePage(GetOpusHeaderPage(channels));
+            WritePage(GetOpusHeaderPage(channels, preskip));
 
             WritePage(GetOpusCommentPage());
         }
@@ -67,7 +67,7 @@ namespace PPeX.External.Ogg
             }
         }
 
-        protected static OggPage GetOpusHeaderPage(int channels)
+        protected static OggPage GetOpusHeaderPage(int channels, ushort preskip)
         {
             const string OpusMagic = "OpusHead";
             const byte OpusVersion = 1;
@@ -81,7 +81,7 @@ namespace PPeX.External.Ogg
                 writer.Write((byte)channels);
 
                 //pre-skip
-                writer.Write((ushort)0);
+                writer.Write(preskip);
 
                 //input sample rate
                 writer.Write((uint)48000);
