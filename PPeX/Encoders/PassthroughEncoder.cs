@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace PPeX.Encoders
 {
-    public class PassthroughEncoder : IEncoder, IDecoder
+    public class PassthroughEncoder : IEncoder
     {
         public Stream BaseStream { get; set; }
 
@@ -20,14 +20,19 @@ namespace PPeX.Encoders
 
         public ArchiveFileType Encoding => ArchiveFileType.Raw;
 
-        public Stream Decode()
-        {
-            return BaseStream;
-        }
+        public ArchiveDataType DataType => ArchiveDataType.Raw;
 
         public Stream Encode()
         {
-            return BaseStream;
+            byte[] buffer = new byte[BaseStream.Length];
+            BaseStream.Read(buffer, 0, (int)BaseStream.Length);
+
+            return new MemoryStream(buffer);
+        }
+
+        public Stream Decode()
+        {
+            return Encode();
         }
 
         public string NameTransform(string original)

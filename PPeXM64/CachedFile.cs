@@ -77,7 +77,7 @@ namespace PPeXM64
             {
                 if (Type == ArchiveFileType.Xx3Mesh)
                 {
-                    IDecoder decoder = new Xx3Decoder(decompressor.Decompress(), Cache.UniversalTexBank);
+                    IEncoder decoder = new Xx3Encoder(decompressor.Decompress(), Cache.UniversalTexBank);
                     
                     Stream decoded = decoder.Decode();
                     decoded.Position = 0;
@@ -86,7 +86,7 @@ namespace PPeXM64
                 }
                 else
                 {
-                    IDecoder decoder = EncoderFactory.GetDecoder(decompressor.Decompress(), Source.BaseArchive, Type);
+                    IEncoder decoder = EncoderFactory.GetEncoder(decompressor.Decompress(), Source.BaseArchive, Type);
 
                     Stream decoded = decoder.Decode();
                     decoded.Position = 0;

@@ -73,7 +73,7 @@ namespace PPeXM64
                     {
                         TotalFiles.Add(file);
 
-                        string name = PPeX.Encoders.EncoderFactory.GetDecoder(System.IO.Stream.Null, archive, file.Type).NameTransform(file.Name);
+                        string name = PPeX.Encoders.EncoderFactory.GetEncoder(System.IO.Stream.Null, archive, file.Type).NameTransform(file.Name);
 
                         LoadedFiles[new FileEntry(file.ArchiveName, name)] = file;
                     }

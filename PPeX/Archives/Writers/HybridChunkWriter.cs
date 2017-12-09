@@ -1,4 +1,5 @@
-﻿using PPeX.Compressors;
+﻿using PPeX.Archives.Writers;
+using PPeX.Compressors;
 using PPeX.Encoders;
 using PPeX.External.CRC32;
 using System;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace PPeX.Archives
 {
-    internal class HybridChunkWriter : IDisposable
+    internal class HybridChunkWriter : IThreadWork
     {
         public uint ID { get; protected set; }
 
@@ -20,9 +21,9 @@ namespace PPeX.Archives
 
         ulong UncompressedSize { get; set; }
 
-        protected IArchiveWriter writer;
+        protected IArchiveContainer writer;
 
-        public HybridChunkWriter(uint id, ArchiveChunkCompression compression, ChunkType type, IArchiveWriter writer)
+        public HybridChunkWriter(uint id, ArchiveChunkCompression compression, ChunkType type, IArchiveContainer writer)
         {
             ID = id;
             Compression = compression;
@@ -57,7 +58,7 @@ namespace PPeX.Archives
                 return;
             }
 
-            using (IEncoder encoder = EncoderFactory.GetEncoder(file.Source, writer, file.Type))
+            using (IEncoder encoder = EncoderFactory.GetEncoder(file.Source.GetStream(), writer, file.Type))
             using (var encoded = encoder.Encode())
             {
                 FileReceipt receipt = new FileReceipt
@@ -89,14 +90,14 @@ namespace PPeX.Archives
                 return true;
             }
 
-            IEncoder encoder = EncoderFactory.GetEncoder(file.Source, writer, file.Type);
+            IEncoder encoder = EncoderFactory.GetEncoder(file.Source.GetStream(), writer, file.Type);
             Stream dataStream;
 
             if (file.Source is ArchiveFileSource &&
                 file.Type == ArchiveFileType.OpusAudio)
             {
                 //don't need to reencode
-                dataStream = (file.Source as ArchiveFileSource).GetRawStream();
+                dataStream = (file.Source as ArchiveFileSource).GetStream();
             }
             else
             {
@@ -106,7 +107,7 @@ namespace PPeX.Archives
             using (dataStream)
             {
                 if (UncompressedStream.Length == 0 ||
-                    (ulong)(encoder.EncodedLength + UncompressedStream.Length) <= maxChunkSize)
+                    (ulong)(dataStream.Length + UncompressedStream.Length) <= maxChunkSize)
                 {
                     FileReceipt receipt = new FileReceipt
                     {
@@ -163,6 +164,14 @@ namespace PPeX.Archives
 
             if (CompressedStream != null)
                 CompressedStream.Dispose();
+        }
+
+        public Stream GetData()
+        {
+            if (!IsReady)
+                Compress();
+
+            return CompressedStream;
         }
     }
 

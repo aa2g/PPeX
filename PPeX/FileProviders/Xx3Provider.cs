@@ -3,12 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using PPeX.Common;
 using PPeX.Xx2;
 
 namespace PPeX
 {
-    public class Xx3Provider
+    public class Xx3Provider : TextureBank
     {
+        public override byte[] this[string name]
+        {
+            get => TextureFiles[name].GetRawStream().ToByteArray();
+            set {  }
+        }
+
         protected Dictionary<string, ISubfile> textureSubfiles = new Dictionary<string, ISubfile>();
 
         public IReadOnlyDictionary<string, ISubfile> TextureFiles => textureSubfiles;
@@ -23,14 +30,9 @@ namespace PPeX
             {
                 textureSubfiles.Add(textureFile.Name, textureFile);
             }
-
             
             foreach (var xx3File in xxChunks.SelectMany(x => x.Files).Where(x => x.Name.EndsWith(".xx3")))
             {
-                //Xx3Subfile file = new Xx3Subfile(xx3File.Source as ArchiveFileSource, this);
-
-                //XX3Subfiles.Add(file);
-
                 XX3Subfiles.Add(xx3File);
             }
         }

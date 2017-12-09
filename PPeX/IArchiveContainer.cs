@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace PPeX
 {
-    public interface IArchiveWriter
+    public interface IArchiveContainer
     {
         TextureBank TextureBank { get; }
     }

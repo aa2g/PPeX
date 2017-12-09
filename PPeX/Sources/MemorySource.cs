@@ -69,7 +69,7 @@ namespace PPeX
         public Stream GetStream()
         {
             using (MemoryStream buffer = new MemoryStream(DataStream.GetBuffer(), false))
-            using (IDecoder decoder = EncoderFactory.GetGenericDecoder(buffer, Encoding))
+            using (IEncoder decoder = EncoderFactory.GetGenericEncoder(buffer, Encoding))
             using (Stream output = decoder.Decode())
             {
                 MemoryStream temp = new MemoryStream();

@@ -20,7 +20,7 @@ namespace PPeX
 
             _size = source.Size;
 
-            Xx3File file = Xx3Reader.Read(BaseSource.GetRawStream());
+            Xx3File file = Xx3Reader.Read(BaseSource.GetStream());
             
             foreach (var texRef in file.TextureRefs)
             {
@@ -42,7 +42,7 @@ namespace PPeX
 
         public Stream GetRawStream()
         {
-            Xx3File file = Xx3Reader.Read(BaseSource.GetRawStream());
+            Xx3File file = Xx3Reader.Read(BaseSource.GetStream());
 
             TextureBank Bank = new TextureBank();
 

@@ -18,5 +18,13 @@ namespace PPeX.Common
         {
             return Encoding.ASCII.GetString(reader.ReadBytes(length));
         }
+
+        public static byte[] ToByteArray(this Stream str)
+        {
+            str.Position = 0;
+            byte[] buffer = new byte[str.Length];
+            str.Read(buffer, 0, (int)str.Length);
+            return buffer;
+        }
     }
 }
