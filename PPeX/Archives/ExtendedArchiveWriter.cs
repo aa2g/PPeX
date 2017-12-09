@@ -233,9 +233,9 @@ namespace PPeX
                 {
                     //non-compressable data, assign it and any duplicates to a new chunk
 
-                    HybridChunkWriter tempChunk = new HybridChunkWriter(ID++, ArchiveChunkCompression.Uncompressed, ChunkType.Generic, this);
+                    List<ISubfile> opusFiles = new List<ISubfile>();
 
-                    tempChunk.AddFile(file);
+                    opusFiles.Add(file);
 
                     byte[] md5Template = file.Source.Md5;
 
@@ -255,10 +255,12 @@ namespace PPeX
                             break;
                         }
 
-                        tempChunk.AddFile(fileList.Dequeue());
+                        opusFiles.Add(fileList.Dequeue());
                     }
 
+                    HybridEncoder tempChunk = new HybridEncoder(ID++, opusFiles, this);
                     chunks.Add(tempChunk);
+
                     continue;
                 }
 
