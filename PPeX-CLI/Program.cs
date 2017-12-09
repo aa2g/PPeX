@@ -152,7 +152,7 @@ Sets a regex to use for compressing or extracting.");
             {
                 CompressArg(args);
             }
-            if (args[0].ToLower() == "-e")
+            else if (args[0].ToLower() == "-e")
             {
                 DecompressArg(args);
             }
