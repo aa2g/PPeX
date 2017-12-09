@@ -11,42 +11,24 @@ namespace PPeX.Encoders
 {
     public class OpusEncoder : BaseEncoder
     {
-        public bool PreserveStereo { get; set; }
+        public bool PreserveStereo { get; set; } = true;
 
-        public override IDataSource Source
+        public OpusEncoder(Stream source) : base(source)
         {
-            get
-            {
-                return base.Source;
-            }
 
-            protected set
-            {
-                IsEncoded = false;
-                base.Source = value;
-            }
-        }
-
-        public OpusEncoder(IDataSource source, bool preserveStereo) : base(source)
-        {
-            PreserveStereo = preserveStereo;
         }
 
         public override ArchiveFileType Encoding => ArchiveFileType.OpusAudio;
 
-        public override uint EncodedLength { get; protected set; }
+        public override ArchiveDataType DataType => ArchiveDataType.Audio;
 
-        protected byte[] internalEncodedData;
-        protected bool IsEncoded = false;
-
-        protected MemoryStream internalEncode()
+        public override Stream Encode()
         {
             var mem = new MemoryStream();
 
             try
             {
-                using (var data = Source.GetStream())
-                using (var wav = new WaveReader(data))
+                using (var wav = new WaveReader(BaseStream))
                 {
 #warning need to add preserve stereo option
                     byte channels = (byte)wav.Channels;
@@ -56,19 +38,19 @@ namespace PPeX.Encoders
                     var application = channels > 1 ?
                         FragLabs.Audio.Codecs.Opus.Application.Audio :
                         FragLabs.Audio.Codecs.Opus.Application.Voip;
-                    
+
                     using (var opus = FragLabs.Audio.Codecs.OpusEncoder.Create(resampleRate, channels, application))
                     using (var wrapper = new OggWrapper(mem, channels, (ushort)opus.LookaheadSamples, true))
                     using (var resampler = new LibResampler(wav.SampleRate, resampleRate, channels))
                     {
                         opus.Bitrate = channels > 1 ? Core.Settings.OpusMusicBitrate : Core.Settings.OpusVoiceBitrate;
                         int packetsize = (int)(resampleRate * Core.Settings.OpusFrameSize * 2 * channels);
-                        
+
                         int rawSampleCount = (int)Math.Round(resampleRate * Core.Settings.OpusFrameSize);
                         int inputSampleCount = (int)Math.Round(wav.SampleRate * Core.Settings.OpusFrameSize);
                         int samplesToRead = rawSampleCount * channels;
                         int inputSamplesToRead = inputSampleCount * channels;
-                        
+
                         float[] inputSampleBuffer = new float[inputSamplesToRead];
                         int result = wav.Read(inputSampleBuffer, 0, inputSamplesToRead);
 
@@ -91,7 +73,7 @@ namespace PPeX.Encoders
                             byte[] output = opus.Encode(outputBuffer, rawSampleCount, out int outlen);
 
                             wrapper.WritePacket(output.Take(outlen).ToArray(), (int)(48000 * Core.Settings.OpusFrameSize), result < inputSamplesToRead);
-                                
+
                             result = wav.Read(inputSampleBuffer, 0, inputSamplesToRead);
 
                             Array.Clear(inputSampleBuffer, result, inputSampleBuffer.Length - result);
@@ -105,35 +87,66 @@ namespace PPeX.Encoders
             }
             finally
             {
-                EncodedLength = (uint)mem.Length;
                 mem.Position = 0;
             }
 
             return mem;
         }
 
-        public override Stream Encode()
+        public override Stream Decode()
         {
-            if (!IsEncoded)
-            {
-                using (MemoryStream buffer = internalEncode())
-                    internalEncodedData = buffer.ToArray();
-                IsEncoded = true;
-            }
+            MemoryStream output = new MemoryStream();
+
+            int resampleRate = 44100;
             
-            return new MemoryStream(internalEncodedData, false);
+            using (OggReader reader = new OggReader(BaseStream))
+            using (MemoryStream temp = new MemoryStream())
+            using (BinaryWriter tempWriter = new BinaryWriter(temp))
+            using (var decoder = OpusDecoder.Create(48000, reader.Channels))
+            using (LibResampler resampler = new LibResampler(48000, resampleRate, reader.Channels))
+            {
+                bool isFirst = true;
+
+                while (!reader.IsStreamFinished)
+                {
+                    byte[] frame = reader.ReadPacket();
+
+                    float[] outputSamples = decoder.DecodeFloat(frame, frame.Length);
+
+                    if (isFirst)
+                    {
+                        //remove preskip
+                        int preskip = reader.Preskip;
+
+                        float[] newSamples = new float[outputSamples.Length - preskip];
+                        Buffer.BlockCopy(outputSamples, preskip, newSamples, 0, outputSamples.Length - preskip);
+
+                        outputSamples = newSamples;
+
+                        isFirst = false;
+                    }
+
+                    outputSamples = resampler.Resample(outputSamples, reader.IsStreamFinished, out int sampleBufferUsed);
+
+                    foreach (float sample in outputSamples)
+                    {
+                        tempWriter.Write(WaveWriter.ConvertSample(sample));
+                    }
+                }
+
+                WaveWriter.WriteWAVHeader(output, reader.Channels, (int)temp.Length, resampleRate, 16);
+
+                temp.Position = 0;
+                temp.CopyTo(output);
+            }
+
+            output.Position = 0;
+            return output;
         }
 
         public override string NameTransform(string original)
         {
-            return original.Replace(".wav", ".opus");
-        }
-
-        public override void Dispose()
-        {
-            internalEncodedData = null;
-            IsEncoded = false;
-            base.Dispose();
+            return $"{original.Substring(0, original.LastIndexOf('.'))}.opus";
         }
     }
 }

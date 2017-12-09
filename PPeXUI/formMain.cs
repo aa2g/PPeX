@@ -327,7 +327,7 @@ namespace PPeXUI
 
                             using (FileStream fs = new FileStream(filename, FileMode.CreateNew))
                             {
-                                (item.Source as ArchiveFileSource).GetRawStream().CopyTo(fs);
+                                (item.Source as ArchiveFileSource).GetStream().CopyTo(fs);
                             }
 
                             progress.Report(new Tuple<string, int>(
@@ -352,7 +352,7 @@ namespace PPeXUI
 
                     using (FileStream fs = new FileStream(path, FileMode.Create))
                     {
-                        (sh.Source as ArchiveFileSource).GetRawStream().CopyTo(fs);
+                        (sh.Source as ArchiveFileSource).GetStream().CopyTo(fs);
                         //sh.Source.GetStream().CopyTo(fs);
                     }
 
@@ -866,7 +866,7 @@ namespace PPeXUI
                 foreach (string file in paths)
                 {
                     using (FileSource f = new FileSource(file))
-                    using (PPeX.Encoders.OpusDecoder decoder = new PPeX.Encoders.OpusDecoder(f.GetStream()))
+                    using (PPeX.Encoders.OpusEncoder decoder = new PPeX.Encoders.OpusEncoder(f.GetStream()))
                     using (FileStream fs = new FileStream(file.Replace(".xgg", ".wav"), FileMode.Create))
                         decoder.Decode().CopyTo(fs);
                 }

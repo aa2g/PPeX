@@ -11,18 +11,11 @@ namespace PPeX
     {
         ArchiveFileType Encoding { get; }
 
+        ArchiveDataType DataType { get; }
+
         Stream Encode();
-        uint EncodedLength { get; }
-
-        string NameTransform(string original);
-    }
-
-    public interface IDecoder : IDisposable
-    {
-        ArchiveFileType Encoding { get; }
-
         Stream Decode();
-
-        string NameTransform(string modified);
+        
+        string NameTransform(string original);
     }
 }

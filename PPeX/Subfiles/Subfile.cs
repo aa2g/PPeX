@@ -55,7 +55,7 @@ namespace PPeX
             if (Type == ArchiveFileType.Xx3Mesh)
                 Name = name.Replace(".xx", ".xx3");
             else
-                using (IEncoder encoder = EncoderFactory.GetGenericEncoder(Source, Type))
+                using (IEncoder encoder = EncoderFactory.GetGenericEncoder(Source.GetStream(), Type))
                 {
                     Name = encoder.NameTransform(name);
                 }
@@ -73,7 +73,7 @@ namespace PPeX
             if (Type == ArchiveFileType.Xx3Mesh)
                 Name = name.Replace(".xx", ".xx3");
             else
-                using (IEncoder encoder = EncoderFactory.GetGenericEncoder(Source, Type))
+                using (IEncoder encoder = EncoderFactory.GetGenericEncoder(Source.GetStream(), Type))
                 {
                     Name = encoder.NameTransform(name);
                 }

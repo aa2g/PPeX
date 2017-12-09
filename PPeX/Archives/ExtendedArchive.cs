@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using PPeX.Xx2;
 
 namespace PPeX
 {
@@ -37,7 +38,7 @@ namespace PPeX
     /// An extended PPX archive.
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{Title}", Name = "{Title}")]
-    public class ExtendedArchive
+    public class ExtendedArchive : IArchiveContainer
     {
         internal static readonly string Magic = "PPEX";
 
@@ -70,6 +71,9 @@ namespace PPeX
         internal ulong TableInfoOffset = 0;
 
         public Xx3Provider Xx3Provider { get; protected set; }
+
+        public TextureBank TextureBank => Xx3Provider;
+
         /// <summary>
         /// Reads from a .ppx file.
         /// </summary>

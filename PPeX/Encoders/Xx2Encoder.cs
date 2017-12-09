@@ -12,18 +12,18 @@ namespace PPeX.Encoders
     {
         MemoryStream encodedXx2;
 
-        public Xx2Encoder(IDataSource source) : base(source)
+        public Xx2Encoder(Stream source) : base(source)
         {
             
         }
 
         public override ArchiveFileType Encoding => ArchiveFileType.Xx2Mesh;
 
-        public override uint EncodedLength { get; protected set; }
+        public override ArchiveDataType DataType => ArchiveDataType.Mesh;
 
         public override Stream Encode()
         {
-            xxParser parser = new xxParser(Source.GetStream());
+            xxParser parser = new xxParser(BaseStream);
             Xx2File file = new Xx2File(parser);
             Xx2Writer writer;
 
@@ -37,36 +37,11 @@ namespace PPeX.Encoders
 
             writer.Write(file, encodedXx2);
 
-            EncodedLength = (uint)encodedXx2.Length;
-
             encodedXx2.Position = 0;
 
             return encodedXx2;
         }
 
-        public override string NameTransform(string original)
-        {
-            return original.Replace(".xx", ".xx2");
-        }
-
-        public override void Dispose()
-        {
-            if (encodedXx2 != null)
-                encodedXx2.Dispose();
-            base.Dispose();
-        }
-    }
-
-    public class Xx2Decoder : BaseDecoder
-    {
-        public Xx2Decoder(Stream baseStream) : base(baseStream)
-        {
-
-        }
-
-        public override ArchiveFileType Encoding => ArchiveFileType.Xx2Mesh;
-
-        
         public override Stream Decode()
         {
             Xx2File file = Xx2Reader.Read(BaseStream);
@@ -81,7 +56,14 @@ namespace PPeX.Encoders
 
         public override string NameTransform(string original)
         {
-            return original.Replace(".xx2", ".xx");
+            return $"{original.Substring(0, original.LastIndexOf('.'))}.xx2";
+        }
+
+        public override void Dispose()
+        {
+            if (encodedXx2 != null)
+                encodedXx2.Dispose();
+            base.Dispose();
         }
     }
 }

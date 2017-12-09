@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace PPeX
 {
     /// <summary>
-    /// The data type of the archived file.
+    /// The specific file type of the archived file.
     /// </summary>
     public enum ArchiveFileType : ushort
     {
@@ -30,6 +30,27 @@ namespace PPeX
         /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx3Encoder"/>.
         /// </summary>
         Xx3Mesh = 3
+    }
+
+    /// <summary>
+    /// The data type of the archived file.
+    /// </summary>
+    public enum ArchiveDataType : ushort
+    {
+        /// <summary>
+        /// The file is generic data and can be compressed normally.
+        /// </summary>
+        Raw = 0,
+
+        /// <summary>
+        /// The data is audio.
+        /// </summary>
+        Audio = 1,
+
+        /// <summary>
+        /// The data relates to meshes.
+        /// </summary>
+        Mesh = 2
     }
 
     /// <summary>

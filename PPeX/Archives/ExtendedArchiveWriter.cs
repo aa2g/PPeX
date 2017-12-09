@@ -11,13 +11,14 @@ using System.Collections.Concurrent;
 using System.Threading;
 using PPeX.Xx2;
 using PPeX.Archives;
+using PPeX.Archives.Writers;
 
 namespace PPeX
 {
     /// <summary>
     /// A writer for extended archives, to .ppx files.
     /// </summary>
-    public class ExtendedArchiveWriter : IArchiveWriter
+    public class ExtendedArchiveWriter : IArchiveContainer
     {
         /*
         0 - magic PPEX
@@ -57,7 +58,7 @@ namespace PPeX
 
         protected bool leaveOpen;
 
-        internal BlockingCollection<HybridChunkWriter> QueuedChunks;
+        internal BlockingCollection<IThreadWork> QueuedChunks;
 
         protected List<ChunkReceipt> CompletedChunks;
 
@@ -80,7 +81,7 @@ namespace PPeX
             leaveOpen = LeaveOpen;
         }
 
-        internal void AllocateBlocking(IEnumerable<ISubfile> FilesToAdd, IProgress<string> ProgressStatus, IProgress<int> ProgressPercentage, BlockingCollection<HybridChunkWriter> chunks, uint startingID = 0)
+        internal void AllocateBlocking(IEnumerable<ISubfile> FilesToAdd, IProgress<string> ProgressStatus, IProgress<int> ProgressPercentage, BlockingCollection<IThreadWork> chunks, uint startingID = 0)
         {
             uint ID = startingID;
 
@@ -290,22 +291,23 @@ namespace PPeX
 
             while (!QueuedChunks.IsCompleted)
             {
-                HybridChunkWriter item;
-                bool result = QueuedChunks.TryTake(out item, 1000);
+                IThreadWork item;
+                bool result = QueuedChunks.TryTake(out item, 500);
 
                 if (result)
                 {
-                    item.Compress();
+                    Stream output = item.GetData();
 
-                    threadProgress.Report("Written chunk id:" + item.ID + " (" + item.Receipt.FileReceipts.Count + " files)\r\n");
+                    threadProgress.Report("Written chunk id:" + item.Receipt.ID + " (" + item.Receipt.FileReceipts.Count + " files)\r\n");
 
                     lock (context.ArchiveStream)
                     {
                         using (item)
+                        using (output)
                         {
                             ulong chunkOffset = (ulong)context.ArchiveStream.Position;
 
-                            item.CompressedStream.CopyTo(context.ArchiveStream);
+                            output.CopyTo(context.ArchiveStream);
 
                             item.Receipt.FileOffset = chunkOffset;
 
@@ -392,7 +394,7 @@ namespace PPeX
         {
             TextureBank = new CompressedTextureBank(ArchiveChunkCompression.LZ4);
 
-            QueuedChunks = new BlockingCollection<HybridChunkWriter>(Threads);
+            QueuedChunks = new BlockingCollection<IThreadWork>(Threads);
 
             CompletedChunks = new List<ChunkReceipt>();
             threadProgress = ProgressStatus;

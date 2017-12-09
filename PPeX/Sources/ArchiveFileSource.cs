@@ -104,36 +104,16 @@ namespace PPeX
         /// <returns></returns>
         public Stream GetStream()
         {
-            using (Stream stream = new Substream(
-                Chunk.GetStream(),
-                (long)Offset,
-                (long)Size))
-            using (var decoder = EncoderFactory.GetDecoder(stream, BaseArchive, Type))
-            using (Stream output = decoder.Decode())
-            {
-                MemoryStream temp = new MemoryStream();
-                output.CopyTo(temp);
-                temp.Position = 0;
-                return temp;
-            }
-        }
+            //using (var baseStream = new Substream(
+            //        Chunk.GetStream(),
+            //        (long)Offset,
+            //        (long)Size))
+            //using (var decoder = EncoderFactory.GetEncoder(baseStream, BaseArchive, Type))
+            //{
+            //    return decoder.Decode();
+            //}
 
-        /// <summary>
-        /// Returns a stream of only uncompressed data.
-        /// </summary>
-        /// <returns></returns>
-        public Stream GetRawStream()
-        {
-            using (Stream stream = new Substream(
-                Chunk.GetStream(),
-                (long)Offset,
-                (long)Size))
-            {
-                MemoryStream temp = new MemoryStream();
-                stream.CopyTo(temp);
-                temp.Position = 0;
-                return temp;
-            }
+            return new Substream(Chunk.GetStream(), (long)Offset, (long)Size);
         }
 
         public void Dispose()
