@@ -15,18 +15,15 @@ namespace PPeX
         public ArchiveSubfile(ArchiveFileSource source)
         {
             RawSource = source;
-            Name = RawSource.Name;
-        }
-
-        public ArchiveSubfile(ArchiveFileSource source, string name)
-        {
-            RawSource = source;
-            Name = name;
         }
 
         public string ArchiveName => RawSource.ArchiveName;
 
-        public string Name { get; protected set; }
+        public string Name => RawSource.Name;
+
+        public string EmulatedArchiveName => RawSource.EmulatedArchiveName;
+
+        public string EmulatedName => RawSource.EmulatedName;
 
         public ulong Size => (uint)RawSource.Size;
 

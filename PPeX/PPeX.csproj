@@ -65,6 +65,8 @@
     <Compile Include="Archives\Writers\HybridEncoder.cs" />
     <Compile Include="Archives\Writers\IThreadWork.cs" />
     <Compile Include="Common\Extensions.cs" />
+    <Compile Include="Encoders\XxEncoder.cs" />
+    <Compile Include="Encoders\WaveEncoder.cs" />
     <Compile Include="External\Ogg\OggPage.cs" />
     <Compile Include="External\Ogg\OggReader.cs" />
     <Compile Include="External\Ogg\OggWrapper.cs" />

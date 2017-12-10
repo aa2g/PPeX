@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Text;
 using PPeX.Encoders;
 
 namespace PPeX
@@ -36,6 +37,16 @@ namespace PPeX
         /// The name of the subfile as it is stored in a .pp file.
         /// </summary>
         public string Name { get; protected set; }
+
+        /// <summary>
+        /// The name of the .pp file the subfile is associated with.
+        /// </summary>
+        public string EmulatedArchiveName { get; protected set; }
+
+        /// <summary>
+        /// The name of the subfile as it is stored in a .pp file.
+        /// </summary>
+        public string EmulatedName { get; protected set; }
 
         /// <summary>
         /// The MD5 hash of the uncompressed data.
@@ -76,10 +87,16 @@ namespace PPeX
             file.BaseArchive = archive;
 
             ushort len = reader.ReadUInt16();
-            file.ArchiveName = System.Text.Encoding.Unicode.GetString(reader.ReadBytes(len));
+            file.ArchiveName = Encoding.Unicode.GetString(reader.ReadBytes(len));
 
             len = reader.ReadUInt16();
-            file.Name = System.Text.Encoding.Unicode.GetString(reader.ReadBytes(len));
+            file.Name = Encoding.Unicode.GetString(reader.ReadBytes(len));
+
+            len = reader.ReadUInt16();
+            file.EmulatedArchiveName = Encoding.Unicode.GetString(reader.ReadBytes(len));
+
+            len = reader.ReadUInt16();
+            file.EmulatedName = Encoding.Unicode.GetString(reader.ReadBytes(len));
 
             file.Type = (ArchiveFileType)reader.ReadUInt16();
 

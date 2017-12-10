@@ -45,37 +45,15 @@ namespace PPeX.Archives
 
         public void AddFile(ISubfile file)
         {
-            Md5Hash hash = file.Source.Md5;
-
-            if (fileReceipts.Any(x => x.Md5 == hash))
-            {
-                FileReceipt original = fileReceipts.First(x => x.Md5 == hash);
-
-                FileReceipt duplicate = FileReceipt.CreateDuplicate(original, file);
-
-                fileReceipts.Add(duplicate);
-
-                return;
-            }
-
-            using (IEncoder encoder = EncoderFactory.GetEncoder(file.Source.GetStream(), writer, file.Type))
-            using (var encoded = encoder.Encode())
-            {
-                FileReceipt receipt = new FileReceipt
-                {
-                    Md5 = hash,
-                    Length = (ulong)encoded.Length,
-                    Offset = (ulong)UncompressedStream.Position,
-                    Subfile = file
-                };
-
-                fileReceipts.Add(receipt);
-
-                encoded.CopyTo(UncompressedStream);
-            }
+            TryAddFile(file, 666, true);
         }
 
         public bool TryAddFile(ISubfile file, ulong maxChunkSize)
+        {
+            return TryAddFile(file, maxChunkSize, false);
+        }
+
+        protected bool TryAddFile(ISubfile file, ulong maxChunkSize, bool continueAnyway)
         {
             Md5Hash hash = file.Source.Md5;
 
@@ -90,23 +68,60 @@ namespace PPeX.Archives
                 return true;
             }
 
-            IEncoder encoder = EncoderFactory.GetEncoder(file.Source.GetStream(), writer, file.Type);
-            Stream dataStream;
+#warning should add conversion/encoding settings here
+            ArchiveFileType target;
 
-            if (file.Source is ArchiveFileSource &&
-                file.Type == ArchiveFileType.OpusAudio)
+            switch (file.Type)
             {
-                //don't need to reencode
-                dataStream = (file.Source as ArchiveFileSource).GetStream();
+                case ArchiveFileType.WaveAudio:
+                    target = ArchiveFileType.OpusAudio;
+                    break;
+                case ArchiveFileType.XxMesh:
+                    target = ArchiveFileType.Xx3Mesh;
+                    break;
+                default:
+                    target = file.Type;
+                    break;
+            }
+
+            Stream dataStream;
+            string internalName;
+            string emulatedName;
+
+            if (target == file.Type)
+            {
+                dataStream = file.Source.GetStream();
+                internalName = file.Name;
+                emulatedName = file.EmulatedName;
             }
             else
             {
-                dataStream = encoder.Encode();
-            }
+                using (IEncoder decoder = EncoderFactory.GetEncoder(file.Source.GetStream(), writer, file.Type))
+                using (IEncoder encoder = EncoderFactory.GetEncoder(decoder.Decode(), writer, target))
+                {
+                    dataStream = encoder.Encode();
 
+                    internalName = encoder.NameTransform(file.Name);
+
+                    switch (encoder.DataType)
+                    {
+                        case ArchiveDataType.Audio:
+                            emulatedName = $"{file.Name.Substring(0, file.Name.LastIndexOf('.'))}.wav";
+                            break;
+                        case ArchiveDataType.Mesh:
+                            emulatedName = $"{file.Name.Substring(0, file.Name.LastIndexOf('.'))}.xx";
+                            break;
+                        default:
+                            emulatedName = file.EmulatedName;
+                            break;
+                    }
+                }
+            }
+            
             using (dataStream)
             {
-                if (UncompressedStream.Length == 0 ||
+                if (continueAnyway ||
+                    UncompressedStream.Length == 0 ||
                     (ulong)(dataStream.Length + UncompressedStream.Length) <= maxChunkSize)
                 {
                     FileReceipt receipt = new FileReceipt
@@ -114,6 +129,9 @@ namespace PPeX.Archives
                         Md5 = hash,
                         Length = (ulong)dataStream.Length,
                         Offset = (ulong)UncompressedStream.Position,
+                        InternalName = internalName,
+                        EmulatedName = emulatedName,
+                        Encoding = target,
                         Subfile = file
                     };
 
@@ -183,6 +201,11 @@ namespace PPeX.Archives
         public ulong Offset;
         public ulong Length;
         //public int Index;
+
+        public string InternalName;
+        public string EmulatedName;
+
+        public ArchiveFileType Encoding;
 
         public static FileReceipt CreateDuplicate(FileReceipt original, ISubfile subfile)
         {

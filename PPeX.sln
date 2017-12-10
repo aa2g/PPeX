@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2008
+VisualStudioVersion = 15.0.27130.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeX", "PPeX\PPeX.csproj", "{A611A988-D477-4E16-AF2F-D3A661B909A9}"
 EndProject
@@ -16,37 +16,67 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed = Debug|Mixed
+		Debug|Mono = Debug|Mono
 		Release|Mixed = Release|Mixed
+		Release|Mono = Release|Mono
 		Wine|Mixed = Wine|Mixed
+		Wine|Mono = Wine|Mono
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Debug|Mixed.ActiveCfg = Debug|Any CPU
 		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Debug|Mixed.Build.0 = Debug|Any CPU
+		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Debug|Mono.ActiveCfg = Debug|Any CPU
+		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Debug|Mono.Build.0 = Debug|Any CPU
 		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Release|Mixed.ActiveCfg = Release|Any CPU
 		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Release|Mixed.Build.0 = Release|Any CPU
+		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Release|Mono.ActiveCfg = Release|Any CPU
+		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Release|Mono.Build.0 = Release|Any CPU
 		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Wine|Mixed.ActiveCfg = Wine|Any CPU
 		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Wine|Mixed.Build.0 = Wine|Any CPU
+		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Wine|Mono.ActiveCfg = Wine|Any CPU
+		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Wine|Mono.Build.0 = Wine|Any CPU
 		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|Mixed.ActiveCfg = Debug|Any CPU
 		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|Mixed.Build.0 = Debug|Any CPU
+		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|Mono.ActiveCfg = Debug|Any CPU
+		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|Mono.Build.0 = Debug|Any CPU
 		{38A09514-215B-490E-B73F-F66894BF7AC9}.Release|Mixed.ActiveCfg = Release|Any CPU
 		{38A09514-215B-490E-B73F-F66894BF7AC9}.Release|Mixed.Build.0 = Release|Any CPU
+		{38A09514-215B-490E-B73F-F66894BF7AC9}.Release|Mono.ActiveCfg = Release|Any CPU
+		{38A09514-215B-490E-B73F-F66894BF7AC9}.Release|Mono.Build.0 = Release|Any CPU
 		{38A09514-215B-490E-B73F-F66894BF7AC9}.Wine|Mixed.ActiveCfg = Release|Any CPU
+		{38A09514-215B-490E-B73F-F66894BF7AC9}.Wine|Mono.ActiveCfg = Release|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Debug|Mixed.ActiveCfg = Debug|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Debug|Mixed.Build.0 = Debug|Any CPU
+		{201A8C09-A18A-4C32-B112-292387AA24E9}.Debug|Mono.ActiveCfg = Debug|Any CPU
+		{201A8C09-A18A-4C32-B112-292387AA24E9}.Debug|Mono.Build.0 = Debug|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Release|Mixed.ActiveCfg = Debug|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Release|Mixed.Build.0 = Debug|Any CPU
+		{201A8C09-A18A-4C32-B112-292387AA24E9}.Release|Mono.ActiveCfg = Debug|Any CPU
+		{201A8C09-A18A-4C32-B112-292387AA24E9}.Release|Mono.Build.0 = Debug|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Wine|Mixed.ActiveCfg = Debug|Any CPU
+		{201A8C09-A18A-4C32-B112-292387AA24E9}.Wine|Mono.ActiveCfg = Debug|Any CPU
 		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Debug|Mixed.ActiveCfg = Debug|Any CPU
 		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Debug|Mixed.Build.0 = Debug|Any CPU
+		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Debug|Mono.ActiveCfg = Debug|Any CPU
+		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Debug|Mono.Build.0 = Debug|Any CPU
 		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Release|Mixed.ActiveCfg = Release|x64
 		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Release|Mixed.Build.0 = Release|x64
+		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Release|Mono.ActiveCfg = Release|Any CPU
+		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Release|Mono.Build.0 = Release|Any CPU
 		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Wine|Mixed.ActiveCfg = Release|x64
+		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Wine|Mono.ActiveCfg = Release|x64
 		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Debug|Mixed.ActiveCfg = Debug|Any CPU
 		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Debug|Mixed.Build.0 = Debug|Any CPU
+		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Debug|Mono.ActiveCfg = Debug|Any CPU
+		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Debug|Mono.Build.0 = Debug|Any CPU
 		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Release|Mixed.ActiveCfg = Release|Any CPU
 		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Release|Mixed.Build.0 = Release|Any CPU
+		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Release|Mono.ActiveCfg = Release|Any CPU
+		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Release|Mono.Build.0 = Release|Any CPU
 		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Wine|Mixed.ActiveCfg = Wine|Any CPU
 		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Wine|Mixed.Build.0 = Wine|Any CPU
+		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Wine|Mono.ActiveCfg = Wine|Any CPU
+		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Wine|Mono.Build.0 = Wine|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

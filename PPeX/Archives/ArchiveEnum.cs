@@ -17,19 +17,29 @@ namespace PPeX
         Raw = 0,
 
         /// <summary>
+        /// The file is audio data, encoded via <see cref="External.Wave.WaveWriter"/>.
+        /// </summary>
+        WaveAudio = 1,
+
+        /// <summary>
         /// The file is audio data, encoded via <see cref="Encoders.OpusEncoder"/>.
         /// </summary>
-        OpusAudio = 1,
+        OpusAudio = 2,
 
         /// <summary>
         /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx2Encoder"/>.
         /// </summary>
-        Xx2Mesh = 2,
+        XxMesh = 10,
+
+        /// <summary>
+        /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx2Encoder"/>.
+        /// </summary>
+        Xx2Mesh = 11,
 
         /// <summary>
         /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx3Encoder"/>.
         /// </summary>
-        Xx3Mesh = 3
+        Xx3Mesh = 12,
     }
 
     /// <summary>
