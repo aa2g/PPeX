@@ -104,6 +104,12 @@
             this.label2 = new System.Windows.Forms.Label();
             this.numVoiceBitrate = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
+            this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.imgLogo = new System.Windows.Forms.PictureBox();
+            this.lblPlatformMode = new System.Windows.Forms.Label();
+            this.lblGUIVersion = new System.Windows.Forms.Label();
+            this.lblBaseVersion = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -122,6 +128,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numChunkSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numVoiceBitrate)).BeginInit();
+            this.tabPage5.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.imgLogo)).BeginInit();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -350,6 +358,7 @@
             this.tabControl1.Controls.Add(this.tabPage4);
             this.tabControl1.Controls.Add(this.tabPage2);
             this.tabControl1.Controls.Add(this.tabPage3);
+            this.tabControl1.Controls.Add(this.tabPage5);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
@@ -941,6 +950,68 @@
             this.label9.TabIndex = 0;
             this.label9.Text = "Voice bitrate (kbps):";
             // 
+            // tabPage5
+            // 
+            this.tabPage5.Controls.Add(this.imgLogo);
+            this.tabPage5.Controls.Add(this.lblPlatformMode);
+            this.tabPage5.Controls.Add(this.lblGUIVersion);
+            this.tabPage5.Controls.Add(this.lblBaseVersion);
+            this.tabPage5.Controls.Add(this.label13);
+            this.tabPage5.Location = new System.Drawing.Point(4, 22);
+            this.tabPage5.Name = "tabPage5";
+            this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage5.Size = new System.Drawing.Size(554, 281);
+            this.tabPage5.TabIndex = 4;
+            this.tabPage5.Text = "About";
+            this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // imgLogo
+            // 
+            this.imgLogo.Dock = System.Windows.Forms.DockStyle.Right;
+            this.imgLogo.Image = global::PPeXUI.Properties.Resources.ppex1;
+            this.imgLogo.Location = new System.Drawing.Point(365, 3);
+            this.imgLogo.Name = "imgLogo";
+            this.imgLogo.Size = new System.Drawing.Size(186, 275);
+            this.imgLogo.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.imgLogo.TabIndex = 4;
+            this.imgLogo.TabStop = false;
+            // 
+            // lblPlatformMode
+            // 
+            this.lblPlatformMode.AutoSize = true;
+            this.lblPlatformMode.Location = new System.Drawing.Point(7, 81);
+            this.lblPlatformMode.Name = "lblPlatformMode";
+            this.lblPlatformMode.Size = new System.Drawing.Size(113, 13);
+            this.lblPlatformMode.TabIndex = 3;
+            this.lblPlatformMode.Text = "Current platform mode:";
+            // 
+            // lblGUIVersion
+            // 
+            this.lblGUIVersion.AutoSize = true;
+            this.lblGUIVersion.Location = new System.Drawing.Point(7, 56);
+            this.lblGUIVersion.Name = "lblGUIVersion";
+            this.lblGUIVersion.Size = new System.Drawing.Size(67, 13);
+            this.lblGUIVersion.TabIndex = 2;
+            this.lblGUIVersion.Text = "GUI Version:";
+            // 
+            // lblBaseVersion
+            // 
+            this.lblBaseVersion.AutoSize = true;
+            this.lblBaseVersion.Location = new System.Drawing.Point(7, 33);
+            this.lblBaseVersion.Name = "lblBaseVersion";
+            this.lblBaseVersion.Size = new System.Drawing.Size(72, 13);
+            this.lblBaseVersion.TabIndex = 1;
+            this.lblBaseVersion.Text = "Base Version:";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(7, 10);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(111, 13);
+            this.label13.TabIndex = 0;
+            this.label13.Text = "PP eXtended archiver";
+            // 
             // formMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -979,6 +1050,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numChunkSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numVoiceBitrate)).EndInit();
+            this.tabPage5.ResumeLayout(false);
+            this.tabPage5.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.imgLogo)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -1058,5 +1132,11 @@
         private System.Windows.Forms.ToolStripMenuItem convertExtractedModToolStripMenuItem;
         private System.Windows.Forms.NumericUpDown numMusicBitrate;
         private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.TabPage tabPage5;
+        private System.Windows.Forms.PictureBox imgLogo;
+        private System.Windows.Forms.Label lblPlatformMode;
+        private System.Windows.Forms.Label lblGUIVersion;
+        private System.Windows.Forms.Label lblBaseVersion;
+        private System.Windows.Forms.Label label13;
     }
 }
