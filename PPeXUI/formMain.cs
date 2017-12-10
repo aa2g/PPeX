@@ -38,6 +38,30 @@ namespace PPeXUI
             InitializeComponent();
         }
 
+        static Version GetVersion()
+        {
+            return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        }
+
+        protected void LoadAboutInfo()
+        {
+            lblBaseVersion.Text = $"Base Version: {PPeX.Core.GetVersion().ToString()}";
+            lblGUIVersion.Text = $"GUI Version: {GetVersion().ToString()}";
+
+            string platformMode;
+
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+                platformMode = "Unix/Mono";
+            else if (Environment.OSVersion.Platform == PlatformID.Win32NT && Environment.Is64BitProcess)
+                platformMode = "Win64";
+            else if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                platformMode = "Win32";
+            else
+                platformMode = "Unsupported";
+
+            lblPlatformMode.Text = $"Current platform mode: {platformMode}";
+        }
+
         private void formMain_Load(object sender, EventArgs e)
         {
             cmbCompression.SelectedIndex = 2;
@@ -61,6 +85,8 @@ namespace PPeXUI
             threads = Math.Min(threads, 8);
 
             numThreads.Value = threads;
+
+            LoadAboutInfo();
         }
 
         public void CloseFile()
