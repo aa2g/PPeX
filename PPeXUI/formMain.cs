@@ -1119,6 +1119,14 @@ namespace PPeXUI
                 }
             }
         }
+
+        private void imgLogo_Click(object sender, EventArgs e)
+        {
+            if (ModifierKeys.HasFlag(Keys.Shift) && ModifierKeys.HasFlag(Keys.Control))
+            {
+                MessageBox.Show("Harsh is still worst", "Fact", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+            }
+        }
     }
 
     public class SubfileHolder
