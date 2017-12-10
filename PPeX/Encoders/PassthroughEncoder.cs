@@ -18,9 +18,9 @@ namespace PPeX.Encoders
 
         public uint EncodedLength => (uint)BaseStream.Length;
 
-        public ArchiveFileType Encoding => ArchiveFileType.Raw;
+        public virtual ArchiveFileType Encoding => ArchiveFileType.Raw;
 
-        public ArchiveDataType DataType => ArchiveDataType.Raw;
+        public virtual ArchiveDataType DataType => ArchiveDataType.Raw;
 
         public Stream Encode()
         {
@@ -35,7 +35,7 @@ namespace PPeX.Encoders
             return Encode();
         }
 
-        public string NameTransform(string original)
+        public virtual string NameTransform(string original)
         {
             return original;
         }

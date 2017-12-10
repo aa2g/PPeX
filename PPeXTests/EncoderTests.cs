@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 namespace PPeXTests
 {
     [DeploymentItem("opus32.dll")]
+    [DeploymentItem("libzstd32.dll")]
     [DeploymentItem("libresample32.dll")]
     [TestClass]
     public class EncoderTests
@@ -65,8 +66,16 @@ namespace PPeXTests
             writer.Write("opusencodertest.ppx");
 
             ExtendedArchive arc = new ExtendedArchive("opusencodertest.ppx");
-            
-            using (OpusEncoder decoder = new OpusEncoder(arc.Files.First().GetRawStream()))
+
+            var subfile = arc.Files.First();
+
+            Assert.AreEqual(ArchiveFileType.OpusAudio, subfile.Type);
+            Assert.IsTrue(subfile.Name == "audio.opus", $"Internal name did not switch to \"audio.opus\". Actual: {subfile.Name}");
+            Assert.IsTrue(subfile.EmulatedName == "audio.wav", $"Emulated name did stay as \"audio.wav\". Actual: {subfile.EmulatedName}");
+            Assert.IsTrue(subfile.ArchiveName == "arc", $"Archive name did stay as \"arc\". Actual: {subfile.ArchiveName}");
+            Assert.IsTrue(subfile.EmulatedArchiveName == "arc", $"Emulated archive name did stay as \"arc\". Actual: {subfile.EmulatedArchiveName}");
+
+            using (OpusEncoder decoder = new OpusEncoder(subfile.GetRawStream()))
             {
                 Stream decoded = decoder.Decode();
 

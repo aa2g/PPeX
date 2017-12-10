@@ -23,7 +23,7 @@ namespace PPeX
         byte[] Md5 { get; }
 
         /// <summary>
-        /// Returns a stream that reads uncompressed and unencoded data.
+        /// Returns a stream that reads uncompressed data.
         /// </summary>
         /// <returns></returns>
         Stream GetStream();

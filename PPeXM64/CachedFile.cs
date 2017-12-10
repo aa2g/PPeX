@@ -18,6 +18,10 @@ namespace PPeXM64
 
         public string ArchiveName { get; protected set; }
 
+        public string EmulatedName { get; protected set; }
+
+        public string EmulatedArchiveName { get; protected set; }
+
         public ArchiveFileSource Source { get; protected set; }
 
         public CompressedCache Cache { get; protected set; }
@@ -46,6 +50,9 @@ namespace PPeXM64
 
             Name = source.Name;
             ArchiveName = source.ArchiveName;
+
+            EmulatedName = source.EmulatedName;
+            EmulatedArchiveName = source.EmulatedArchiveName;
 
             //Offset = (int)source.Offset;
             Length = (int)source.Size;

@@ -43,16 +43,10 @@ namespace PPeX.Encoders
         {
             switch (encoding)
             {
-                case ArchiveFileType.OpusAudio:
-                    return new OpusEncoder(source);
-                case ArchiveFileType.Xx2Mesh:
-                    return new Xx2Encoder(source);
                 case ArchiveFileType.Xx3Mesh:
                     return new Xx3Encoder(source, writer.TextureBank);
-                case ArchiveFileType.Raw:
-                    return new PassthroughEncoder(source);
                 default:
-                    throw new InvalidOperationException("Encoding type is invalid.");
+                    return GetGenericEncoder(source, encoding);
             }
         }
 
@@ -60,8 +54,12 @@ namespace PPeX.Encoders
         {
             switch (encoding)
             {
+                case ArchiveFileType.WaveAudio:
+                    return new WaveEncoder(source);
                 case ArchiveFileType.OpusAudio:
                     return new OpusEncoder(source);
+                case ArchiveFileType.XxMesh:
+                    return new Xx2Encoder(source);
                 case ArchiveFileType.Xx2Mesh:
                     return new Xx2Encoder(source);
                 case ArchiveFileType.Raw:

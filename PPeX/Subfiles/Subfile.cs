@@ -21,6 +21,10 @@ namespace PPeX
         /// </summary>
         public string ArchiveName { get; protected set; }
 
+        public string EmulatedArchiveName { get; protected set; }
+
+        public string EmulatedName { get; protected set; }
+
         /// <summary>
         /// The name of the subfile as it is stored in a .pp file.
         /// </summary>
@@ -52,6 +56,9 @@ namespace PPeX
             Source = source;
             Type = type;
 
+            EmulatedArchiveName = archiveName;
+            EmulatedName = name;
+
             if (Type == ArchiveFileType.Xx3Mesh)
                 Name = name.Replace(".xx", ".xx3");
             else
@@ -64,6 +71,8 @@ namespace PPeX
         public Subfile(IDataSource source, string name, string archiveName) : this(source, name, archiveName, ArchiveFileType.Raw)
         {
             if (name.EndsWith(".wav"))
+                Type = ArchiveFileType.WaveAudio;
+            else if (name.EndsWith(".opus"))
                 Type = ArchiveFileType.OpusAudio;
             else if (name.EndsWith(".xx"))
                 Type = ArchiveFileType.Xx3Mesh;

@@ -32,7 +32,11 @@ namespace PPeX
 
         public string ArchiveName => BaseSource.ArchiveName;
 
-        public string Name => BaseSource.Name.Replace(".xx3", ".xx");
+        public string Name => BaseSource.Name;
+
+        public string EmulatedArchiveName => BaseSource.EmulatedArchiveName;
+
+        public string EmulatedName => BaseSource.EmulatedName;
 
         protected ulong _size;
 

@@ -21,10 +21,21 @@ namespace PPeX
         /// The name of the archive that the subfile belongs to.
         /// </summary>
         string ArchiveName { get; }
+
         /// <summary>
         /// The internal filename of the subfile.
         /// </summary>
         string Name { get; }
+
+        /// <summary>
+        /// The name of the archive that the subfile belongs to that AA2 sees. Empty string if should not be seen.
+        /// </summary>
+        string EmulatedArchiveName { get; }
+
+        /// <summary>
+        /// The name of the file that AA2 sees. Empty string if should not be seen.
+        /// </summary>
+        string EmulatedName { get; }
 
         /// <summary>
         /// The uncompressed file size of the subfile.

@@ -229,7 +229,7 @@ namespace PPeX
                     continue;
                 }
 
-                if (file.Type == ArchiveFileType.OpusAudio)
+                if (file.Type == ArchiveFileType.WaveAudio || file.Type == ArchiveFileType.OpusAudio)
                 {
                     //non-compressable data, assign it and any duplicates to a new chunk
 
@@ -511,12 +511,26 @@ namespace PPeX
                 fileTableWriter.Write(archive_name);
 
 
-                byte[] file_name = Encoding.Unicode.GetBytes(receipt.Subfile.Name);
+                byte[] file_name = Encoding.Unicode.GetBytes(receipt.InternalName);
 
                 fileTableWriter.Write((ushort)file_name.Length);
                 fileTableWriter.Write(file_name);
 
-                fileTableWriter.Write((ushort)receipt.Subfile.Type);
+
+                byte[] emulated_archive_name = Encoding.Unicode.GetBytes(receipt.Subfile.EmulatedArchiveName);
+
+                fileTableWriter.Write((ushort)emulated_archive_name.Length);
+                fileTableWriter.Write(emulated_archive_name);
+
+
+                byte[] emulated_file_name = Encoding.Unicode.GetBytes(receipt.EmulatedName);
+
+                fileTableWriter.Write((ushort)emulated_file_name.Length);
+                fileTableWriter.Write(emulated_file_name);
+
+
+
+                fileTableWriter.Write((ushort)receipt.Encoding);
                 fileTableWriter.Write(receipt.Md5);
 
 
