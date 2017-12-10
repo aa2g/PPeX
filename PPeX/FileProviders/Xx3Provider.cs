@@ -26,7 +26,8 @@ namespace PPeX
         {
             List<ExtendedArchiveChunk> xxChunks = Chunks.Where(x => x.Type == ChunkType.Xx3).ToList();
 
-            foreach (var textureFile in xxChunks.SelectMany(x => x.Files).Where(x => x.ArchiveName == "_TextureBank"))
+            var textures = xxChunks.SelectMany(x => x.Files).Where(x => x.ArchiveName == "_TextureBank");
+            foreach (var textureFile in textures)
             {
                 textureSubfiles.Add(textureFile.Name, textureFile);
             }

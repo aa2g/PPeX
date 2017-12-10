@@ -52,20 +52,12 @@ namespace PPeX
         public Subfile(IDataSource source, string name, string archiveName, ArchiveFileType type)
         {
             ArchiveName = archiveName;
-            //Name = name;
+            Name = name;
             Source = source;
             Type = type;
 
             EmulatedArchiveName = archiveName;
             EmulatedName = name;
-
-            if (Type == ArchiveFileType.Xx3Mesh)
-                Name = name.Replace(".xx", ".xx3");
-            else
-                using (IEncoder encoder = EncoderFactory.GetGenericEncoder(Source.GetStream(), Type))
-                {
-                    Name = encoder.NameTransform(name);
-                }
         }
 
         public Subfile(IDataSource source, string name, string archiveName) : this(source, name, archiveName, ArchiveFileType.Raw)
@@ -75,17 +67,13 @@ namespace PPeX
             else if (name.EndsWith(".opus"))
                 Type = ArchiveFileType.OpusAudio;
             else if (name.EndsWith(".xx"))
+                Type = ArchiveFileType.XxMesh;
+            else if (name.EndsWith(".xx2"))
+                Type = ArchiveFileType.Xx2Mesh;
+            else if (name.EndsWith(".xx3"))
                 Type = ArchiveFileType.Xx3Mesh;
             else
                 Type = ArchiveFileType.Raw;
-
-            if (Type == ArchiveFileType.Xx3Mesh)
-                Name = name.Replace(".xx", ".xx3");
-            else
-                using (IEncoder encoder = EncoderFactory.GetGenericEncoder(Source.GetStream(), Type))
-                {
-                    Name = encoder.NameTransform(name);
-                }
         }
     }
 }

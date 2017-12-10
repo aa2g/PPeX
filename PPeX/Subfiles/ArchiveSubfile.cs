@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace PPeX
 {
+    [System.Diagnostics.DebuggerDisplay("{Name}", Name = "{Name}")]
     public class ArchiveSubfile : ISubfile
     {
         public ArchiveFileSource RawSource { get; protected set; }

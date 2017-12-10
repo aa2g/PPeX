@@ -96,7 +96,9 @@ namespace PPeX
 
             foreach (var file in FilesToAdd)
             {
-                if (file.Type == ArchiveFileType.Xx3Mesh)
+                if (file.Type == ArchiveFileType.XxMesh ||
+                    file.Type == ArchiveFileType.Xx2Mesh ||
+                    file.Type == ArchiveFileType.Xx3Mesh)
                 {
                     Xx3Files.Add(file);
                 }
@@ -107,7 +109,7 @@ namespace PPeX
             }
 
             //XX3 chunks
-            ProgressStatus.Report("Allocating Xx3 chunks...\r\n");
+            ProgressStatus.Report("Allocating XX chunks...\r\n");
             ProgressPercentage.Report(0);
             
             fileList = new Queue<ISubfile>(Xx3Files.OrderBy(x => x.Source.Md5, new ByteArrayComparer()));
