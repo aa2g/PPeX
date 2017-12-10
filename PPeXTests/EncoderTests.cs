@@ -2,6 +2,7 @@
 using PPeX;
 using PPeX.Encoders;
 using PPeX.External.Wave;
+using PPeX.Xx2;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,6 +21,7 @@ namespace PPeXTests
     {
         const string OpusTestFile = "AA2BGM13.opus";
         const string WavTestFile = "AA2BGM13.wav";
+        const string XxTestFile = "A00_00_00_03.xx";
 
         [DeploymentItem(WavTestFile)]
         [TestMethod]
@@ -86,10 +88,60 @@ namespace PPeXTests
             File.Delete("opusencodertest.ppx");
         }
 
+        [DeploymentItem(XxTestFile)]
+        [TestMethod]
+        public void Xx3EncoderTest()
+        {
+            using (Stream source = File.OpenRead(XxTestFile))
+            {
+                CompressedTextureBank bank = new CompressedTextureBank(ArchiveChunkCompression.LZ4);
+
+                using (Xx3Encoder encoder = new Xx3Encoder(source, bank))
+                {
+                    Stream encoded = encoder.Encode();
+
+                    using (Xx3Encoder decoder = new Xx3Encoder(encoded, bank))
+                    {
+                        Stream decoded = decoder.Decode();
+                    }
+                }
+            }
+        }
+
+        [DeploymentItem(XxTestFile)]
+        [TestMethod]
+        public void Xx3ArchiveEncoderTest()
+        {
+            ExtendedArchiveWriter writer = new ExtendedArchiveWriter("xx3encoder");
+            writer.Files.Add(new Subfile(new FileSource(XxTestFile), "mesh.xx", "arc"));
+
+            writer.Write("xx3encodertest.ppx");
+
+            ExtendedArchive arc = new ExtendedArchive("xx3encodertest.ppx");
+
+            var subfile = arc.Files.First();
+
+            Assert.AreEqual(ArchiveFileType.Xx3Mesh, subfile.Type);
+            Assert.IsTrue(subfile.Name == "mesh.xx3", $"Internal name did not switch to \"mesh.xx3\". Actual: {subfile.Name}");
+            Assert.IsTrue(subfile.EmulatedName == "mesh.xx", $"Emulated name did stay as \"amesh.xx\". Actual: {subfile.EmulatedName}");
+            Assert.IsTrue(subfile.ArchiveName == "arc", $"Archive name did stay as \"arc\". Actual: {subfile.ArchiveName}");
+            Assert.IsTrue(subfile.EmulatedArchiveName == "arc", $"Emulated archive name did stay as \"arc\". Actual: {subfile.EmulatedArchiveName}");
+
+            using (Xx3Encoder decoder = new Xx3Encoder(subfile.GetRawStream(), arc.TextureBank))
+            {
+                Stream decoded = decoder.Decode();
+            }
+
+            File.Delete("xx3encodertest.ppx");
+        }
+
         public void Cleanup()
         {
             if (File.Exists("opusencodertest.ppx"))
                 File.Delete("opusencodertest.ppx");
+
+            if (File.Exists("xx3encodertest.ppx"))
+                File.Delete("xx3encodertest.ppx");
         }
     }
 }

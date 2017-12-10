@@ -59,7 +59,7 @@ namespace PPeX.Encoders
                 case ArchiveFileType.OpusAudio:
                     return new OpusEncoder(source);
                 case ArchiveFileType.XxMesh:
-                    return new Xx2Encoder(source);
+                    return new XxEncoder(source);
                 case ArchiveFileType.Xx2Mesh:
                     return new Xx2Encoder(source);
                 case ArchiveFileType.Raw:

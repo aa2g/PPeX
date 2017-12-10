@@ -12,8 +12,6 @@ namespace PPeX.Encoders
     {
         protected TextureBank texBank;
 
-        MemoryStream encodedXx3;
-
         public Xx3Encoder(Stream source, TextureBank bank) : base(source)
         {
             texBank = bank;
@@ -30,7 +28,7 @@ namespace PPeX.Encoders
 
             Xx3Writer writer = new Xx3Writer(Core.Settings.Xx2Precision);
 
-            encodedXx3 = new MemoryStream();
+            MemoryStream encodedXx3 = new MemoryStream();
 
             writer.Write(file, encodedXx3);
 
@@ -42,13 +40,6 @@ namespace PPeX.Encoders
         public override string NameTransform(string original)
         {
             return $"{original.Substring(0, original.LastIndexOf('.'))}.xx3";
-        }
-
-        public override void Dispose()
-        {
-            if (encodedXx3 != null)
-                encodedXx3.Dispose();
-            base.Dispose();
         }
 
         public override Stream Decode()

@@ -56,17 +56,7 @@ namespace PPeX.Archives
         protected bool TryAddFile(ISubfile file, ulong maxChunkSize, bool continueAnyway)
         {
             Md5Hash hash = file.Source.Md5;
-
-            if (fileReceipts.Any(x => x.Md5 == hash))
-            {
-                FileReceipt original = fileReceipts.First(x => x.Md5 == hash);
-
-                FileReceipt duplicate = FileReceipt.CreateDuplicate(original, file);
-
-                fileReceipts.Add(duplicate);
-
-                return true;
-            }
+            bool isDuplicate = fileReceipts.Any(x => x.Md5 == hash);
 
 #warning should add conversion/encoding settings here
             ArchiveFileType target;
@@ -99,8 +89,6 @@ namespace PPeX.Archives
                 using (IEncoder decoder = EncoderFactory.GetEncoder(file.Source.GetStream(), writer, file.Type))
                 using (IEncoder encoder = EncoderFactory.GetEncoder(decoder.Decode(), writer, target))
                 {
-                    dataStream = encoder.Encode();
-
                     internalName = encoder.NameTransform(file.Name);
 
                     switch (encoder.DataType)
@@ -115,6 +103,22 @@ namespace PPeX.Archives
                             emulatedName = file.EmulatedName;
                             break;
                     }
+
+                    if (isDuplicate)
+                    {
+                        FileReceipt original = fileReceipts.First(x => x.Md5 == hash);
+
+                        FileReceipt duplicate = FileReceipt.CreateDuplicate(original, file);
+
+                        duplicate.InternalName = internalName;
+                        duplicate.EmulatedName = emulatedName;
+
+                        fileReceipts.Add(duplicate);
+
+                        return true;
+                    }
+
+                    dataStream = encoder.Encode();
                 }
             }
             
