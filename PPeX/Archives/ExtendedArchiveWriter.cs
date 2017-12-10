@@ -186,7 +186,7 @@ namespace PPeX
 
             var node = linkedSubfileList.First;
 
-            while (node.Next != null)
+            while (node != null && node.Next != null)
             {
                 ISubfile file = node.Value;
                 Md5Hash hash = file.Source.Md5;
