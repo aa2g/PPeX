@@ -948,6 +948,7 @@
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(781, 307);
             this.Controls.Add(this.splitContainer1);
+            this.Icon = global::PPeXUI.Properties.Resources.PPeX;
             this.MinimumSize = new System.Drawing.Size(797, 346);
             this.Name = "formMain";
             this.Text = "PPeXUI";
