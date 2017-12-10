@@ -29,7 +29,7 @@ namespace ZstdNet
 
         const string dll32 = "libzstd32.dll";
         const string dll64 = "libzstd64.dll";
-        const string linuxso = "libzstd.so";
+        const string linuxso = "libzstd.so.1";
 
         private enum Platform
         {
