@@ -180,7 +180,7 @@ namespace PPeXUI
                     if (!node.Parent.IsExpanded)
                         node.Parent.Expand();
                 }
-                
+
 
                 //trvFiles.SelectedNode = node;
 
@@ -206,7 +206,7 @@ namespace PPeXUI
 
                 ReloadInfo();
             }
-                
+
         }
 
         private void TryDeleteSelected()
@@ -253,7 +253,7 @@ namespace PPeXUI
             if (!isreloading && trvFiles.SelectedNode != null)
             {
                 var node = trvFiles.SelectedNode;
-                
+
                 if (node.Tag != null)
                 {
                     var current = node.Tag as SubfileHolder;
@@ -406,7 +406,7 @@ namespace PPeXUI
                         }
 
                         string uncompressedSize = PPeX.Utility.GetBytesReadable(ucb);
-                        
+
                         string size = PPeX.Utility.GetBytesReadable(cb);
 
                         string ratio = ((double)cb / ucb).ToString("P2");
@@ -450,7 +450,7 @@ namespace PPeXUI
                                 break;
                         }
                     }
-                        
+
                 }
             }
         }
@@ -591,7 +591,7 @@ namespace PPeXUI
 
             });
 
-            
+
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -613,7 +613,7 @@ namespace PPeXUI
             IsModified = false;
 
             ExtendedArchive arc = new ExtendedArchive(path);
-            
+
             List<TreeNode> parents = new List<TreeNode>();
 
             trvFiles.BeginUpdate();
@@ -715,7 +715,7 @@ namespace PPeXUI
                     ImportPP(file, progress);
                 }
 
-                progform.DynamicInvoke(() => 
+                progform.DynamicInvoke(() =>
                     progform.Close()
                     );
             });
@@ -801,7 +801,7 @@ namespace PPeXUI
                             trvFiles.SelectedNode :
                             trvFiles.SelectedNode.Parent;
 
-                        
+
                         var node = parent.Nodes.Add(Path.GetFileName(file));
 
                         node.Tag = new SubfileHolder(new FileSource(file), Path.GetFileName(file));
@@ -901,30 +901,36 @@ namespace PPeXUI
             verifyForm.ShowDialog();
         }
 
-        public string ShowSaveFileDialog(string filter, string defaultname = "")
+        private static string showSaveFileDialogWin32(string[][] filters, string defaultname)
+        {
+            CommonSaveFileDialog dialog = new CommonSaveFileDialog()
+            {
+                OverwritePrompt = true
+            };
+
+            if (defaultname != "")
+                dialog.DefaultFileName = defaultname;
+
+            foreach (string[] filterSet in filters)
+                dialog.Filters.Add(new CommonFileDialogFilter(filterSet[0], filterSet[1]));
+
+            var result = dialog.ShowDialog();
+
+            if (result != CommonFileDialogResult.Ok)
+                return "";
+
+            return dialog.FileName;
+        }
+
+
+        public static string ShowSaveFileDialog(string filter, string defaultname = "")
         {
             string[][] filters = filter.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => x.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries)).ToArray();
 
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
-                CommonSaveFileDialog dialog = new CommonSaveFileDialog()
-                {
-                    OverwritePrompt = true
-                };
-
-                if (defaultname != "")
-                    dialog.DefaultFileName = defaultname;
-
-                foreach (string[] filterSet in filters)
-                    dialog.Filters.Add(new CommonFileDialogFilter(filterSet[0], filterSet[1]));
-
-                var result = dialog.ShowDialog();
-
-                if (result != CommonFileDialogResult.Ok)
-                    return "";
-
-                return dialog.FileName;
+                return showSaveFileDialogWin32(filters, defaultname);
             }
             else
             {
@@ -957,6 +963,27 @@ namespace PPeXUI
             }
         }
 
+        private static IEnumerable<string> showOpenFileDialogWin32(string[][] filters, bool multiple)
+        {
+            CommonOpenFileDialog dialog = new CommonOpenFileDialog()
+            {
+                Multiselect = multiple,
+                EnsureValidNames = true,
+                EnsureFileExists = true,
+                EnsurePathExists = true
+            };
+
+            foreach (string[] filterSet in filters)
+                dialog.Filters.Add(new CommonFileDialogFilter(filterSet[0], filterSet[1]));
+
+            var result = dialog.ShowDialog();
+
+            if (result != CommonFileDialogResult.Ok)
+                return new string[0];
+
+            return dialog.FileNames;
+        }
+
         public static IEnumerable<string> ShowOpenFileDialog(string filter = "", bool multiple = false)
         {
             string[][] filters = filter.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
@@ -964,23 +991,7 @@ namespace PPeXUI
 
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
-                CommonOpenFileDialog dialog = new CommonOpenFileDialog()
-                {
-                    Multiselect = multiple,
-                    EnsureValidNames = true,
-                    EnsureFileExists = true,
-                    EnsurePathExists = true
-                };
-
-                foreach (string[] filterSet in filters)
-                    dialog.Filters.Add(new CommonFileDialogFilter(filterSet[0], filterSet[1]));
-
-                var result = dialog.ShowDialog();
-
-                if (result != CommonFileDialogResult.Ok)
-                    return new string[0];
-
-                return dialog.FileNames;
+                return showOpenFileDialogWin32(filters, multiple);
             }
             else
             {
@@ -1013,27 +1024,32 @@ namespace PPeXUI
             }
         }
 
+        private static IEnumerable<string> showFolderDialogWin32(string title, bool multiple)
+        {
+            CommonOpenFileDialog dialog = new CommonOpenFileDialog()
+            {
+                Multiselect = multiple,
+                IsFolderPicker = true,
+                EnsureValidNames = true,
+                EnsurePathExists = true
+            };
+
+            if (title != "")
+                dialog.Title = title;
+
+            var result = dialog.ShowDialog();
+
+            if (result != CommonFileDialogResult.Ok)
+                return new string[0];
+
+            return dialog.FileNames;
+        }
+
         public static IEnumerable<string> ShowFolderDialog(string title = "", bool multiple = false)
         {
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
-                CommonOpenFileDialog dialog = new CommonOpenFileDialog()
-                {
-                    Multiselect = multiple,
-                    IsFolderPicker = true,
-                    EnsureValidNames = true,
-                    EnsurePathExists = true
-                };
-
-                if (title != "")
-                    dialog.Title = title;
-
-                var result = dialog.ShowDialog();
-
-                if (result != CommonFileDialogResult.Ok)
-                    return new string[0];
-
-                return dialog.FileNames;
+                return showFolderDialogWin32(title, multiple);
             }
             else
             {
