@@ -968,7 +968,7 @@
             // imgLogo
             // 
             this.imgLogo.Dock = System.Windows.Forms.DockStyle.Right;
-            this.imgLogo.Image = global::PPeXUI.Properties.Resources.ppex1;
+            this.imgLogo.Image = global::PPeXUI.Properties.Resources.ppex2;
             this.imgLogo.Location = new System.Drawing.Point(365, 3);
             this.imgLogo.Name = "imgLogo";
             this.imgLogo.Size = new System.Drawing.Size(186, 275);
