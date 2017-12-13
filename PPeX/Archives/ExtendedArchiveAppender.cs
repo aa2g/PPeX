@@ -75,7 +75,9 @@ namespace PPeX
                     Offset = fileSource.Offset,
                     Length = fileSource.Size,
                     Md5 = fileSource.Md5,
-                    Subfile = new ArchiveSubfile(fileSource)
+                    Subfile = new ArchiveSubfile(fileSource),
+                    InternalName = fileSource.Name,
+                    EmulatedName = fileSource.EmulatedName
                 };
 
                 fileReciepts.Add(reciept);
@@ -121,7 +123,7 @@ namespace PPeX
             using (FileStream fs = new FileStream(BaseArchive.Filename, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
             using (BinaryWriter dataWriter = new BinaryWriter(fs))
             {
-                InitializeThreads(Threads, fs, ProgressStatus);
+                InitializeThreads(Threads, fs, DefaultCompression, ProgressStatus);
 
                 long tableInfoOffset = WriteHeader(dataWriter, false);
 

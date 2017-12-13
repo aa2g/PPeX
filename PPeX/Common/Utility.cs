@@ -46,11 +46,9 @@ namespace PPeX
 
         public static long TestCompression(Stream data, ArchiveChunkCompression method)
         {
-            using (ICompressor compressor = CompressorFactory.GetCompressor(data, method))
-            using (MemoryStream temp = new MemoryStream())
+            using (ICompressor compressor = CompressorFactory.GetCompressor(method))
             {
-                compressor.WriteToStream(temp);
-                return compressor.CompressedSize;
+                return compressor.GetStream(data).Length;
             }
         }
 

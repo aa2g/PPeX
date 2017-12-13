@@ -55,10 +55,10 @@ namespace PPeXM64
                     if (possibleFiles.Any(x => !x.Allocated))
                     {
                         using (MemoryStream uncomp = new MemoryStream(uncompressed))
-                        using (ICompressor compressor = CompressorFactory.GetCompressor(uncomp, RecompressionMethod))
+                        using (ICompressor compressor = CompressorFactory.GetCompressor(RecompressionMethod))
                         using (MemoryStream compressed = new MemoryStream())
                         {
-                            compressor.WriteToStream(compressed);
+                            compressor.WriteToStream(uncomp, compressed);
 
                             byte[] compressedArray = compressed.ToArray();
 

@@ -90,8 +90,8 @@ namespace PPeX
             MemoryStream mem = new MemoryStream();
 
             using (Stream raw = GetRawStream())
-            using (IDecompressor decompressor = CompressorFactory.GetDecompressor(raw, Compression))
-                decompressor.Decompress().CopyTo(mem);
+            using (IDecompressor decompressor = CompressorFactory.GetDecompressor(Compression))
+                decompressor.Decompress(raw).CopyTo(mem);
 
             mem.Position = 0;
 

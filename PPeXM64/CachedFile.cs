@@ -80,11 +80,11 @@ namespace PPeXM64
             Accesses++;
 
             using (MemoryStream mem = new MemoryStream(CompressedData))
-            using (IDecompressor decompressor = CompressorFactory.GetDecompressor(mem, Compression))
+            using (IDecompressor decompressor = CompressorFactory.GetDecompressor(Compression))
             {
                 if (Type == ArchiveFileType.Xx3Mesh)
                 {
-                    IEncoder decoder = new Xx3Encoder(decompressor.Decompress(), Cache.UniversalTexBank);
+                    IEncoder decoder = new Xx3Encoder(decompressor.Decompress(mem), Cache.UniversalTexBank);
                     
                     Stream decoded = decoder.Decode();
                     decoded.Position = 0;
@@ -93,7 +93,7 @@ namespace PPeXM64
                 }
                 else
                 {
-                    IEncoder decoder = EncoderFactory.GetEncoder(decompressor.Decompress(), Source.BaseArchive, Type);
+                    IEncoder decoder = EncoderFactory.GetEncoder(decompressor.Decompress(mem), Source.BaseArchive, Type);
 
                     Stream decoded = decoder.Decode();
                     decoded.Position = 0;

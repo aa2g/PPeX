@@ -300,7 +300,7 @@ namespace PPeX
 
                 if (result)
                 {
-                    Stream output = item.GetData();
+                    Stream output = item.GetData(context.Compressor);
 
                     threadProgress.Report("Written chunk id:" + item.Receipt.ID + " (" + item.Receipt.FileReceipts.Count + " files)\r\n");
 
@@ -394,7 +394,7 @@ namespace PPeX
             }
         }
 
-        protected void InitializeThreads(int threads, Stream ArchiveStream, IProgress<string> ProgressStatus)
+        protected void InitializeThreads(int threads, Stream ArchiveStream, ArchiveChunkCompression Compression, IProgress<string> ProgressStatus)
         {
             TextureBank = new CompressedTextureBank(ArchiveChunkCompression.LZ4);
 
@@ -402,13 +402,18 @@ namespace PPeX
 
             CompletedChunks = new List<ChunkReceipt>();
             threadProgress = ProgressStatus;
-
-            WriterThreadContext ctx = new WriterThreadContext { ArchiveStream = ArchiveStream };
+            
 
             threadObjects = new Thread[Threads];
             for (int i = 0; i < Threads; i++)
             {
                 threadObjects[i] = new Thread(new ParameterizedThreadStart(CompressCallback));
+
+                WriterThreadContext ctx = new WriterThreadContext {
+                    ArchiveStream = ArchiveStream,
+                    Compressor = CompressorFactory.GetCompressor(Compression)
+                };
+
                 threadObjects[i].Start(ctx);
             }
         }
@@ -453,7 +458,7 @@ namespace PPeX
             if (!ArchiveStream.CanSeek || !ArchiveStream.CanWrite)
                 throw new ArgumentException("Stream must be seekable and able to be written to.", nameof(ArchiveStream));
 
-            InitializeThreads(Threads, ArchiveStream, ProgressStatus);
+            InitializeThreads(Threads, ArchiveStream, DefaultCompression, ProgressStatus);
             
             using (BinaryWriter dataWriter = new BinaryWriter(ArchiveStream, Encoding.ASCII, leaveOpen))
             {
@@ -567,6 +572,7 @@ namespace PPeX
         protected class WriterThreadContext
         {
             public Stream ArchiveStream;
+            public ICompressor Compressor;
         }
     }
 }

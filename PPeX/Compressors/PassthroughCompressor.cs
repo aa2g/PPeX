@@ -11,22 +11,22 @@ namespace PPeX.Compressors
     {
         public override ArchiveChunkCompression Compression => ArchiveChunkCompression.Uncompressed;
 
-        public PassthroughCompressor(Stream stream) : base(stream, (uint)stream.Length)
+        public override long WriteToStream(Stream input, Stream output)
         {
-            CompressedSize = (uint)BaseStream.Length;
+            long outputpos = output.Position;
+            input.CopyTo(output);
+
+            return output.Position - outputpos;
         }
 
-        public override uint CompressedSize { get; protected set; }
-
-        public Stream Decompress()
+        public Stream Decompress(Stream input)
         {
-            return BaseStream;
+            return input;
         }
 
-        public override void WriteToStream(Stream stream)
+        public override void Dispose()
         {
-            BaseStream.Position = 0;
-            BaseStream.CopyTo(stream);
+            //nothing to dispose
         }
     }
 }

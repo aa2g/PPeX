@@ -56,6 +56,7 @@
     <Compile Include="Archives\Writers\HybridEncoder.cs" />
     <Compile Include="Archives\Writers\IThreadWork.cs" />
     <Compile Include="Common\Extensions.cs" />
+    <Compile Include="Compressors\BaseCompressor.cs" />
     <Compile Include="Encoders\XxEncoder.cs" />
     <Compile Include="Encoders\WaveEncoder.cs" />
     <Compile Include="External\Ogg\OggPage.cs" />
@@ -103,7 +104,7 @@
     <Compile Include="Archives\ArchiveEnum.cs" />
     <Compile Include="Archives\ExtendedArchiveChunk.cs" />
     <Compile Include="CachedMd5.cs" />
-    <Compile Include="Compressors\BaseCompressor.cs" />
+    <Compile Include="Compressors\CompressorFactory.cs" />
     <Compile Include="Compressors\Lz4Compressor.cs" />
     <Compile Include="Compressors\PassthroughCompressor.cs" />
     <Compile Include="Compressors\ZstdCompressor.cs" />
