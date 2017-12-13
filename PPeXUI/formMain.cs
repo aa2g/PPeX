@@ -69,9 +69,6 @@ namespace PPeXUI
 #if !DEBUG
             verifyArchiveToolStripMenuItem.Enabled = false;
             verifyArchiveToolStripMenuItem.Visible = false;
-
-            convertxggTowavToolStripMenuItem.Enabled = false;
-            convertxggTowavToolStripMenuItem.Visible = false;
 #endif
             numVoiceBitrate.Value = Core.Settings.OpusVoiceBitrate / 1000;
             numMusicBitrate.Value = Core.Settings.OpusMusicBitrate / 1000;
@@ -871,38 +868,6 @@ namespace PPeXUI
             }
 
             trvFiles.EndUpdate();
-        }
-
-        private void convertxggTowavToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            IEnumerable<string> paths = ShowOpenFileDialog("XGG audio file|*.xgg", true);
-
-            if (!paths.Any())
-                return;
-
-            var progform = new formImporting();
-
-            IProgress<int> progress = new Progress<int>((x) =>
-            {
-                progform.SetProgress(x, x);
-            });
-
-            Task t = Task.Factory.StartNew(() =>
-            {
-                foreach (string file in paths)
-                {
-                    using (FileSource f = new FileSource(file))
-                    using (PPeX.Encoders.OpusEncoder decoder = new PPeX.Encoders.OpusEncoder(f.GetStream()))
-                    using (FileStream fs = new FileStream(file.Replace(".xgg", ".wav"), FileMode.Create))
-                        decoder.Decode().CopyTo(fs);
-                }
-
-                progform.DynamicInvoke(() =>
-                    progform.Close()
-                    );
-            });
-
-            progform.ShowDialog(this);
         }
 
         private void btnClearCache_Click(object sender, EventArgs e)
