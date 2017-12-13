@@ -11,17 +11,15 @@ namespace PPeX
     {
         ArchiveChunkCompression Compression { get; }
 
-        uint UncompressedSize { get; }
+        Stream GetStream(Stream input);
 
-        uint CompressedSize { get; }
-
-        void WriteToStream(Stream stream);
+        long WriteToStream(Stream input, Stream output);
     }
 
     public interface IDecompressor : IDisposable
     {
         ArchiveChunkCompression Compression { get; }
 
-        Stream Decompress();
+        Stream Decompress(Stream input);
     }
 }

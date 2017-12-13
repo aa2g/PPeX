@@ -12,17 +12,15 @@ namespace PPeX.Compressors
         public override ArchiveChunkCompression Compression => ArchiveChunkCompression.LZ4;
 
         protected bool highCompression;
+        protected int blockSize;
 
-        public static int BlockSize = 4 * 1024 * 1024;
-
-        public Lz4Compressor(Stream stream, bool HighCompression) : base(stream, (uint)stream.Length)
+        public Lz4Compressor(bool HighCompression, int BlockSize = 4 * 1024 * 1024)
         {
             highCompression = HighCompression;
+            blockSize = BlockSize;
         }
 
-        public override uint CompressedSize { get; protected set; }
-
-        public override void WriteToStream(Stream stream)
+        public override long WriteToStream(Stream input, Stream stream)
         {
             long oldPos = stream.Position;
 
@@ -31,13 +29,18 @@ namespace PPeX.Compressors
             if (highCompression)
                 flags |= LZ4.LZ4StreamFlags.HighCompression;
 
-            using (var lz4 = new LZ4.LZ4Stream(stream, LZ4.LZ4StreamMode.Compress, flags, BlockSize))
+            using (var lz4 = new LZ4.LZ4Stream(stream, LZ4.LZ4StreamMode.Compress, flags, blockSize))
             {
-                BaseStream.CopyTo(lz4);
+                input.CopyTo(lz4);
                 lz4.Close();
             }
 
-            CompressedSize = (uint)(stream.Position - oldPos);
+            return stream.Position - oldPos;
+        }
+
+        public override void Dispose()
+        {
+            //nothing to dispose
         }
     }
 
@@ -45,18 +48,11 @@ namespace PPeX.Compressors
     {
         public ArchiveChunkCompression Compression => ArchiveChunkCompression.LZ4;
 
-        public Stream BaseStream { get; protected set; }
-
-        public Lz4Decompressor(Stream stream)
-        {
-            BaseStream = stream;
-        }
-
-        public Stream Decompress()
+        public Stream Decompress(Stream input)
         {
             MemoryStream buffer = new MemoryStream();
 
-            using (var lz4 = new LZ4.LZ4Stream(BaseStream, LZ4.LZ4StreamMode.Decompress))
+            using (var lz4 = new LZ4.LZ4Stream(input, LZ4.LZ4StreamMode.Decompress))
                 lz4.CopyTo(buffer);
 
             buffer.Position = 0;
@@ -66,7 +62,7 @@ namespace PPeX.Compressors
 
         public void Dispose()
         {
-            ((IDisposable)BaseStream).Dispose();
+            //nothing to dispose
         }
     }
 }

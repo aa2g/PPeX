@@ -10,20 +10,21 @@ namespace PPeX.Xx2
 {
     public class CompressedTextureBank : TextureBank
     {
-        ArchiveChunkCompression compression;
+        ICompressor compressor;
+        IDecompressor decompressor;
 
         public CompressedTextureBank(ArchiveChunkCompression compression)
         {
-            this.compression = compression;
+            compressor = CompressorFactory.GetCompressor(compression);
+            decompressor = CompressorFactory.GetDecompressor(compression);
         }
 
         protected byte[] GetCompressed(byte[] source)
         {
             using (MemoryStream stream = new MemoryStream(source))
-            using (ICompressor compressor = CompressorFactory.GetCompressor(stream, compression))
             using (MemoryStream destination = new MemoryStream())
             {
-                compressor.WriteToStream(destination);
+                compressor.WriteToStream(stream, destination);
                 return destination.ToArray();
             }
         }
@@ -31,10 +32,9 @@ namespace PPeX.Xx2
         protected byte[] GetDecompressed(byte[] compressed)
         {
             using (MemoryStream stream = new MemoryStream(compressed))
-            using (IDecompressor decompressor = CompressorFactory.GetDecompressor(stream, compression))
             using (MemoryStream destination = new MemoryStream())
             {
-                decompressor.Decompress().CopyTo(destination);
+                decompressor.Decompress(stream).CopyTo(destination);
                 return destination.ToArray();
             }
         }

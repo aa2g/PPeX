@@ -26,6 +26,7 @@ namespace PPeX.Archives
         public HybridChunkWriter(uint id, ArchiveChunkCompression compression, ChunkType type, IArchiveContainer writer)
         {
             ID = id;
+#warning Currently this doesn't change chunk compression
             Compression = compression;
             Type = type;
             this.writer = writer;
@@ -37,7 +38,7 @@ namespace PPeX.Archives
 
         public bool ContainsFiles => fileReceipts.Count > 0;
 
-        public MemoryStream CompressedStream { get; protected set; }
+        public Stream CompressedStream { get; protected set; }
 
         protected List<FileReceipt> fileReceipts = new List<FileReceipt>();
 
@@ -74,15 +75,17 @@ namespace PPeX.Archives
                     break;
             }
 
-            Stream dataStream;
+            Stream dataStream = null;
             string internalName;
             string emulatedName;
 
             if (target == file.Type)
             {
-                dataStream = file.Source.GetStream();
                 internalName = file.Name;
                 emulatedName = file.EmulatedName;
+
+                if (!isDuplicate)
+                    dataStream = file.Source.GetStream();
             }
             else
             {
@@ -104,24 +107,25 @@ namespace PPeX.Archives
                             break;
                     }
 
-                    if (isDuplicate)
-                    {
-                        FileReceipt original = fileReceipts.First(x => x.Md5 == hash);
-
-                        FileReceipt duplicate = FileReceipt.CreateDuplicate(original, file);
-
-                        duplicate.InternalName = internalName;
-                        duplicate.EmulatedName = emulatedName;
-
-                        fileReceipts.Add(duplicate);
-
-                        return true;
-                    }
-
-                    dataStream = encoder.Encode();
+                    if (!isDuplicate)
+                        dataStream = encoder.Encode();
                 }
             }
-            
+
+            if (isDuplicate)
+            {
+                FileReceipt original = fileReceipts.First(x => x.Md5 == hash);
+
+                FileReceipt duplicate = FileReceipt.CreateDuplicate(original, file);
+
+                duplicate.InternalName = internalName;
+                duplicate.EmulatedName = emulatedName;
+
+                fileReceipts.Add(duplicate);
+
+                return true;
+            }
+
             using (dataStream)
             {
                 if (continueAnyway ||
@@ -149,23 +153,21 @@ namespace PPeX.Archives
             return false;
         }
 
-        public void Compress()
+        public void Compress(ICompressor compressor)
         {
             UncompressedStream.Position = 0;
 
             using (UncompressedStream)
-            using (ICompressor compressor = CompressorFactory.GetCompressor(UncompressedStream, Compression))
             {
-                CompressedStream = new MemoryStream();
+                CompressedStream = compressor.GetStream(UncompressedStream);
 
-                compressor.WriteToStream(CompressedStream);
-
-                uint crc = CRC32.Compute(CompressedStream.ToArray());
+                uint crc = CRC32.Compute(CompressedStream);
+                CompressedStream.Position = 0;
 
                 Receipt = new ChunkReceipt
                 {
                     ID = this.ID,
-                    Compression = this.Compression,
+                    Compression = compressor.Compression,
                     Type = this.Type,
                     CRC = crc,
                     UncompressedSize = (ulong)UncompressedStream.Length,
@@ -188,10 +190,10 @@ namespace PPeX.Archives
                 CompressedStream.Dispose();
         }
 
-        public Stream GetData()
+        public Stream GetData(ICompressor compressor)
         {
             if (!IsReady)
-                Compress();
+                Compress(compressor);
 
             return CompressedStream;
         }

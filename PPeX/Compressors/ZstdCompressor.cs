@@ -7,37 +7,34 @@ using System.Threading.Tasks;
 
 namespace PPeX.Compressors
 {
-    public class ZstdCompressor : BaseCompressor, IDisposable
+    public class ZstdCompressor : BaseCompressor
     {
         public override ArchiveChunkCompression Compression => ArchiveChunkCompression.Zstandard;
 
         protected ZstdNet.Compressor _compressor;
 
-        public ZstdCompressor(Stream stream, int CompressionLevel) : base(stream, (uint)stream.Length)
+        public ZstdCompressor(int CompressionLevel)
         {
-            _compressor = new ZstdNet.Compressor(new ZstdNet.CompressionOptions(CompressionLevel), 1);
+            _compressor = new ZstdNet.Compressor(new ZstdNet.CompressionOptions(CompressionLevel));
         }
 
-        public override uint CompressedSize { get; protected set; }
-
-        public override void WriteToStream(Stream stream)
+        public override long WriteToStream(Stream input, Stream output)
         {
             using (MemoryStream mem = new MemoryStream())
             {
-                BaseStream.CopyTo(mem);
+                input.CopyTo(mem);
 
-                using (MemoryStream output = new MemoryStream(_compressor.Wrap(mem.ToArray())))
-                {
-                    output.CopyTo(stream);
-                    CompressedSize = (uint)output.Length;
-                }
+                byte[] buffer = _compressor.Wrap(mem.ToArray());
+
+                output.Write(buffer, 0, buffer.Length);
+
+                return output.Length;
             }
         }
 
         public override void Dispose()
         {
             ((IDisposable)_compressor).Dispose();
-            base.Dispose();
         }
     }
 
@@ -47,19 +44,16 @@ namespace PPeX.Compressors
 
         protected ZstdNet.Decompressor _decompressor;
 
-        public Stream BaseStream { get; protected set; }
-
-        public ZstdDecompressor(Stream stream)
+        public ZstdDecompressor()
         {
             _decompressor = new ZstdNet.Decompressor();
-            BaseStream = stream;
         }
 
-        public Stream Decompress()
+        public Stream Decompress(Stream input)
         {
             using (MemoryStream buffer = new MemoryStream())
             {
-                BaseStream.CopyTo(buffer);
+                input.CopyTo(buffer);
                 return new MemoryStream(_decompressor.Unwrap(buffer.ToArray()));
             }
         }
@@ -67,7 +61,6 @@ namespace PPeX.Compressors
         public void Dispose()
         {
             ((IDisposable)_decompressor).Dispose();
-            ((IDisposable)BaseStream).Dispose();
         }
     }
 }
