@@ -162,7 +162,6 @@ namespace PPeX.Archives
                 CompressedStream = compressor.GetStream(UncompressedStream);
 
                 uint crc = CRC32.Compute(CompressedStream);
-                CompressedStream.Position = 0;
 
                 Receipt = new ChunkReceipt
                 {
