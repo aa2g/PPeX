@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -32,7 +33,7 @@ namespace PPeXTests
 
             Assert.IsFalse(writer.IsReady);
 
-            writer.Compress(new PassthroughCompressor());
+            writer.Compress(new List<ICompressor> { new PassthroughCompressor() });
 
             Assert.IsTrue(writer.IsReady);
         }
@@ -78,20 +79,21 @@ namespace PPeXTests
         [TestMethod]
         public void HybridChunkWriter_CompressTest()
         {
-            Mock<ICompressor> compressorMock = new Mock<ICompressor>();
-            compressorMock.Setup(x => x.GetStream(It.IsAny<Stream>()))
-                .Returns((Stream s) =>
-                {
-                    MemoryStream mem = new MemoryStream();
-                    s.CopyTo(mem);
-                    mem.Position = 0;
-                    return mem;
-                });
+            Mock<BaseCompressor> compressorMock = new Mock<BaseCompressor>();
+            compressorMock.CallBase = true;
 
             compressorMock.Setup(x => x.WriteToStream(It.IsAny<Stream>(), It.IsAny<Stream>()))
                 .Callback((Stream i, Stream o) => i.CopyTo(o));
 
             compressorMock.Setup(x => x.Compression).Returns(ArchiveChunkCompression.Uncompressed);
+
+            Mock<BaseCompressor> compressorMock2 = new Mock<BaseCompressor>();
+            compressorMock2.CallBase = true;
+
+            compressorMock2.Setup(x => x.WriteToStream(It.IsAny<Stream>(), It.IsAny<Stream>()))
+                .Callback((Stream i, Stream o) => i.CopyTo(o));
+
+            compressorMock2.Setup(x => x.Compression).Returns(ArchiveChunkCompression.Zstandard);
 
 
             Mock<IArchiveContainer> containerMock = new Mock<IArchiveContainer>();
@@ -110,7 +112,10 @@ namespace PPeXTests
 
             writer.AddFile(subfileMock3);
 
-            writer.Compress(compressorMock.Object);
+            writer.Compress(new List<ICompressor> { compressorMock.Object, compressorMock2.Object });
+
+            compressorMock.Verify(x => x.WriteToStream(It.IsAny<Stream>(), It.IsAny<Stream>()), Times.AtLeastOnce);
+            compressorMock2.Verify(x => x.WriteToStream(It.IsAny<Stream>(), It.IsAny<Stream>()), Times.Never);
 
             Assert.IsNotNull(writer.CompressedStream);
             Assert.IsTrue(writer.CompressedStream.Length == 16 + 32);

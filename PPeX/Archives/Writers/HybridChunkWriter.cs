@@ -26,7 +26,6 @@ namespace PPeX.Archives
         public HybridChunkWriter(uint id, ArchiveChunkCompression compression, ChunkType type, IArchiveContainer writer)
         {
             ID = id;
-#warning Currently this doesn't change chunk compression
             Compression = compression;
             Type = type;
             this.writer = writer;
@@ -153,9 +152,10 @@ namespace PPeX.Archives
             return false;
         }
 
-        public void Compress(ICompressor compressor)
+        public void Compress(IEnumerable<ICompressor> compressors)
         {
             UncompressedStream.Position = 0;
+            ICompressor compressor = compressors.First(x => x.Compression == Compression);
 
             using (UncompressedStream)
             {
@@ -189,10 +189,10 @@ namespace PPeX.Archives
                 CompressedStream.Dispose();
         }
 
-        public Stream GetData(ICompressor compressor)
+        public Stream GetData(IEnumerable<ICompressor> compressors)
         {
             if (!IsReady)
-                Compress(compressor);
+                Compress(compressors);
 
             return CompressedStream;
         }

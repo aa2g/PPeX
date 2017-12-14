@@ -300,7 +300,7 @@ namespace PPeX
 
                 if (result)
                 {
-                    Stream output = item.GetData(context.Compressor);
+                    Stream output = item.GetData(context.Compressors);
 
                     threadProgress.Report("Written chunk id:" + item.Receipt.ID + " (" + item.Receipt.FileReceipts.Count + " files)\r\n");
 
@@ -394,6 +394,16 @@ namespace PPeX
             }
         }
 
+        protected IEnumerable<ICompressor> GenerateCompressors()
+        {
+            List<ICompressor> compressors = new List<ICompressor>();
+            foreach (ArchiveChunkCompression method in Enum.GetValues(typeof(ArchiveChunkCompression)))
+            {
+                compressors.Add(CompressorFactory.GetCompressor(method));
+            }
+            return compressors;
+        }
+
         protected void InitializeThreads(int threads, Stream ArchiveStream, ArchiveChunkCompression Compression, IProgress<string> ProgressStatus)
         {
             TextureBank = new CompressedTextureBank(ArchiveChunkCompression.LZ4);
@@ -411,7 +421,7 @@ namespace PPeX
 
                 WriterThreadContext ctx = new WriterThreadContext {
                     ArchiveStream = ArchiveStream,
-                    Compressor = CompressorFactory.GetCompressor(Compression)
+                    Compressors = GenerateCompressors()
                 };
 
                 threadObjects[i].Start(ctx);
@@ -572,7 +582,7 @@ namespace PPeX
         protected class WriterThreadContext
         {
             public Stream ArchiveStream;
-            public ICompressor Compressor;
+            public IEnumerable<ICompressor> Compressors;
         }
     }
 }
