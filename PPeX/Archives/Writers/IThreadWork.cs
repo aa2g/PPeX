@@ -9,7 +9,7 @@ namespace PPeX.Archives.Writers
 {
     public interface IThreadWork : IDisposable
     {
-        Stream GetData(ICompressor compressor);
+        Stream GetData(IEnumerable<ICompressor> compressors);
 
         ChunkReceipt Receipt { get; }
     }

@@ -26,12 +26,12 @@ namespace PPeX.Archives.Writers
             chunkWriter.Dispose();
         }
 
-        public Stream GetData(ICompressor compressor)
+        public Stream GetData(IEnumerable<ICompressor> compressors)
         {
             foreach (ISubfile file in files)
                 chunkWriter.AddFile(file);
 
-            chunkWriter.Compress(compressor);
+            chunkWriter.Compress(compressors);
             return chunkWriter.CompressedStream;
         }
     }
