@@ -189,6 +189,8 @@ Sets a regex to use for compressing or extracting.");
                 Console.WriteLine("-- STACK TRACE --");
                 Console.WriteLine(ex.StackTrace);
             }
+
+            Environment.Exit(9999);
         }
 
 #region Compress
@@ -256,6 +258,13 @@ Sets a regex to use for compressing or extracting.");
                 else if (currentArg == "-no-encode")
                 {
                     unencodedRegex = new Regex(args[argcounter++]);
+                }
+                else
+                {
+                    Console.WriteLine($"Unknown command: \"{currentArg}\"");
+                    Console.WriteLine($"Stopping archival");
+                    Environment.Exit(1);
+                    return;
                 }
             }
 
