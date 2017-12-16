@@ -469,14 +469,14 @@ Sets a regex to use for compressing or extracting.");
                     string fullname = file.ArchiveName + "/" + file.Name;
                     string arcname = file.ArchiveName.Replace(".pp", "");
 
-                    if (!Directory.Exists(outputDirectory.FullName + "\\" + arcname))
-                        Directory.CreateDirectory(outputDirectory.FullName + "\\" + arcname);
-
                     if (regex.IsMatch(fullname))
                     {
                         Console.WriteLine("Exporting " + fullname);
 
-                        using (FileStream fs = new FileStream(outputDirectory.FullName + "\\" + arcname + "\\" + file.Name, FileMode.Create))
+                        if (!Directory.Exists(Path.Combine(outputDirectory.FullName, arcname)))
+                            Directory.CreateDirectory(Path.Combine(outputDirectory.FullName + arcname));
+
+                        using (FileStream fs = new FileStream(Path.Combine(outputDirectory.FullName, arcname, file.Name), FileMode.Create))
                         using (Stream subfileStream = file.GetStream())
                         {
                             subfileStream.CopyTo(fs);
@@ -492,18 +492,18 @@ Sets a regex to use for compressing or extracting.");
                     string fullname = file.ArchiveName + "/" + file.Name;
                     string arcname = file.ArchiveName.Replace(".pp", "");
 
-                    if (!Directory.Exists(outputDirectory.FullName + "\\" + arcname))
-                        Directory.CreateDirectory(outputDirectory.FullName + "\\" + arcname);
-
                     if (regex.IsMatch(fullname))
                     {
                         Console.WriteLine("Exporting " + fullname);
+
+                        if (!Directory.Exists(Path.Combine(outputDirectory.FullName, arcname)))
+                            Directory.CreateDirectory(Path.Combine(outputDirectory.FullName, arcname));
 
                         if (decode == "full" && file.Type == ArchiveFileType.OpusAudio)
                         {
                             string fileName = file.Name.Replace(".opus", ".wav");
 
-                            using (FileStream fs = new FileStream(outputDirectory.FullName + "\\" + arcname + "\\" + fileName, FileMode.Create))
+                            using (FileStream fs = new FileStream(Path.Combine(outputDirectory.FullName, arcname, fileName), FileMode.Create))
                             using (Stream stream = file.GetRawStream())
                             {
                                 stream.CopyTo(fs);
@@ -515,7 +515,7 @@ Sets a regex to use for compressing or extracting.");
                             
                             fileName = EncoderFactory.TransformName(file.Name, file.Type);
 
-                            using (FileStream fs = new FileStream(outputDirectory.FullName + "\\" + arcname + "\\" + fileName, FileMode.Create))
+                            using (FileStream fs = new FileStream(Path.Combine(outputDirectory.FullName, arcname, fileName), FileMode.Create))
                             using (Stream stream = file.GetRawStream())
                             {
                                 stream.CopyTo(fs);
@@ -523,7 +523,7 @@ Sets a regex to use for compressing or extracting.");
                         }
                         else
                         {
-                            using (FileStream fs = new FileStream(outputDirectory.FullName + "\\" + arcname + "\\" + file.Name, FileMode.Create))
+                            using (FileStream fs = new FileStream(Path.Combine(outputDirectory.FullName, arcname, file.Name), FileMode.Create))
                             using (Stream stream = (file as ArchiveSubfile).RawSource.GetStream())
                             {
                                 stream.CopyTo(fs);
