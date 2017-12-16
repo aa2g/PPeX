@@ -42,7 +42,8 @@ namespace PPeX.Encoders
 
         public void Dispose()
         {
-            BaseStream.Dispose();
+            if (BaseStream != null)
+                BaseStream.Dispose();
         }
     }
 }
