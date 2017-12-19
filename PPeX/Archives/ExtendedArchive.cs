@@ -52,7 +52,7 @@ namespace PPeX
         /// </summary>
         public string Filename { get; protected set; }
 
-        public static readonly ushort Version = 7;
+        public static readonly ushort Version = 8;
 
         protected List<ExtendedArchiveChunk> chunks = new List<ExtendedArchiveChunk>();
         /// <summary>

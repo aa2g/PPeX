@@ -98,7 +98,8 @@ namespace PPeX
             {
                 if (file.Type == ArchiveFileType.XxMesh ||
                     file.Type == ArchiveFileType.Xx2Mesh ||
-                    file.Type == ArchiveFileType.Xx3Mesh)
+                    file.Type == ArchiveFileType.Xx3Mesh ||
+                    file.Type == ArchiveFileType.Xx4Mesh)
                 {
                     Xx3Files.Add(file);
                 }

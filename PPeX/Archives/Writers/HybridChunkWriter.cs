@@ -67,7 +67,7 @@ namespace PPeX.Archives
                     target = ArchiveFileType.OpusAudio;
                     break;
                 case ArchiveFileType.XxMesh:
-                    target = ArchiveFileType.Xx3Mesh;
+                    target = ArchiveFileType.Xx4Mesh;
                     break;
                 default:
                     target = file.Type;
