@@ -57,6 +57,7 @@
     <Compile Include="Archives\Writers\IThreadWork.cs" />
     <Compile Include="Common\Extensions.cs" />
     <Compile Include="Compressors\BaseCompressor.cs" />
+    <Compile Include="Encoders\Xx4Encoder.cs" />
     <Compile Include="Encoders\XxEncoder.cs" />
     <Compile Include="Encoders\WaveEncoder.cs" />
     <Compile Include="External\Ogg\OggPage.cs" />
@@ -93,6 +94,9 @@
     <Compile Include="Xx2\Xx3\Xx3File.cs" />
     <Compile Include="Xx2\Xx3\Xx3Writer.cs" />
     <Compile Include="Xx2\Xx3\xxTextureReference.cs" />
+    <Compile Include="Xx2\Xx4\Xx4File.cs" />
+    <Compile Include="Xx2\Xx4\Xx4Reader.cs" />
+    <Compile Include="Xx2\Xx4\Xx4Writer.cs" />
     <Compile Include="Xx2\XX\xxBone.cs" />
     <Compile Include="Xx2\XX\xxFace.cs" />
     <Compile Include="Xx2\XX\xxMaterial.cs" />

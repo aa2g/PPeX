@@ -40,6 +40,11 @@ namespace PPeX
         /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx3Encoder"/>.
         /// </summary>
         Xx3Mesh = 12,
+
+        /// <summary>
+        /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx4Encoder"/>.
+        /// </summary>
+        Xx4Mesh = 13,
     }
 
     /// <summary>

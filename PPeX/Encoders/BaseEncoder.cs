@@ -45,6 +45,8 @@ namespace PPeX.Encoders
             {
                 case ArchiveFileType.Xx3Mesh:
                     return new Xx3Encoder(source, writer.TextureBank);
+                case ArchiveFileType.Xx4Mesh:
+                    return new Xx4Encoder(source, writer.TextureBank);
                 default:
                     return GetGenericEncoder(source, encoding);
             }

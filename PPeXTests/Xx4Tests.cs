@@ -14,10 +14,10 @@ namespace PPeXTests
 {
     [DeploymentItem("A00_00_00_03.xx")]
     [TestClass()]
-    public class Xx3ParserTests
+    public class Xx4ParserTests
     {
-        public static Xx3File File;
-        public static Xx3Writer x3writer = new Xx3Writer(0);
+        public static Xx4File File;
+        public static Xx4Writer x4writer = new Xx4Writer();
         public static string Path = "A00_00_00_03.xx";
 
         public static TextureBank bank = new TextureBank();
@@ -25,7 +25,7 @@ namespace PPeXTests
         [ClassInitialize]
         public static void Initialize(TestContext context)
         {
-            File = new Xx3File(new xxParser(new FileStream(Path, FileMode.Open)), bank);
+            File = new Xx4File(new xxParser(new FileStream(Path, FileMode.Open)), bank);
         }
 
 
@@ -49,7 +49,7 @@ namespace PPeXTests
 
                 xxParser parser = new xxParser(mem);
 
-                VerifyFile(File, new Xx3File(parser, bank));
+                VerifyFile(File, new Xx4File(parser, bank));
             }
         }
 
@@ -68,6 +68,24 @@ namespace PPeXTests
                 byte[] encoded = mem.ToArray();
 
                 Assert.IsTrue(PPeX.Utility.CompareBytes(data, encoded));
+            }
+        }
+
+        [TestMethod()]
+        public void Xx4WritingTest()
+        {
+            byte[] data = System.IO.File.ReadAllBytes(Path);
+
+            using (MemoryStream mem = new MemoryStream())
+            using (MemoryStream write = new MemoryStream())
+            {
+                x4writer.Write(File, mem);
+
+                mem.Position = 0;
+
+                var newxx = Xx4Reader.Read(mem);
+
+                VerifyFile(File, newxx);
             }
         }
     }
