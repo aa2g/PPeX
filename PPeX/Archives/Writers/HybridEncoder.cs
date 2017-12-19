@@ -14,7 +14,7 @@ namespace PPeX.Archives.Writers
 
         public HybridEncoder(uint ID, IEnumerable<ISubfile> files, IArchiveContainer writer)
         {
-            chunkWriter = new HybridChunkWriter(ID, ArchiveChunkCompression.Uncompressed, ChunkType.Generic, writer);
+            chunkWriter = new HybridChunkWriter(ID, ArchiveChunkCompression.Uncompressed, writer);
 
             this.files = files;
         }

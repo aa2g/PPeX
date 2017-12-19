@@ -34,9 +34,9 @@ namespace PPeXM64
 
         }
 
-        protected void LoadTextures(Xx3Provider provider)
+        protected void LoadTextures(SubfileTextureBank provider)
         {
-            var chunks = provider.TextureFiles
+            var chunks = provider.TextureSubfiles
                 .Select(x => (x.Value.Source as ArchiveFileSource).Chunk)
                 .Distinct();
 
@@ -61,7 +61,7 @@ namespace PPeXM64
 
             foreach (ExtendedArchive archive in Archives)
             {
-                LoadTextures(archive.Xx3Provider);
+                LoadTextures(archive.TextureBank);
 
                 foreach (var chunk in archive.Chunks)
                 {

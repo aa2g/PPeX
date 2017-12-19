@@ -17,11 +17,10 @@ namespace PPeXTests
         {
             Mock<IArchiveContainer> containerMock = new Mock<IArchiveContainer>();
 
-            HybridChunkWriter writer = new HybridChunkWriter(666, ArchiveChunkCompression.Uncompressed, ChunkType.Generic, containerMock.Object);
+            HybridChunkWriter writer = new HybridChunkWriter(666, ArchiveChunkCompression.Uncompressed, containerMock.Object);
 
             Assert.AreEqual((uint)666, writer.ID);
             Assert.AreEqual(ArchiveChunkCompression.Uncompressed, writer.Compression);
-            Assert.AreEqual(ChunkType.Generic, writer.Type);
         }
 
         [TestMethod]
@@ -29,7 +28,7 @@ namespace PPeXTests
         {
             Mock<IArchiveContainer> containerMock = new Mock<IArchiveContainer>();
 
-            HybridChunkWriter writer = new HybridChunkWriter(666, ArchiveChunkCompression.Uncompressed, ChunkType.Generic, containerMock.Object);
+            HybridChunkWriter writer = new HybridChunkWriter(666, ArchiveChunkCompression.Uncompressed, containerMock.Object);
 
             Assert.IsFalse(writer.IsReady);
 
@@ -43,7 +42,7 @@ namespace PPeXTests
         {
             Mock<IArchiveContainer> containerMock = new Mock<IArchiveContainer>();
 
-            HybridChunkWriter writer = new HybridChunkWriter(666, ArchiveChunkCompression.Uncompressed, ChunkType.Generic, containerMock.Object);
+            HybridChunkWriter writer = new HybridChunkWriter(666, ArchiveChunkCompression.Uncompressed, containerMock.Object);
 
             Assert.IsFalse(writer.ContainsFiles);
 
@@ -60,7 +59,7 @@ namespace PPeXTests
         {
             Mock<IArchiveContainer> containerMock = new Mock<IArchiveContainer>();
 
-            HybridChunkWriter writer = new HybridChunkWriter(666, ArchiveChunkCompression.Uncompressed, ChunkType.Generic, containerMock.Object);
+            HybridChunkWriter writer = new HybridChunkWriter(666, ArchiveChunkCompression.Uncompressed, containerMock.Object);
 
             byte[] data = new byte[16];
             Subfile subfileMock = new Subfile(new MemorySource(data), "1", "1");
@@ -98,7 +97,7 @@ namespace PPeXTests
 
             Mock<IArchiveContainer> containerMock = new Mock<IArchiveContainer>();
 
-            HybridChunkWriter writer = new HybridChunkWriter(666, ArchiveChunkCompression.Uncompressed, ChunkType.Generic, containerMock.Object);
+            HybridChunkWriter writer = new HybridChunkWriter(666, ArchiveChunkCompression.Uncompressed, containerMock.Object);
 
             byte[] data = new byte[16];
             Subfile subfileMock = new Subfile(new MemorySource(data), "1", "1");
@@ -128,7 +127,6 @@ namespace PPeXTests
             Assert.AreEqual((ulong)0, writer.Receipt.FileOffset);
             Assert.AreEqual((uint)666, writer.Receipt.ID);
             Assert.AreEqual(PPeX.External.CRC32.CRC32.Compute(writer.CompressedStream), writer.Receipt.CRC);
-            Assert.AreEqual(ChunkType.Generic, writer.Receipt.Type);
 
             Assert.AreEqual(3, writer.Receipt.FileReceipts.Count);
 
