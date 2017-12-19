@@ -10,10 +10,10 @@ namespace PPeX
 {
     public class Xx3Subfile : ISubfile
     {
-        Xx3Provider Provider;
+        SubfileTextureBank Provider;
         ArchiveFileSource BaseSource;
 
-        public Xx3Subfile(ArchiveFileSource source, Xx3Provider provider)
+        public Xx3Subfile(ArchiveFileSource source, SubfileTextureBank provider)
         {
             BaseSource = source;
             Provider = provider;
@@ -24,7 +24,7 @@ namespace PPeX
             
             foreach (var texRef in file.TextureRefs)
             {
-                _size += provider.TextureFiles[texRef.Name].Size;
+                _size += provider.TextureSubfiles[texRef.Name].Size;
             }
         }
 
@@ -53,7 +53,7 @@ namespace PPeX
             foreach (var texRef in file.TextureRefs)
             {
                 string name = texRef.Name;
-                using (Stream stream = Provider.TextureFiles[name].GetRawStream())
+                using (Stream stream = Provider.TextureSubfiles[name].GetRawStream())
                 using (BinaryReader reader = new BinaryReader(stream))
                     Bank[name] = reader.ReadBytes((int)stream.Length);
             }

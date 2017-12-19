@@ -78,7 +78,6 @@
     <Compile Include="External\Zstandard\ExternMethods.cs" />
     <Compile Include="External\Zstandard\Parameters.cs" />
     <Compile Include="External\Zstandard\ThrowHelper.cs" />
-    <Compile Include="FileProviders\GenericProvider.cs" />
     <Compile Include="IArchiveContainer.cs" />
     <Compile Include="Subfiles\Xx3Subfile.cs" />
     <Compile Include="Xx2\CompressedTextureBank.cs" />
@@ -86,6 +85,7 @@
     <Compile Include="Xx2\FloatEncoder.cs" />
     <Compile Include="Xx2\IntegerEncoder.cs" />
     <Compile Include="Xx2\Md5Hash.cs" />
+    <Compile Include="Xx2\SubfileTextureBank.cs" />
     <Compile Include="Xx2\TextureBank.cs" />
     <Compile Include="Xx2\Xx2\Xx2File.cs" />
     <Compile Include="Xx2\Xx2\Xx2Reader.cs" />
@@ -131,7 +131,6 @@
     <Compile Include="External\PP\ppSwapfile.cs" />
     <Compile Include="External\PP\Utility.cs" />
     <Compile Include="External\PP\WakeariStream.cs" />
-    <Compile Include="FileProviders\Xx3Provider.cs" />
     <Compile Include="ICompressor.cs" />
     <Compile Include="IEncoder.cs" />
     <Compile Include="IFileProvider.cs" />

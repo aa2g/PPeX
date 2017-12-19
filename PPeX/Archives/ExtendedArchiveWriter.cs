@@ -117,7 +117,7 @@ namespace PPeX
 
             total = fileList.Count;
 
-            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
+            currentChunk = new HybridChunkWriter(ID++, DefaultCompression,  this);
 
             while (fileList.Count > 0)
             {
@@ -134,7 +134,7 @@ namespace PPeX
                     chunks.Add(currentChunk);
 
                     //create a new chunk
-                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
+                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this);
                     currentChunk.AddFile(file);
                 }
             }
@@ -153,7 +153,7 @@ namespace PPeX
                         "_TextureBank"))
                     .OrderBy(x => x.Source.Md5, new ByteArrayComparer());
 
-                var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
+                var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, this);
                 
                 foreach (var file in textureFiles)
                 {
@@ -161,7 +161,7 @@ namespace PPeX
                     {
                         chunks.Add(textureBankWriter);
 
-                        textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Xx3, this);
+                        textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, this);
                         textureBankWriter.AddFile(file);
                     }
                 }
@@ -175,7 +175,7 @@ namespace PPeX
             ProgressPercentage.Report(0);
 
             //Create a LST chunk
-            HybridChunkWriter LSTWriter = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Generic, this);
+            HybridChunkWriter LSTWriter = new HybridChunkWriter(ID++, DefaultCompression, this);
 
 
             //bunch duplicate files together
@@ -218,7 +218,7 @@ namespace PPeX
 
             total = fileList.Count;
 
-            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Generic, this);
+            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this);
 
             while (fileList.Count > 0)
             {
@@ -273,7 +273,7 @@ namespace PPeX
                     chunks.Add(currentChunk);
 
                     //create a new chunk
-                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, ChunkType.Generic, this);
+                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this);
                     currentChunk.AddFile(file);
                 }
             }
@@ -499,8 +499,6 @@ namespace PPeX
         public static void WriteChunkTable(BinaryWriter chunkTableWriter, ChunkReceipt receipt, uint fileOffset)
         {
             chunkTableWriter.Write(receipt.ID);
-
-            chunkTableWriter.Write((byte)receipt.Type);
 
             chunkTableWriter.Write((byte)receipt.Compression);
 

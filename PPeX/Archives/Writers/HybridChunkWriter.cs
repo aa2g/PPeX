@@ -15,19 +15,16 @@ namespace PPeX.Archives
     {
         public uint ID { get; protected set; }
 
-        public ChunkType Type { get; protected set; }
-
         public ArchiveChunkCompression Compression { get; protected set; }
 
         ulong UncompressedSize { get; set; }
 
         protected IArchiveContainer writer;
 
-        public HybridChunkWriter(uint id, ArchiveChunkCompression compression, ChunkType type, IArchiveContainer writer)
+        public HybridChunkWriter(uint id, ArchiveChunkCompression compression, IArchiveContainer writer)
         {
             ID = id;
             Compression = compression;
-            Type = type;
             this.writer = writer;
         }
 
@@ -167,7 +164,6 @@ namespace PPeX.Archives
                 {
                     ID = this.ID,
                     Compression = compressor.Compression,
-                    Type = this.Type,
                     CRC = crc,
                     UncompressedSize = (ulong)UncompressedStream.Length,
                     CompressedSize = (ulong)CompressedStream.Length,
@@ -225,7 +221,6 @@ namespace PPeX.Archives
     public class ChunkReceipt
     {
         public uint ID;
-        public ChunkType Type;
         public ArchiveChunkCompression Compression;
         public uint CRC;
         public ulong FileOffset;
