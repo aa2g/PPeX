@@ -86,6 +86,9 @@
     <Compile Include="Xx2\IntegerEncoder.cs" />
     <Compile Include="Xx2\Md5Hash.cs" />
     <Compile Include="Xx2\SubfileTextureBank.cs" />
+    <Compile Include="Xx2\Sviex\SviexBone.cs" />
+    <Compile Include="Xx2\Sviex\SviexFile.cs" />
+    <Compile Include="Xx2\Sviex\SviexSection.cs" />
     <Compile Include="Xx2\TextureBank.cs" />
     <Compile Include="Xx2\Xx2\Xx2File.cs" />
     <Compile Include="Xx2\Xx2\Xx2Reader.cs" />
