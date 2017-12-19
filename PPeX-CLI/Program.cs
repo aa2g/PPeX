@@ -620,6 +620,7 @@ Sets a regex to use for compressing or extracting.");
 
             appender.ChunkSizeLimit = (ulong)chunksize;
             appender.Threads = threads;
+            appender.Name = name;
 
             if (compression == "zstd")
                 appender.DefaultCompression = ArchiveChunkCompression.Zstandard;
