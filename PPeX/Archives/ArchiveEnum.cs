@@ -19,32 +19,42 @@ namespace PPeX
         /// <summary>
         /// The file is audio data, encoded via <see cref="External.Wave.WaveWriter"/>.
         /// </summary>
-        WaveAudio = 1,
+        WaveAudio = 11,
 
         /// <summary>
         /// The file is audio data, encoded via <see cref="Encoders.OpusEncoder"/>.
         /// </summary>
-        OpusAudio = 2,
+        OpusAudio = 12,
 
         /// <summary>
         /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx2Encoder"/>.
         /// </summary>
-        XxMesh = 10,
+        XxMesh = 20,
 
         /// <summary>
         /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx2Encoder"/>.
         /// </summary>
-        Xx2Mesh = 11,
+        Xx2Mesh = 21,
 
         /// <summary>
         /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx3Encoder"/>.
         /// </summary>
-        Xx3Mesh = 12,
+        Xx3Mesh = 22,
 
         /// <summary>
         /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx4Encoder"/>.
         /// </summary>
-        Xx4Mesh = 13,
+        Xx4Mesh = 23,
+
+        /// <summary>
+        /// The file is .sviex mesh data, encoded via <see cref="Encoders.SviexEncoder"/>.
+        /// </summary>
+        SviexMesh = 30,
+
+        /// <summary>
+        /// The file is .sviex2 mesh data, encoded via <see cref="Encoders.Sviex2Encoder"/>.
+        /// </summary>
+        Sviex2Mesh = 31,
     }
 
     /// <summary>
@@ -65,7 +75,12 @@ namespace PPeX
         /// <summary>
         /// The data relates to meshes.
         /// </summary>
-        Mesh = 2
+        Mesh = 2,
+
+        /// <summary>
+        /// The data relates to SVIEX meshes.
+        /// </summary>
+        Sviex = 3,
     }
 
     /// <summary>

@@ -66,6 +66,9 @@ namespace PPeX.Archives
                 case ArchiveFileType.XxMesh:
                     target = ArchiveFileType.Xx4Mesh;
                     break;
+                case ArchiveFileType.SviexMesh:
+                    target = ArchiveFileType.Sviex2Mesh;
+                    break;
                 default:
                     target = file.Type;
                     break;
@@ -97,6 +100,9 @@ namespace PPeX.Archives
                             break;
                         case ArchiveDataType.Mesh:
                             emulatedName = $"{file.Name.Substring(0, file.Name.LastIndexOf('.'))}.xx";
+                            break;
+                        case ArchiveDataType.Sviex:
+                            emulatedName = $"{file.Name.Substring(0, file.Name.LastIndexOf('.'))}.sviex";
                             break;
                         default:
                             emulatedName = file.EmulatedName;
