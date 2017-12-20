@@ -64,6 +64,10 @@ namespace PPeX.Encoders
                     return new XxEncoder(source);
                 case ArchiveFileType.Xx2Mesh:
                     return new Xx2Encoder(source);
+                case ArchiveFileType.SviexMesh:
+                    return new SviexEncoder(source);
+                case ArchiveFileType.Sviex2Mesh:
+                    return new Sviex2Encoder(source);
                 case ArchiveFileType.Raw:
                     return new PassthroughEncoder(source);
                 default:

@@ -60,12 +60,12 @@ namespace PPeX.Xx2.Sviex
                 section.boneIndices = new sbyte[boneIndiciesCount];
 
                 for (int i = 0; i < boneIndiciesCount; i++)
-                    section.Weights[i] = reader.ReadSByte();
+                    section.boneIndices[i] = reader.ReadSByte();
 
                 int boneCount = reader.ReadInt32();
                 section.Bones = new SviexBone[boneCount];
 
-                for (int i = 0; i < boneIndiciesCount; i++)
+                for (int i = 0; i < boneCount; i++)
                     section.Bones[i] = SviexBone.FromReader(reader);
             }
             else
@@ -84,6 +84,10 @@ namespace PPeX.Xx2.Sviex
                 for (int i = 0; i < normalCount; i++)
                     section.Normals[i] = reader.ReadSingle();
             }
+            else
+            {
+                section.Normals = new float[0];
+            }
 
             byte uvsPresent = reader.ReadByte();
             if (uvsPresent == 1)
@@ -93,6 +97,10 @@ namespace PPeX.Xx2.Sviex
 
                 for (int i = 0; i < uvCount; i++)
                     section.UV[i] = reader.ReadSingle();
+            }
+            else
+            {
+                section.UV = new float[0];
             }
 
             section.Unknown = reader.ReadBytes(1);
