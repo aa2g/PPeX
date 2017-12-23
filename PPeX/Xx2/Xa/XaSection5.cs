@@ -11,16 +11,11 @@ namespace PPeX.Xx2.Xa
     {
         public string Name;
         public float Speed;
-        public byte[] Unknown1;
         public float Start;
         public float End;
-        public byte[] Unknown2;
-        public byte[] Unknown3;
-        public byte[] Unknown4;
         public int Next;
-        public byte[] Unknown5;
-        public byte[] Unknown6;
-        public byte[] Unknown7;
+
+        public byte[][] Unknowns = new byte[7][];
 
         public static XaAnimationClip FromReader(BinaryReader reader)
         {
@@ -28,16 +23,16 @@ namespace PPeX.Xx2.Xa
 
             clip.Name = reader.ReadEncryptedString(64);
             clip.Speed = reader.ReadSingle();
-            clip.Unknown1 = reader.ReadBytes(4);
+            clip.Unknowns[0] = reader.ReadBytes(4);
             clip.Start = reader.ReadSingle();
             clip.End = reader.ReadSingle();
-            clip.Unknown2 = reader.ReadBytes(1);
-            clip.Unknown3 = reader.ReadBytes(1);
-            clip.Unknown4 = reader.ReadBytes(1);
+            clip.Unknowns[1] = reader.ReadBytes(1);
+            clip.Unknowns[2] = reader.ReadBytes(1);
+            clip.Unknowns[3] = reader.ReadBytes(1);
             clip.Next = reader.ReadInt32();
-            clip.Unknown5 = reader.ReadBytes(1);
-            clip.Unknown6 = reader.ReadBytes(4);
-            clip.Unknown7 = reader.ReadBytes(16);
+            clip.Unknowns[4] = reader.ReadBytes(1);
+            clip.Unknowns[5] = reader.ReadBytes(4);
+            clip.Unknowns[6] = reader.ReadBytes(16);
 
             return clip;
         }

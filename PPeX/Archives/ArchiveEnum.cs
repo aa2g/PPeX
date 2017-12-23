@@ -55,6 +55,16 @@ namespace PPeX
         /// The file is .sviex2 mesh data, encoded via <see cref="Encoders.Sviex2Encoder"/>.
         /// </summary>
         Sviex2Mesh = 31,
+
+        /// <summary>
+        /// The file is .xa animation data, encoded via <see cref="Encoders.XaEncoder"/>.
+        /// </summary>
+        XaAnimation = 40,
+
+        /// <summary>
+        /// The file is .xa2 animation data, encoded via <see cref="Encoders.Xa2Encoder"/>.
+        /// </summary>
+        Xa2Animation = 41,
     }
 
     /// <summary>
@@ -81,6 +91,11 @@ namespace PPeX
         /// The data relates to SVIEX meshes.
         /// </summary>
         Sviex = 3,
+
+        /// <summary>
+        /// The data relates to animation.
+        /// </summary>
+        Animation = 4,
     }
 
     /// <summary>
