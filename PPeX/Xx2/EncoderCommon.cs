@@ -9,6 +9,8 @@ namespace PPeX.Xx2
 {
     public static class EncoderCommon
     {
+        public static Encoding ShiftJIS = Encoding.GetEncoding(932);
+
         public static string ReadEncryptedString(this BinaryReader reader)
         {
             int length = reader.ReadInt32();
@@ -17,12 +19,27 @@ namespace PPeX.Xx2
             for (int i = 0; i < length - 1; i++)
                 array[i] = (byte)~array[i];
 
-            string decrypted = Encoding.ASCII.GetString(array);
+            string decrypted = ShiftJIS.GetString(array);
             if (decrypted.Length > 0)
                 decrypted = decrypted.Remove(decrypted.Length - 1);
 
             return decrypted;
         }
+
+        public static string ReadEncryptedString(this BinaryReader reader, int length)
+        {
+            byte[] array = reader.ReadBytes(length);
+
+            for (int i = 0; i < length - 1; i++)
+                array[i] = (byte)~array[i];
+
+            string decrypted = ShiftJIS.GetString(array);
+            if (decrypted.Length > 0)
+                decrypted = decrypted.Remove(decrypted.Length - 1);
+
+            return decrypted;
+        }
+
         public static void WriteEncryptedString(this BinaryWriter writer, string String)
         {
             if (String.Length == 0)
@@ -34,7 +51,7 @@ namespace PPeX.Xx2
             writer.Write((int)(String.Length + 1));
 
 
-            byte[] array = Encoding.ASCII.GetBytes(String);
+            byte[] array = ShiftJIS.GetBytes(String);
 
             Array.Resize(ref array, array.Length + 1);
 

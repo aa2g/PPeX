@@ -94,6 +94,12 @@
     <Compile Include="Xx2\Sviex\SviexFile.cs" />
     <Compile Include="Xx2\Sviex\SviexSection.cs" />
     <Compile Include="Xx2\TextureBank.cs" />
+    <Compile Include="Xx2\Xa\XaFile.cs" />
+    <Compile Include="Xx2\Xa\XaSection2.cs" />
+    <Compile Include="Xx2\Xa\XaSection1.cs" />
+    <Compile Include="Xx2\Xa\XaSection3.cs" />
+    <Compile Include="Xx2\Xa\XaSection4.cs" />
+    <Compile Include="Xx2\Xa\XaSection5.cs" />
     <Compile Include="Xx2\Xx2\Xx2File.cs" />
     <Compile Include="Xx2\Xx2\Xx2Reader.cs" />
     <Compile Include="Xx2\Xx2\Xx2Writer.cs" />
