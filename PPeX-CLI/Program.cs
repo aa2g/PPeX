@@ -305,7 +305,7 @@ Sets a regex to use for compressing or extracting.");
                 {
                     name = Path.GetFileNameWithoutExtension(dirpath) + ".pp";
 
-                    Console.WriteLine("Importing \'" + dirpath + "\" as \"" + name + "\"");
+                    Console.WriteLine("Importing \"" + dirpath + "\" as \"" + name + "\"");
 
                     int imported = 0;
                     var files = Directory.EnumerateFiles(dirpath, "*.*", SearchOption.TopDirectoryOnly).ToArray();
@@ -650,7 +650,7 @@ Sets a regex to use for compressing or extracting.");
                 {
                     name = Path.GetFileNameWithoutExtension(dirpath) + ".pp";
 
-                    Console.WriteLine("Importing \'" + dirpath + "\" as \"" + name + "\"");
+                    Console.WriteLine("Importing \"" + dirpath + "\" as \"" + name + "\"");
 
                     int imported = 0;
                     var files = Directory.EnumerateFiles(dirpath, "*.*", SearchOption.TopDirectoryOnly).ToArray();
