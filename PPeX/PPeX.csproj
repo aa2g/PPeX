@@ -59,6 +59,8 @@
     <Compile Include="Compressors\BaseCompressor.cs" />
     <Compile Include="Encoders\Sviex2Encoder.cs" />
     <Compile Include="Encoders\SviexEncoder.cs" />
+    <Compile Include="Encoders\Xa2Encoder.cs" />
+    <Compile Include="Encoders\XaEncoder.cs" />
     <Compile Include="Encoders\Xx4Encoder.cs" />
     <Compile Include="Encoders\XxEncoder.cs" />
     <Compile Include="Encoders\WaveEncoder.cs" />
@@ -94,6 +96,7 @@
     <Compile Include="Xx2\Sviex\SviexFile.cs" />
     <Compile Include="Xx2\Sviex\SviexSection.cs" />
     <Compile Include="Xx2\TextureBank.cs" />
+    <Compile Include="Xx2\Xa2\Xa2Writer.cs" />
     <Compile Include="Xx2\Xa\XaFile.cs" />
     <Compile Include="Xx2\Xa\XaSection2.cs" />
     <Compile Include="Xx2\Xa\XaSection1.cs" />

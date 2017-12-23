@@ -69,6 +69,9 @@ namespace PPeX.Archives
                 case ArchiveFileType.SviexMesh:
                     target = ArchiveFileType.Sviex2Mesh;
                     break;
+                case ArchiveFileType.XaAnimation:
+                    target = ArchiveFileType.Xa2Animation;
+                    break;
                 default:
                     target = file.Type;
                     break;

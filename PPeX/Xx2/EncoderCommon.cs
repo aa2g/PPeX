@@ -63,6 +63,25 @@ namespace PPeX.Xx2
             writer.Write(array);
         }
 
+        public static void WriteEncryptedStringRaw(this BinaryWriter writer, string String)
+        {
+            if (String.Length == 0)
+            {
+                return;
+            }
+
+            byte[] array = ShiftJIS.GetBytes(String);
+
+            Array.Resize(ref array, array.Length + 1);
+
+            array[array.Length - 1] = 0;
+
+            for (int i = 0; i < array.Length; i++)
+                array[i] = (byte)~array[i];
+
+            writer.Write(array);
+        }
+
         public static uint[] DecodeAll(BinaryReader reader, int count, bool half, bool zigzag)
         {
             int[] deltas = new int[count];
