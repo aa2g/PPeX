@@ -117,7 +117,7 @@ namespace PPeX
 
             total = fileList.Count;
 
-            currentChunk = new HybridChunkWriter(ID++, DefaultCompression,  this);
+            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
 
             while (fileList.Count > 0)
             {
@@ -128,13 +128,13 @@ namespace PPeX
                 if (file.Source.Size == 0)
                     continue;
 
-                if (!currentChunk.TryAddFile(file, ChunkSizeLimit))
+                if (!currentChunk.TryAddFile(file))
                 {
                     //cut off the chunk here
                     chunks.Add(currentChunk);
 
                     //create a new chunk
-                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this);
+                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
                     currentChunk.AddFile(file);
                 }
             }
@@ -153,15 +153,15 @@ namespace PPeX
                         "_TextureBank"))
                     .OrderBy(x => x.Source.Md5, new ByteArrayComparer());
 
-                var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, this);
+                var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
                 
                 foreach (var file in textureFiles)
                 {
-                    if (!textureBankWriter.TryAddFile(file, ChunkSizeLimit))
+                    if (!textureBankWriter.TryAddFile(file))
                     {
                         chunks.Add(textureBankWriter);
 
-                        textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, this);
+                        textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
                         textureBankWriter.AddFile(file);
                     }
                 }
@@ -175,7 +175,7 @@ namespace PPeX
             ProgressPercentage.Report(0);
 
             //Create a LST chunk
-            HybridChunkWriter LSTWriter = new HybridChunkWriter(ID++, DefaultCompression, this);
+            HybridChunkWriter LSTWriter = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
 
 
             //bunch duplicate files together
@@ -218,7 +218,7 @@ namespace PPeX
 
             total = fileList.Count;
 
-            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this);
+            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
 
             while (fileList.Count > 0)
             {
@@ -261,19 +261,19 @@ namespace PPeX
                         opusFiles.Add(fileList.Dequeue());
                     }
 
-                    HybridEncoder tempChunk = new HybridEncoder(ID++, opusFiles, this);
+                    HybridEncoder tempChunk = new HybridEncoder(ID++, opusFiles, this, ChunkSizeLimit);
                     chunks.Add(tempChunk);
 
                     continue;
                 }
 
-                if (!currentChunk.TryAddFile(file, ChunkSizeLimit))
+                if (!currentChunk.TryAddFile(file))
                 {
                     //cut off the chunk here
                     chunks.Add(currentChunk);
 
                     //create a new chunk
-                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this);
+                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
                     currentChunk.AddFile(file);
                 }
             }
