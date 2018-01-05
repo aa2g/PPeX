@@ -21,11 +21,16 @@ namespace PPeX.Archives
 
         protected IArchiveContainer writer;
 
-        public HybridChunkWriter(uint id, ArchiveChunkCompression compression, IArchiveContainer writer)
+        protected ulong MaxChunkSize;
+
+        public HybridChunkWriter(uint id, ArchiveChunkCompression compression, IArchiveContainer writer, ulong maxChunkSize)
         {
             ID = id;
             Compression = compression;
             this.writer = writer;
+            MaxChunkSize = maxChunkSize;
+
+            UncompressedStream = new MemoryStream((int)MaxChunkSize);
         }
 
         protected MemoryStream UncompressedStream = new MemoryStream();
@@ -42,15 +47,15 @@ namespace PPeX.Archives
 
         public void AddFile(ISubfile file)
         {
-            TryAddFile(file, 666, true);
+            TryAddFile(file, true);
         }
 
-        public bool TryAddFile(ISubfile file, ulong maxChunkSize)
+        public bool TryAddFile(ISubfile file)
         {
-            return TryAddFile(file, maxChunkSize, false);
+            return TryAddFile(file, false);
         }
 
-        protected bool TryAddFile(ISubfile file, ulong maxChunkSize, bool continueAnyway)
+        protected bool TryAddFile(ISubfile file, bool continueAnyway)
         {
             Md5Hash hash = file.Source.Md5;
             bool isDuplicate = fileReceipts.Any(x => x.Md5 == hash);
@@ -64,7 +69,7 @@ namespace PPeX.Archives
                     target = ArchiveFileType.OpusAudio;
                     break;
                 case ArchiveFileType.XxMesh:
-                    target = ArchiveFileType.Xx4Mesh;
+                    target = ArchiveFileType.Xx3Mesh;
                     break;
                 case ArchiveFileType.SviexMesh:
                     target = ArchiveFileType.Sviex2Mesh;
@@ -135,7 +140,7 @@ namespace PPeX.Archives
             {
                 if (continueAnyway ||
                     UncompressedStream.Length == 0 ||
-                    (ulong)(dataStream.Length + UncompressedStream.Length) <= maxChunkSize)
+                    (ulong)(dataStream.Length + UncompressedStream.Length) <= MaxChunkSize)
                 {
                     FileReceipt receipt = new FileReceipt
                     {
@@ -160,6 +165,7 @@ namespace PPeX.Archives
 
         public void Compress(IEnumerable<ICompressor> compressors)
         {
+            UncompressedStream.SetLength(UncompressedStream.Length);
             UncompressedStream.Position = 0;
             ICompressor compressor = compressors.First(x => x.Compression == Compression);
 
