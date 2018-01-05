@@ -153,6 +153,8 @@ namespace PPeX
 
                 WriteTables(tableInfoOffset, dataWriter);
 
+                FinalizeThreads();
+
                 Utility.GCCompress();
 
                 ProgressStatus.Report("Finished.\r\n");

@@ -290,6 +290,7 @@ namespace PPeX
         }
         
         Thread[] threadObjects;
+        WriterThreadContext[] threadContexts;
         IProgress<string> threadProgress;
 
         public void CompressCallback(object threadContext)
@@ -418,6 +419,7 @@ namespace PPeX
             
 
             threadObjects = new Thread[Threads];
+            threadContexts = new WriterThreadContext[Threads];
             for (int i = 0; i < Threads; i++)
             {
                 threadObjects[i] = new Thread(new ParameterizedThreadStart(CompressCallback));
@@ -428,6 +430,22 @@ namespace PPeX
                 };
 
                 threadObjects[i].Start(ctx);
+                threadContexts[i] = ctx;
+            }
+        }
+
+        protected void FinalizeThreads()
+        {
+            TextureBank.Clear();
+
+            CompletedChunks.Clear();
+
+            foreach (WriterThreadContext ctx in threadContexts)
+            {
+                ctx.ArchiveStream.Close();
+
+                foreach (ICompressor compressor in ctx.Compressors)
+                    compressor.Dispose();
             }
         }
 
@@ -490,6 +508,8 @@ namespace PPeX
                 
                 WriteTables(tableInfoOffset, dataWriter);
             }
+
+            FinalizeThreads();
 
             //Collect garbage and compress memory
             Utility.GCCompress();

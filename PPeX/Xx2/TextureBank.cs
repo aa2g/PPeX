@@ -37,6 +37,11 @@ namespace PPeX.Xx2
                 this[texture.Name] = texture.ImageData;
         }
 
+        public virtual void Clear()
+        {
+            Textures.Clear();
+        }
+
         public IEnumerator<KeyValuePair<string, byte[]>> GetEnumerator()
         {
             return Textures.Select(x => new KeyValuePair<string, byte[]>(x.Key, this[x.Key])).GetEnumerator();
