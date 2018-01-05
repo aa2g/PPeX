@@ -685,7 +685,7 @@ namespace PPeXUI
 
             TreeNode parent = null;
 
-            string name = Path.GetFileName(filename);
+            string name = Path.GetFileNameWithoutExtension(filename);
 
             trvFiles.DynamicInvoke(() =>
             {

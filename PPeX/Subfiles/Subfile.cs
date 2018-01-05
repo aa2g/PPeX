@@ -56,7 +56,7 @@ namespace PPeX
             Source = source;
             Type = type;
 
-            EmulatedArchiveName = archiveName;
+            EmulatedArchiveName = $"{archiveName.Replace(".pp", "")}.pp";
             EmulatedName = name;
         }
 
