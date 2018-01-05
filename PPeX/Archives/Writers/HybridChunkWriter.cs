@@ -23,12 +23,15 @@ namespace PPeX.Archives
 
         protected ulong MaxChunkSize;
 
-        public HybridChunkWriter(uint id, ArchiveChunkCompression compression, IArchiveContainer writer, ulong maxChunkSize)
+        protected Dictionary<ArchiveFileType, ArchiveFileType> EncodingTargets;
+
+        public HybridChunkWriter(uint id, ArchiveChunkCompression compression, IArchiveContainer writer, ulong maxChunkSize, Dictionary<ArchiveFileType, ArchiveFileType> encodingTargets)
         {
             ID = id;
             Compression = compression;
             this.writer = writer;
             MaxChunkSize = maxChunkSize;
+            EncodingTargets = encodingTargets;
 
             UncompressedStream = new MemoryStream((int)MaxChunkSize);
         }
@@ -61,26 +64,10 @@ namespace PPeX.Archives
             bool isDuplicate = fileReceipts.Any(x => x.Md5 == hash);
 
 #warning should add conversion/encoding settings here
-            ArchiveFileType target;
+            ArchiveFileType target = file.Type;
 
-            switch (file.Type)
-            {
-                case ArchiveFileType.WaveAudio:
-                    target = ArchiveFileType.OpusAudio;
-                    break;
-                case ArchiveFileType.XxMesh:
-                    target = ArchiveFileType.Xx3Mesh;
-                    break;
-                case ArchiveFileType.SviexMesh:
-                    target = ArchiveFileType.Sviex2Mesh;
-                    break;
-                case ArchiveFileType.XaAnimation:
-                    target = ArchiveFileType.Xa2Animation;
-                    break;
-                default:
-                    target = file.Type;
-                    break;
-            }
+            if (EncodingTargets.TryGetValue(file.Type, out ArchiveFileType encoderTarget))
+                target = encoderTarget;
 
             Stream dataStream = null;
             string internalName;
@@ -89,7 +76,6 @@ namespace PPeX.Archives
             if (target == file.Type)
             {
                 internalName = file.Name;
-                emulatedName = file.EmulatedName;
 
                 if (!isDuplicate)
                     dataStream = file.Source.GetStream();
@@ -101,26 +87,31 @@ namespace PPeX.Archives
                 {
                     internalName = encoder.NameTransform(file.Name);
 
-                    switch (encoder.DataType)
-                    {
-                        case ArchiveDataType.Audio:
-                            emulatedName = $"{file.Name.Substring(0, file.Name.LastIndexOf('.'))}.wav";
-                            break;
-                        case ArchiveDataType.Mesh:
-                            emulatedName = $"{file.Name.Substring(0, file.Name.LastIndexOf('.'))}.xx";
-                            break;
-                        case ArchiveDataType.Sviex:
-                            emulatedName = $"{file.Name.Substring(0, file.Name.LastIndexOf('.'))}.sviex";
-                            break;
-                        default:
-                            emulatedName = file.EmulatedName;
-                            break;
-                    }
-
                     if (!isDuplicate)
                         dataStream = encoder.Encode();
                 }
             }
+
+            using (IEncoder encoder = EncoderFactory.GetEncoder(Stream.Null, writer, target))
+                switch (encoder.DataType)
+                {
+                    case ArchiveDataType.Audio:
+                        emulatedName = $"{file.Name.Substring(0, file.Name.LastIndexOf('.'))}.wav";
+                        break;
+                    case ArchiveDataType.Mesh:
+                        emulatedName = $"{file.Name.Substring(0, file.Name.LastIndexOf('.'))}.xx";
+                        break;
+                    case ArchiveDataType.Sviex:
+                        emulatedName = $"{file.Name.Substring(0, file.Name.LastIndexOf('.'))}.sviex";
+                        break;
+                    case ArchiveDataType.Animation:
+                        emulatedName = $"{file.Name.Substring(0, file.Name.LastIndexOf('.'))}.xa";
+                        break;
+                    case ArchiveDataType.Raw:
+                    default:
+                        emulatedName = file.EmulatedName;
+                        break;
+                }
 
             if (isDuplicate)
             {

@@ -76,5 +76,15 @@ namespace PPeX
         /// The location to load PPX archives.
         /// </summary>
         public Dictionary<string, CachedMd5> Md5Cache = new Dictionary<string, CachedMd5>();
+
+        /// <summary>
+        /// Default encoding rules all archive writers use.
+        /// </summary>
+        public Dictionary<ArchiveFileType, ArchiveFileType> DefaultEncodingConversions = new Dictionary<ArchiveFileType, ArchiveFileType>
+        {
+            { ArchiveFileType.WaveAudio, ArchiveFileType.OpusAudio },
+            { ArchiveFileType.XxMesh, ArchiveFileType.Xx4Mesh },
+            { ArchiveFileType.SviexMesh, ArchiveFileType.Sviex2Mesh },
+        };
     }
 }

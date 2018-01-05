@@ -31,7 +31,7 @@ namespace PPeX_CLI
         static string VersionToReadableString(Version version)
         {
             string text = version.ToString().TrimEnd(".0".ToCharArray());
-            if (text.Length == 1)
+            if (text.Count(x => x == '.') < 2)
                 text += ".0";
             return text;
         }
@@ -63,12 +63,14 @@ namespace PPeX_CLI
             WriteLineAlternating("PPeX-CLI ", VersionToReadableString(GetVersion()));
             WriteLineAlternating("PPeX base ", VersionToReadableString(PPeX.Core.GetVersion()));
 
+            Console.WriteLine($"Compiled codecs: {string.Join(", ", Enum.GetNames(typeof(ArchiveFileType)))}");
+
 
             Console.WriteLine();
 
             if (args.Length < 1 || args[0].ToLower() == "-h")
             {
-                Console.WriteLine(@"Usage:
+                Console.WriteLine($@"Usage:
 
 ppex-cli -h
 Shows this help dialog
@@ -124,6 +126,15 @@ Sets .xx2 encode quality. Not enabled by default. Cannot be used with -xx2-preci
 -threads 1
 (-c, -a only)
 Sets threads to be used during compression.
+
+-convert [input]:[output]
+(-c, -a only)
+Adds a rule to convert from one format to another. Leave [output] empty to disable transcoding for the input format.
+Current defaults:
+{
+    string.Join("\r\n",
+        Core.Settings.DefaultEncodingConversions.Select(x => $"{Enum.GetName(typeof(ArchiveFileType), x.Key)}:{Enum.GetName(typeof(ArchiveFileType), x.Value)}"))
+}
 
 -no-encode ""a^""
 (-c, -a only)
@@ -193,6 +204,14 @@ Sets a regex to use for compressing or extracting.");
             Environment.Exit(9999);
         }
 
+        private static void HaltAndCatchFire(string message, int exitCode)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(message);
+            Console.WriteLine($"Stopping archival");
+            Environment.Exit(1);
+        }
+
 #region Compress
         static void CompressArg(string[] args)
         {
@@ -205,6 +224,7 @@ Sets a regex to use for compressing or extracting.");
             string name = Path.GetFileNameWithoutExtension(args.Last());
             string compression = "zstd";
             string currentArg;
+            Dictionary<ArchiveFileType, ArchiveFileType> encodingTransforms = Core.Settings.DefaultEncodingConversions;
 
             if (Environment.OSVersion.Platform == PlatformID.Unix)
                 Core.Settings.OpusFrameSize = 0.060;
@@ -259,11 +279,36 @@ Sets a regex to use for compressing or extracting.");
                 {
                     unencodedRegex = new Regex(args[argcounter++]);
                 }
+                else if (currentArg == "-convert")
+                {
+                    string[] codecs = args[argcounter++].Split(':');
+
+                    if (codecs.Length != 2)
+                        HaltAndCatchFire($"Invalid convert argument: {args[argcounter]}", 100);
+
+                    ArchiveFileType input;
+
+                    if (!Enum.TryParse(codecs[0], out input))
+                        HaltAndCatchFire($"Invalid input codec for conversion: {codecs[0]}", 101);
+
+                    if (string.IsNullOrWhiteSpace(codecs[1]))
+                    {
+                        if (encodingTransforms.ContainsKey(input))
+                            encodingTransforms.Remove(input);
+                    }
+                    else
+                    {
+                        ArchiveFileType output;
+
+                        if (!Enum.TryParse(codecs[1], out output))
+                            HaltAndCatchFire($"Invalid output codec for conversion: {codecs[1]}", 102);
+
+                        encodingTransforms[input] = output;
+                    }
+                }
                 else
                 {
-                    Console.WriteLine($"Unknown command: \"{currentArg}\"");
-                    Console.WriteLine($"Stopping archival");
-                    Environment.Exit(1);
+                    HaltAndCatchFire($"Unknown command: \"{currentArg}\"", 1);
                     return;
                 }
             }
@@ -273,9 +318,14 @@ Sets a regex to use for compressing or extracting.");
             string filename = args.Last();
 
             ExtendedArchiveWriter writer = new ExtendedArchiveWriter(name);
-                
+            
             writer.ChunkSizeLimit = (ulong)chunksize;
             writer.Threads = threads;
+
+            writer.EncodingConversions.Clear();
+
+            foreach (var kv in encodingTransforms)
+                writer.EncodingConversions[kv.Key] = kv.Value;
 
             if (compression == "zstd")
                 writer.DefaultCompression = ArchiveChunkCompression.Zstandard;

@@ -39,7 +39,9 @@ namespace PPeX
         /// <summary>
         /// The list of files that the archive contains.
         /// </summary>
-        public List<ISubfile> Files = new List<ISubfile>();
+        public List<ISubfile> Files { get; protected set; } = new List<ISubfile>();
+
+        public Dictionary<ArchiveFileType, ArchiveFileType> EncodingConversions { get; protected set; } = new Dictionary<ArchiveFileType, ArchiveFileType>(Core.Settings.DefaultEncodingConversions);
 
         /// <summary>
         /// The compression type that the writer will default to.
@@ -117,7 +119,7 @@ namespace PPeX
 
             total = fileList.Count;
 
-            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
+            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit, EncodingConversions);
 
             while (fileList.Count > 0)
             {
@@ -134,7 +136,7 @@ namespace PPeX
                     chunks.Add(currentChunk);
 
                     //create a new chunk
-                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
+                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit, EncodingConversions);
                     currentChunk.AddFile(file);
                 }
             }
@@ -153,7 +155,7 @@ namespace PPeX
                         "_TextureBank"))
                     .OrderBy(x => x.Source.Md5, new ByteArrayComparer());
 
-                var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
+                var textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit, EncodingConversions);
                 
                 foreach (var file in textureFiles)
                 {
@@ -161,7 +163,7 @@ namespace PPeX
                     {
                         chunks.Add(textureBankWriter);
 
-                        textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
+                        textureBankWriter = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit, EncodingConversions);
                         textureBankWriter.AddFile(file);
                     }
                 }
@@ -175,7 +177,7 @@ namespace PPeX
             ProgressPercentage.Report(0);
 
             //Create a LST chunk
-            HybridChunkWriter LSTWriter = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
+            HybridChunkWriter LSTWriter = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit, EncodingConversions);
 
 
             //bunch duplicate files together
@@ -218,7 +220,7 @@ namespace PPeX
 
             total = fileList.Count;
 
-            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
+            currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit, EncodingConversions);
 
             while (fileList.Count > 0)
             {
@@ -261,7 +263,7 @@ namespace PPeX
                         opusFiles.Add(fileList.Dequeue());
                     }
 
-                    HybridEncoder tempChunk = new HybridEncoder(ID++, opusFiles, this, ChunkSizeLimit);
+                    HybridEncoder tempChunk = new HybridEncoder(ID++, opusFiles, this, ChunkSizeLimit, EncodingConversions);
                     chunks.Add(tempChunk);
 
                     continue;
@@ -273,7 +275,7 @@ namespace PPeX
                     chunks.Add(currentChunk);
 
                     //create a new chunk
-                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit);
+                    currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit, EncodingConversions);
                     currentChunk.AddFile(file);
                 }
             }
