@@ -12,9 +12,9 @@ namespace PPeX.Archives.Writers
         internal HybridChunkWriter chunkWriter;
         protected IEnumerable<ISubfile> files;
 
-        public HybridEncoder(uint ID, IEnumerable<ISubfile> files, IArchiveContainer writer)
+        public HybridEncoder(uint ID, IEnumerable<ISubfile> files, IArchiveContainer writer, ulong maxChunkSize)
         {
-            chunkWriter = new HybridChunkWriter(ID, ArchiveChunkCompression.Uncompressed, ChunkType.Generic, writer);
+            chunkWriter = new HybridChunkWriter(ID, ArchiveChunkCompression.Uncompressed, writer, maxChunkSize);
 
             this.files = files;
         }

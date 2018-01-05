@@ -45,6 +45,8 @@ namespace PPeX.Encoders
             {
                 case ArchiveFileType.Xx3Mesh:
                     return new Xx3Encoder(source, writer.TextureBank);
+                case ArchiveFileType.Xx4Mesh:
+                    return new Xx4Encoder(source, writer.TextureBank);
                 default:
                     return GetGenericEncoder(source, encoding);
             }
@@ -62,6 +64,14 @@ namespace PPeX.Encoders
                     return new XxEncoder(source);
                 case ArchiveFileType.Xx2Mesh:
                     return new Xx2Encoder(source);
+                case ArchiveFileType.SviexMesh:
+                    return new SviexEncoder(source);
+                case ArchiveFileType.Sviex2Mesh:
+                    return new Sviex2Encoder(source);
+                case ArchiveFileType.XaAnimation:
+                    return new XaEncoder(source);
+                case ArchiveFileType.Xa2Animation:
+                    return new Xa2Encoder(source);
                 case ArchiveFileType.Raw:
                     return new PassthroughEncoder(source);
                 default:

@@ -67,6 +67,8 @@
     <Compile Include="ExtendedArchiveAppenderTests.cs" />
     <Compile Include="TestCommon.cs" />
     <Compile Include="HybridChunkWriterTests.cs" />
+    <Compile Include="SviexTests.cs" />
+    <Compile Include="Xx4Tests.cs" />
     <Compile Include="Xx3Tests.cs" />
     <Compile Include="Xx2Tests.cs" />
     <Compile Include="xxCommon.cs" />
@@ -90,6 +92,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+    <None Include="A00_01_O_blazer_S.sviex">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="AA2BGM13.wav">

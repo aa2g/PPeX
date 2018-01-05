@@ -98,7 +98,6 @@ namespace PPeX
             {
                 ID = chunk.ID,
                 CRC = chunk.CRC32,
-                Type = chunk.Type,
                 Compression = chunk.Compression,
                 CompressedSize = chunk.CompressedLength,
                 UncompressedSize = chunk.UncompressedLength,

@@ -72,6 +72,16 @@ namespace PPeX
                 Type = ArchiveFileType.Xx2Mesh;
             else if (name.EndsWith(".xx3"))
                 Type = ArchiveFileType.Xx3Mesh;
+            else if (name.EndsWith(".xx4"))
+                Type = ArchiveFileType.Xx4Mesh;
+            else if (name.EndsWith(".sviex"))
+                Type = ArchiveFileType.SviexMesh;
+            else if (name.EndsWith(".sviex2"))
+                Type = ArchiveFileType.Sviex2Mesh;
+            else if (name.EndsWith(".xa"))
+                Type = ArchiveFileType.XaAnimation;
+            else if (name.EndsWith(".xa2"))
+                Type = ArchiveFileType.Xa2Animation;
             else
                 Type = ArchiveFileType.Raw;
         }

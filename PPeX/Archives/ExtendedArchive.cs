@@ -52,13 +52,14 @@ namespace PPeX
         /// </summary>
         public string Filename { get; protected set; }
 
-        public static readonly ushort Version = 7;
+        public static readonly ushort Version = 8;
 
         protected List<ExtendedArchiveChunk> chunks = new List<ExtendedArchiveChunk>();
         /// <summary>
         /// Subfiles that are contained within the extended archive.
         /// </summary>
         public IReadOnlyList<ExtendedArchiveChunk> Chunks => chunks.AsReadOnly();
+
 
         public List<ArchiveFileSource> RawFiles = new List<ArchiveFileSource>();
         /// <summary>
@@ -70,9 +71,8 @@ namespace PPeX
         internal ulong FileTableOffset = 0;
         internal ulong TableInfoOffset = 0;
 
-        public Xx3Provider Xx3Provider { get; protected set; }
-
-        public TextureBank TextureBank => Xx3Provider;
+        public SubfileTextureBank TextureBank;
+        TextureBank IArchiveContainer.TextureBank => TextureBank;
 
         /// <summary>
         /// Reads from a .ppx file.
@@ -130,13 +130,10 @@ namespace PPeX
                     var source = ArchiveFileSource.ReadFromTable(reader, this);
 
                     RawFiles.Add(source);
-                    //Files.Add(new ArchiveSubfile(source));
+                    Files.Add(new ArchiveSubfile(source));
                 }
 
-                Xx3Provider = new Xx3Provider(chunks);
-                Files.AddRange(Xx3Provider.XX3Subfiles);
-
-                Files.AddRange(GenericProvider.Load(chunks));
+                TextureBank = new SubfileTextureBank(RawFiles.Where(x => x.ArchiveName == "_TextureBank").Select(x => new ArchiveSubfile(x)));
             }
         }
 
