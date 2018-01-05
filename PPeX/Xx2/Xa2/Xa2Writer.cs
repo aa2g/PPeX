@@ -43,16 +43,23 @@ namespace PPeX.Xx2.Xa
             //    foreach (byte[] unknown in section.Clips.Select(x => x.Unknowns[i]))
             //        writer.Write(unknown);
 
+            int clipCount = section.Clips.Count(x => x.Speed != 0);
+
+            writer.Write(clipCount);
+
             foreach (var clip in section.Clips)
             {
-                writer.WriteEncryptedStringRaw(clip.Name);
-                writer.Write(clip.Start);
-                writer.Write(clip.End);
-                writer.Write(clip.Speed);
-                writer.Write(clip.Next);
+                if (clip.Speed != 0)
+                {
+                    writer.WriteEncryptedStringRaw(clip.Name);
+                    writer.Write(clip.Start);
+                    writer.Write(clip.End);
+                    writer.Write(clip.Speed);
+                    writer.Write(clip.Next);
 
-                foreach (byte[] unknown in clip.Unknowns)
-                    writer.Write(unknown);
+                    foreach (byte[] unknown in clip.Unknowns)
+                        writer.Write(unknown);
+                }
             }
 
             writer.Write(section.Tracks.Length);
@@ -69,7 +76,7 @@ namespace PPeX.Xx2.Xa
             foreach (var keyframes in section.Tracks.Select(x => x.Keyframes))
                 writer.Write(keyframes.Length);
 
-            //track -> keyframes -> index (delta)
+            //track->keyframes->index(delta)
             foreach (var keyframes in section.Tracks.Select(x => x.Keyframes))
             {
                 int last = 0;
@@ -110,27 +117,51 @@ namespace PPeX.Xx2.Xa
 
 
 
-            foreach (var track in section.Tracks)
-            {
-                //writer.Write(track.Name);
-                //writer.Write(track.Unknown);
+            //foreach (var track in section.Tracks)
+            //{
+            //    writer.Write(track.Name);
+            //    writer.Write(track.Unknown);
 
-                foreach (var frame in track.Keyframes)
-                {
-                    //writer.Write(frame.Index);
+            //    for (int index = 0; index < track.Keyframes.Length;)
+            //    {
+            //        var frame = track.Keyframes[index];
 
-                    //for (int i = 0; i < 4; i++)
-                    //    writer.Write(frame.Rotation[i]);
+            //        //writer.Write(frame.Index);
 
-                    //for (int i = 0; i < 3; i++)
-                    //    writer.Write(frame.Translation[i]);
+            //        for (int i = 0; i < 4; i++)
+            //            writer.Write(frame.Rotation[i]);
 
-                    //for (int i = 0; i < 3; i++)
-                    //    writer.Write(frame.Scaling[i]);
+            //        for (int i = 0; i < 3; i++)
+            //            writer.Write(frame.Translation[i]);
 
-                    //writer.Write(frame.Unknown);
-                }
-            }
+            //        for (int i = 0; i < 3; i++)
+            //            writer.Write(frame.Scaling[i]);
+
+            //        writer.Write(frame.Unknown);
+
+            //        int dupes = 0;
+            //        while (index + 1 < track.Keyframes.Length)
+            //        {
+            //            var newFrame = track.Keyframes[++index];
+
+            //            if (newFrame.Rotation.SequenceEqual(frame.Rotation) &&
+            //                newFrame.Translation.SequenceEqual(frame.Translation) &&
+            //                newFrame.Scaling.SequenceEqual(frame.Scaling) &&
+            //                newFrame.Unknown.SequenceEqual(frame.Unknown))
+            //            {
+            //                dupes++;
+            //            }
+            //            else
+            //            {
+            //                writer.Write(dupes);
+            //                break;
+            //            }
+            //        }
+
+            //        if (index + 1 >= track.Keyframes.Length)
+            //            break;
+            //    }
+            //}
         }
     }
 }
