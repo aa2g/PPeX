@@ -74,8 +74,8 @@ namespace PPeXTests
             Assert.AreEqual(ArchiveFileType.OpusAudio, subfile.Type);
             Assert.IsTrue(subfile.Name == "audio.opus", $"Internal name did not switch to \"audio.opus\". Actual: {subfile.Name}");
             Assert.IsTrue(subfile.EmulatedName == "audio.wav", $"Emulated name did stay as \"audio.wav\". Actual: {subfile.EmulatedName}");
-            Assert.IsTrue(subfile.ArchiveName == "arc", $"Archive name did stay as \"arc\". Actual: {subfile.ArchiveName}");
-            Assert.IsTrue(subfile.EmulatedArchiveName == "arc", $"Emulated archive name did stay as \"arc\". Actual: {subfile.EmulatedArchiveName}");
+            Assert.IsTrue(subfile.ArchiveName == "arc", $"Archive name did not stay as \"arc\". Actual: {subfile.ArchiveName}");
+            Assert.IsTrue(subfile.EmulatedArchiveName == "arc.pp", $"Emulated archive name did not change to \"arc.pp\". Actual: {subfile.EmulatedArchiveName}");
 
             using (OpusEncoder decoder = new OpusEncoder(subfile.GetRawStream()))
             {
@@ -110,29 +110,29 @@ namespace PPeXTests
 
         [DeploymentItem(XxTestFile)]
         [TestMethod]
-        public void Xx3ArchiveEncoderTest()
+        public void Xx4ArchiveEncoderTest()
         {
-            ExtendedArchiveWriter writer = new ExtendedArchiveWriter("xx3encoder");
+            ExtendedArchiveWriter writer = new ExtendedArchiveWriter("xx4encoder");
             writer.Files.Add(new Subfile(new FileSource(XxTestFile), "mesh.xx", "arc"));
 
-            writer.Write("xx3encodertest.ppx");
+            writer.Write("xx4encodertest.ppx");
 
-            ExtendedArchive arc = new ExtendedArchive("xx3encodertest.ppx");
+            ExtendedArchive arc = new ExtendedArchive("xx4encodertest.ppx");
 
             var subfile = arc.Files.First();
 
-            Assert.AreEqual(ArchiveFileType.Xx3Mesh, subfile.Type);
-            Assert.IsTrue(subfile.Name == "mesh.xx3", $"Internal name did not switch to \"mesh.xx3\". Actual: {subfile.Name}");
-            Assert.IsTrue(subfile.EmulatedName == "mesh.xx", $"Emulated name did stay as \"amesh.xx\". Actual: {subfile.EmulatedName}");
-            Assert.IsTrue(subfile.ArchiveName == "arc", $"Archive name did stay as \"arc\". Actual: {subfile.ArchiveName}");
-            Assert.IsTrue(subfile.EmulatedArchiveName == "arc", $"Emulated archive name did stay as \"arc\". Actual: {subfile.EmulatedArchiveName}");
+            Assert.AreEqual(ArchiveFileType.Xx4Mesh, subfile.Type);
+            Assert.IsTrue(subfile.Name == "mesh.xx4", $"Internal name did not switch to \"mesh.xx4\". Actual: {subfile.Name}");
+            Assert.IsTrue(subfile.EmulatedName == "mesh.xx", $"Emulated name did stay as \"mesh.xx\". Actual: {subfile.EmulatedName}");
+            Assert.IsTrue(subfile.ArchiveName == "arc", $"Archive name did not stay as \"arc\". Actual: {subfile.ArchiveName}");
+            Assert.IsTrue(subfile.EmulatedArchiveName == "arc.pp", $"Emulated archive name did not change to \"arc.pp\". Actual: {subfile.EmulatedArchiveName}");
 
-            using (Xx3Encoder decoder = new Xx3Encoder(subfile.GetRawStream(), arc.TextureBank))
+            using (Xx4Encoder decoder = new Xx4Encoder(subfile.GetRawStream(), arc.TextureBank))
             {
                 Stream decoded = decoder.Decode();
             }
 
-            File.Delete("xx3encodertest.ppx");
+            File.Delete("xx4encodertest.ppx");
         }
 
         public void Cleanup()
