@@ -185,7 +185,7 @@ namespace PPeX
             using (BinaryWriter dataWriter = new BinaryWriter(fs))
             {
                 var orderedChunks = BaseArchive.Chunks.OrderBy(x => x.Offset);
-                ulong expectedOffset = orderedChunks.First().Offset;
+                ulong expectedOffset = BaseArchive.TableInfoOffset + 1024; //orderedChunks.First().Offset;
 
                 foreach (var chunk in orderedChunks)
                 {
