@@ -591,7 +591,7 @@ namespace PPeXUI
 
                     //write hash cache
                     if (Core.Settings.UseMd5Cache)
-                        using (var comp = new ZstdNet.Compressor())
+                        using (var comp = new ZstdNet.Compressor(new ZstdNet.CompressionOptions(3)))
                         {
                             var strings = Core.Settings.Md5Cache.Values.Select(x => x.ToWritableString());
 
