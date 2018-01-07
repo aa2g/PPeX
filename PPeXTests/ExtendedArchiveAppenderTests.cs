@@ -11,6 +11,12 @@ namespace PPeXTests
     public class ExtendedArchiveAppenderTests
     {
         public static byte[] TestData = Encoding.UTF8.GetBytes("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ac purus id diam consectetur fermentum. Etiam nulla nisi, tincidunt sed sagittis nec, finibus vel elit. Pellentesque sodales massa eget tortor eleifend dictum. Ut finibus tellus efficitur nulla hendrerit convallis. Cras sed neque sed tellus luctus vehicula sed in sapien.");
+        
+        protected void AssertCRC(ExtendedArchive arc)
+        {
+            foreach (var chunk in arc.Chunks)
+                Assert.IsTrue(chunk.VerifyChecksum());
+        }
 
         [TestMethod]
         public void AppendMetadataTest()
@@ -54,6 +60,8 @@ namespace PPeXTests
             
             Assert.IsFalse(ppx.Files.Any(x => x.Name == file3.Name));
 
+            AssertCRC(ppx);
+
             TestCommon.TeardownPPX(ppx);
         }
 
@@ -64,7 +72,11 @@ namespace PPeXTests
 
             ExtendedArchiveAppender appender = new ExtendedArchiveAppender(ppx);
 
+            AssertCRC(ppx);
+
             Assert.IsFalse(appender.WastedSpaceExists);
+
+            appender.Defragment();
 
             var file3 = appender.BaseArchive.RawFiles.Find(x => x.Name == "test00");
 
@@ -73,10 +85,14 @@ namespace PPeXTests
             appender.Write();
 
             Assert.IsTrue(appender.WastedSpaceExists);
+            
+            AssertCRC(appender.BaseArchive);
 
             appender.Defragment();
 
             Assert.IsFalse(appender.WastedSpaceExists);
+
+            AssertCRC(appender.BaseArchive);
 
             TestCommon.TeardownPPX(ppx);
         }

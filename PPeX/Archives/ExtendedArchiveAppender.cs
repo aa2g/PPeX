@@ -99,6 +99,7 @@ namespace PPeX
                 ID = chunk.ID,
                 CRC = chunk.CRC32,
                 Compression = chunk.Compression,
+                FileOffset = chunk.Offset,
                 CompressedSize = chunk.CompressedLength,
                 UncompressedSize = chunk.UncompressedLength,
                 FileReceipts = fileReciepts
@@ -199,14 +200,16 @@ namespace PPeX
                             fs.Position = (long)expectedOffset;
                             buffer.CopyTo(fs);
                         }
-
-                        reciept.FileOffset = expectedOffset;
                     }
+
+                    reciept.FileOffset = expectedOffset;
 
                     CompletedChunks.Add(reciept);
 
                     expectedOffset += chunk.CompressedLength;
                 }
+
+                fs.Position = (long)expectedOffset;
 
                 WriteTables((long)BaseArchive.TableInfoOffset, dataWriter);
                 
