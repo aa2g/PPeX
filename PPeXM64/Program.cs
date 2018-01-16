@@ -8,11 +8,21 @@ using PPeX;
 using System.IO;
 using System.Runtime;
 using System.Timers;
+using System.Runtime.InteropServices;
 
 namespace PPeXM64
 {
     public class Program
     {
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        const int SW_HIDE = 0;
+        const int SW_SHOW = 5;
+
         public static CompressedCache Cache;
 
         public static bool LogFiles = false;
@@ -44,6 +54,12 @@ namespace PPeXM64
 
             Core.Settings.PPXLocation = Core.Settings.PPXLocation.Replace("\\\\", "\\");
 
+            if (args.Length > 0 &&
+                args.Any(x => x.ToLower() == "-nowindow"))
+            {
+                ShowWindow(GetConsoleWindow(), SW_HIDE);
+            }
+            
             //Attach the handler to the server
             server.OnRequest += Server_OnRequest;
             server.OnDisconnect += Server_OnDisconnect;
