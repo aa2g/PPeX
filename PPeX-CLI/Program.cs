@@ -23,6 +23,15 @@ namespace PPeX_CLI
                 return int.Parse(readable);
         }
 
+        static string ConvertToReadable(long length)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            int order = (int)Math.Floor(Math.Log(length, 1024));
+            double len = length / Math.Pow(1024, order);
+            
+            return String.Format("{0:0.##} {1}", len, sizes[order]);
+        }
+
         static Version GetVersion()
         {
             return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
@@ -86,6 +95,9 @@ Appends files to an already existing archive
 
 ppex-cli -d fragmented.ppx
 Defragments an archive
+
+ppex-cli -v archive.ppx
+Verifies an archive
 
 
 [Options]
@@ -167,6 +179,14 @@ Sets a regex to use for compressing or extracting.");
             {
                 DecompressArg(args);
             }
+            else if (args[0].ToLower() == "-d")
+            {
+                DefragmentArgs(args);
+            }
+            else if (args[0].ToLower() == "-v")
+            {
+                VerifyArgs(args);
+            }
             else
             {
                 Console.WriteLine("No valid switch passed!");
@@ -183,24 +203,25 @@ Sets a regex to use for compressing or extracting.");
         {
             Exception ex = (Exception)e.ExceptionObject;
 
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            var oldColor = Console.ForegroundColor;
+
+            Console.ForegroundColor = ConsoleColor.Red;
+
+            Console.WriteLine("-- UNHANDLED EXCEPTION --");
+            Console.WriteLine(ex.Message);
+            Console.WriteLine($"-- USER DATA ({ex.Data.Count}) --");
+
+            foreach (var key in ex.Data.Keys)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-
-                Console.WriteLine("-- UNHANDLED EXCEPTION --");
-                Console.WriteLine(ex.Message);
-                Console.WriteLine($"-- USER DATA ({ex.Data.Count}) --");
-
-                foreach (var key in ex.Data.Keys)
-                {
-                    Console.WriteLine(key.ToString());
-                    Console.WriteLine(ex.Data[key].ToString());
-                }
-                
-                Console.WriteLine("-- STACK TRACE --");
-                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine(key.ToString());
+                Console.WriteLine(ex.Data[key].ToString());
             }
+                
+            Console.WriteLine("-- STACK TRACE --");
+            Console.WriteLine(ex.StackTrace);
 
+            Console.CursorVisible = true;
+            Console.ForegroundColor = oldColor;
             Environment.Exit(9999);
         }
 
@@ -208,7 +229,8 @@ Sets a regex to use for compressing or extracting.");
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(message);
-            Console.WriteLine($"Stopping archival");
+            Console.WriteLine($"Stopping...");
+            Console.CursorVisible = true;
             Environment.Exit(1);
         }
 
@@ -797,13 +819,80 @@ Sets a regex to use for compressing or extracting.");
         #region Defragment
         static void DefragmentArgs(string[] args)
         {
-            string filename = args[0];
+            if (args.Length < 2)
+            {
+                HaltAndCatchFire($"Invalid amount of arguments.", -1);
+            }
+
+            string filename = args[1];
+
+            if (!File.Exists(filename))
+            {
+                HaltAndCatchFire($"Input file does not exist: {filename}", 1);
+            }
 
             ExtendedArchiveAppender appender = new ExtendedArchiveAppender(filename);
 
             appender.Defragment();
 
             Console.WriteLine($"\"{appender.Name}\" defragmented.");
+        }
+        #endregion
+
+        #region Verify
+        static void VerifyArgs(string[] args)
+        {
+            if (args.Length < 2)
+            {
+                HaltAndCatchFire($"Invalid amount of arguments.", -1);
+            }
+
+            string filename = args[1];
+
+            if (!File.Exists(filename))
+            {
+                HaltAndCatchFire($"Input file does not exist: {filename}", 1);
+            }
+
+            ExtendedArchive arc = new ExtendedArchive(filename);
+
+            Console.CursorVisible = false;
+
+            Action<int, string> UpdateProgress = (i, x) =>
+            {
+                Console.SetCursorPosition(0, Console.CursorTop);
+
+                string message = $"Verification {i}% complete [{x}]";
+
+                message = message.PadRight(Console.BufferWidth - 1);
+
+                Console.Write(message);
+            };
+
+            var orderedChunks = arc.Chunks.OrderBy(x => x.Offset).ToArray();
+
+            long currentOffset = 0;
+            long totalOffset = orderedChunks.Sum(x => (long)x.CompressedLength);
+
+            for (int i = 0; i < orderedChunks.Length; i++)
+            {
+                ExtendedArchiveChunk chunk = orderedChunks[i];
+
+                if (!chunk.VerifyChecksum())
+                    HaltAndCatchFire($"Chunk hash mismatch; id: {chunk.ID}, offset: {chunk.Offset}", 8);
+
+                currentOffset += (long)chunk.CompressedLength;
+
+                //int percentage = (int)((float)(100 * i) / (float)orderedChunks.Length);
+                int percentage = (int)Math.Round((float)(100 * currentOffset) / (float)totalOffset);
+
+                UpdateProgress(percentage, $"{i + 1}/{orderedChunks.Length} : {ConvertToReadable(currentOffset)}/{ConvertToReadable(totalOffset)}");
+            }
+
+            Console.WriteLine();
+
+            Console.WriteLine($"\"{arc.Title}\" successfully verified.");
+            Console.CursorVisible = true;
         }
         #endregion
     }
