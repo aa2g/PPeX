@@ -212,7 +212,7 @@ Sets a regex to use for compressing or extracting.");
             Environment.Exit(1);
         }
 
-#region Compress
+        #region Compress
         static void CompressArg(string[] args)
         {
             Regex regex = new Regex(".+");
@@ -487,9 +487,9 @@ Sets a regex to use for compressing or extracting.");
 
             Console.WriteLine("Imported " + imported + "/" + pp.Subfiles.Count + " files");
         }
-#endregion
+        #endregion
 
-#region Decompress
+        #region Decompress
         static void DecompressArg(string[] args)
         {
             Regex regex = new Regex(".+");
@@ -594,7 +594,7 @@ Sets a regex to use for compressing or extracting.");
         }
         #endregion
 
-#region Append
+        #region Append
         static void AppendArg(string[] args)
         {
             Regex regex = new Regex(".+");
