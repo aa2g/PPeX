@@ -93,6 +93,21 @@ namespace PPeX
 
             double total;
 
+            
+            ProgressStatus.Report("First pass hash caching...\r\n");
+            int i = 0;
+            total = FilesToAdd.Count();
+
+            byte[] dummyHash;
+            foreach (ISubfile file in FilesToAdd)
+            {
+                dummyHash = file.Source.Md5; //dummy get
+
+                i++;
+
+                ProgressPercentage.Report((int)(i * 100 / total));
+            }
+
             List<ISubfile> GenericFiles = new List<ISubfile>();
             List<ISubfile> Xx3Files = new List<ISubfile>();
 
@@ -111,7 +126,9 @@ namespace PPeX
                 }
             }
 
+
             //XX3 chunks
+            ProgressStatus.Report("Second pass writing...\r\n");
             ProgressStatus.Report("Allocating XX chunks...\r\n");
             ProgressPercentage.Report(0);
             
