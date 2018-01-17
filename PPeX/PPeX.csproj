@@ -83,6 +83,7 @@
     <Compile Include="External\Zstandard\Parameters.cs" />
     <Compile Include="External\Zstandard\ThrowHelper.cs" />
     <Compile Include="IArchiveContainer.cs" />
+    <Compile Include="PpexException.cs" />
     <Compile Include="Subfiles\Xx3Subfile.cs" />
     <Compile Include="Xx2\CompressedTextureBank.cs" />
     <Compile Include="Xx2\EncoderCommon.cs" />

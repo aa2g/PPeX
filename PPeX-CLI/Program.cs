@@ -63,7 +63,7 @@ namespace PPeX_CLI
                 Console.Write(text);
             }
 
-            Console.ForegroundColor = BaseColor;
+            Console.ResetColor();
             Console.WriteLine();
         }
 
@@ -203,8 +203,6 @@ Sets a regex to use for compressing or extracting.");
         {
             Exception ex = (Exception)e.ExceptionObject;
 
-            var oldColor = Console.ForegroundColor;
-
             Console.ForegroundColor = ConsoleColor.Red;
 
             Console.WriteLine("-- UNHANDLED EXCEPTION --");
@@ -221,7 +219,7 @@ Sets a regex to use for compressing or extracting.");
             Console.WriteLine(ex.StackTrace);
 
             Console.CursorVisible = true;
-            Console.ForegroundColor = oldColor;
+            Console.ResetColor();
             Environment.Exit(9999);
         }
 
@@ -231,6 +229,7 @@ Sets a regex to use for compressing or extracting.");
             Console.WriteLine(message);
             Console.WriteLine($"Stopping...");
             Console.CursorVisible = true;
+            Console.ResetColor();
             Environment.Exit(1);
         }
 
@@ -854,7 +853,26 @@ Sets a regex to use for compressing or extracting.");
                 HaltAndCatchFire($"Input file does not exist: {filename}", 1);
             }
 
-            ExtendedArchive arc = new ExtendedArchive(filename);
+            ExtendedArchive arc;
+
+            try
+            {
+                arc = new ExtendedArchive(filename);
+            }
+            catch (PpexException ex)
+            {
+                if (ex.ErrorCode == PpexException.PpexErrorCode.FileNotPPXArchive ||
+                    ex.ErrorCode == PpexException.PpexErrorCode.IncorrectVersionNumber)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(ex.Message);
+                    Console.ResetColor();
+                    return;
+                }
+                else
+                    throw;
+            }
+            
 
             Console.CursorVisible = false;
 

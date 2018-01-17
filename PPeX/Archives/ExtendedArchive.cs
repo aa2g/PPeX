@@ -89,13 +89,13 @@ namespace PPeX
 
                 //Check magic
                 if (Magic != magic)
-                    throw new InvalidDataException("Supplied file is not an extended PP archive.");
+                    throw new PpexException("Supplied file is not an extended PP archive.", PpexException.PpexErrorCode.FileNotPPXArchive);
 
                 //Check version
                 ushort version = reader.ReadUInt16();
 
                 if (version != Version)
-                    throw new InvalidDataException("Supplied extended PP archive is of an incompatible version.");
+                    throw new PpexException($"Supplied extended PP archive is of version {version}; was expecting version {Version}", PpexException.PpexErrorCode.IncorrectVersionNumber);
 
                 //Read the title
                 ushort strlen = reader.ReadUInt16();
