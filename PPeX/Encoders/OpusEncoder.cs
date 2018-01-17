@@ -54,6 +54,10 @@ namespace PPeX.Encoders
                         float[] inputSampleBuffer = new float[inputSamplesToRead];
                         int result = wav.Read(inputSampleBuffer, 0, inputSamplesToRead);
 
+                        List<float> sampleBuffer = new List<float>(samplesToRead * 2);
+
+                        int packetCount = 0;
+
                         while (result > 0)
                         {
                             if (result < inputSamplesToRead)
@@ -68,15 +72,34 @@ namespace PPeX.Encoders
 
                             float[] outputBuffer = resampler.Resample(inputSampleBuffer, result < inputSamplesToRead, out int sampleBufferUsed);
 
-                            Array.Resize(ref outputBuffer, samplesToRead);
+                            sampleBuffer.AddRange(outputBuffer);
 
-                            byte[] output = opus.Encode(outputBuffer, rawSampleCount, out int outlen);
+                            if (sampleBuffer.Count >= samplesToRead ||
+                                result < inputSamplesToRead)
+                            {
+                                do {
+                                    int sampleLength = Math.Min(samplesToRead, sampleBuffer.Count);
+                                    outputBuffer = sampleBuffer.GetRange(0, sampleLength).ToArray();
+                                    sampleBuffer.RemoveRange(0, sampleLength);
 
-                            wrapper.WritePacket(output.Take(outlen).ToArray(), (int)(48000 * Core.Settings.OpusFrameSize), result < inputSamplesToRead);
+                                    if (packetCount > 0)
+                                    {
+                                        Array.Resize(ref outputBuffer, samplesToRead);
 
-                            result = wav.Read(inputSampleBuffer, 0, inputSamplesToRead);
+                                        byte[] output = opus.Encode(outputBuffer, rawSampleCount, out int outlen);
 
-                            Array.Clear(inputSampleBuffer, result, inputSampleBuffer.Length - result);
+                                        Array.Resize(ref output, outlen);
+
+                                        wrapper.WritePacket(output, (int)(48000 * Core.Settings.OpusFrameSize), result < inputSamplesToRead);
+                                    }
+
+                                    packetCount++;
+                                } while (result < inputSampleCount && sampleBuffer.Count > 0);
+
+                                result = wav.Read(inputSampleBuffer, 0, inputSamplesToRead);
+
+                                Array.Clear(inputSampleBuffer, result, inputSampleBuffer.Length - result);
+                            }
                         }
                     }
                 }
