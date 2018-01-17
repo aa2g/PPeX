@@ -71,7 +71,7 @@ namespace PPeXM64
                 List<ExtendedArchive> ArchivesToLoad = new List<ExtendedArchive>();
 
                 //Index all .ppx files in the location
-                foreach (string arc in Directory.EnumerateFiles(Core.Settings.PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x).Reverse())
+                foreach (string arc in Directory.EnumerateFiles(Core.Settings.PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
                 {
                     var archive = new ExtendedArchive(arc);
 
