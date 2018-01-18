@@ -1,5 +1,6 @@
 ﻿using PPeX;
 using PPeX.Compressors;
+using PPeX.Encoders;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -58,7 +59,32 @@ namespace PPeXM64
                         using (ICompressor compressor = CompressorFactory.GetCompressor(RecompressionMethod))
                         using (MemoryStream compressed = new MemoryStream())
                         {
-                            compressor.WriteToStream(uncomp, compressed);
+                            Stream output;
+
+                            if (Program.TurboMode)
+                            {
+                                ArchiveFileType Type = possibleFiles.First().Type;
+                                IEncoder decoder;
+
+                                if (Type == ArchiveFileType.Xx3Mesh)
+                                    decoder = new Xx3Encoder(uncomp, BaseCache.UniversalTexBank);
+                                else
+                                    decoder = EncoderFactory.GetEncoder(uncomp, possibleFiles.First().Source.BaseArchive, Type);
+                                
+                                output = decoder.Decode();
+                                output.Position = 0;
+
+                                foreach (var file in possibleFiles)
+                                {
+                                    file.Type = ArchiveFileType.Raw;
+                                }
+
+                                decoder.Dispose();
+                            }
+                            else
+                                output = uncomp;
+
+                            compressor.WriteToStream(output, compressed);
 
                             byte[] compressedArray = compressed.ToArray();
 

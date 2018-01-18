@@ -28,19 +28,22 @@ namespace PPeXM64
         public static bool LogFiles = false;
         public static bool IsLoaded = false;
 
+        public static bool Preloading = true;
+        public static bool TurboMode = true;
+
         static PipeServer server;
 
-        static Timer timer = new Timer(3000);
+        static Timer timer = new Timer(5000);
 
         static void Main(string[] args)
         {
-            timer.Stop();
-
             server = new PipeServer("PPEX");
 
 #if DEBUG
             LogFiles = true;
 #endif
+
+            timer = new Timer(TurboMode ? 10000 : 5000);
 
             if (args.Length > 0 &&
                 Directory.Exists(args[0]))
@@ -95,6 +98,24 @@ namespace PPeXM64
 
             Console.WriteLine("Finished loading " + Cache.LoadedArchives.Count + " archive(s)");
 
+            if (Preloading)
+            {
+                Console.WriteLine("Preloading files...");
+
+                foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.File.EndsWith(".lst")).Select(x => x.Value.Chunk).Distinct())
+                    chunk.Allocate();
+
+                foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.Archive.StartsWith("jg2p06")).Select(x => x.Value.Chunk).Distinct())
+                    chunk.Allocate();
+
+                //foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.Archive.StartsWith("jg2p07")).Select(x => x.Value.Chunk).Distinct())
+                //    chunk.Allocate();
+
+                Console.WriteLine("Preloading complete.");
+            }
+
+            Cache.Trim(TrimMethod.GCCompactOnly);
+
             IsLoaded = true;
 
             string line;
@@ -113,6 +134,9 @@ namespace PPeXM64
                         return;
                     case "log":
                         LogFiles = !LogFiles;
+                        break;
+                    case "turbo":
+                        TurboMode = !TurboMode;
                         break;
                     case "size":
                         Console.WriteLine(Utility.GetBytesReadable(Cache.AllocatedMemorySize));

@@ -30,7 +30,7 @@ namespace PPeXM64
 
         public byte[] MD5 => Source.Md5;
 
-        public ArchiveFileType Type => Source.Type;
+        public ArchiveFileType Type { get; set; }
 
         public int Length { get; protected set; }
 
@@ -47,6 +47,7 @@ namespace PPeXM64
             Source = source;
             Cache = cache;
             Chunk = chunk;
+            Type = source.Type;
 
             Name = source.Name;
             ArchiveName = source.ArchiveName;
