@@ -83,7 +83,7 @@ namespace PPeX
         public Dictionary<ArchiveFileType, ArchiveFileType> DefaultEncodingConversions = new Dictionary<ArchiveFileType, ArchiveFileType>
         {
             { ArchiveFileType.WaveAudio, ArchiveFileType.OpusAudio },
-            { ArchiveFileType.XxMesh, ArchiveFileType.Xx4Mesh },
+            { ArchiveFileType.XxMesh, ArchiveFileType.Xx3Mesh },
             { ArchiveFileType.SviexMesh, ArchiveFileType.Sviex2Mesh },
         };
     }
