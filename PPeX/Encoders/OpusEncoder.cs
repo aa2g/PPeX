@@ -90,7 +90,7 @@ namespace PPeX.Encoders
 
                                         Array.Resize(ref output, outlen);
 
-                                        wrapper.WritePacket(output, (int)(48000 * Core.Settings.OpusFrameSize), result < inputSamplesToRead);
+                                        wrapper.WritePacket(output, (int)(48000 * Core.Settings.OpusFrameSize), result < inputSamplesToRead && sampleBuffer.Count == 0);
                                     }
 
                                     packetCount++;
@@ -135,14 +135,14 @@ namespace PPeX.Encoders
                     byte[] frame = reader.ReadPacket();
 
                     float[] outputSamples = decoder.DecodeFloat(frame, frame.Length);
-
+                    
                     if (isFirst)
                     {
                         //remove preskip
                         int preskip = reader.Preskip;
 
                         float[] newSamples = new float[outputSamples.Length - preskip];
-                        Buffer.BlockCopy(outputSamples, preskip, newSamples, 0, outputSamples.Length - preskip);
+                        Array.Copy(outputSamples, preskip, newSamples, 0, outputSamples.Length - preskip);
 
                         outputSamples = newSamples;
 
