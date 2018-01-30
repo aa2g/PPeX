@@ -105,7 +105,13 @@ namespace PPeXM64
                 foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.File.EndsWith(".lst")).Select(x => x.Value.Chunk).Distinct())
                     chunk.Allocate();
 
-                foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.Archive.StartsWith("jg2p06")).Select(x => x.Value.Chunk).Distinct())
+                //foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.Archive.StartsWith("jg2p06")).Select(x => x.Value.Chunk).Distinct())
+                //    chunk.Allocate();
+
+                foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.File.EndsWith(".bmp")).Select(x => x.Value.Chunk).Distinct())
+                    chunk.Allocate();
+
+                foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.File.EndsWith(".tga")).Select(x => x.Value.Chunk).Distinct())
                     chunk.Allocate();
 
                 //foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.Archive.StartsWith("jg2p07")).Select(x => x.Value.Chunk).Distinct())
