@@ -189,6 +189,8 @@ namespace PPeXM64
                     string[] splitNames = argument.Replace("data/", "").Split('/');
                     FileEntry entry = new FileEntry(splitNames[0], splitNames[1]);
 
+                    Logger.LogFile(argument);
+
                     //Ensure we have the file
                     if (!Cache.LoadedFiles.ContainsKey(entry))
                     {
@@ -231,6 +233,7 @@ namespace PPeXM64
             Cache.Trim(TrimMethod.All); //deallocate everything
 
             Console.WriteLine("Pipe disconnected, game has closed");
+            Logger.Dump();
 
             System.Threading.Thread.Sleep(1500);
             Environment.Exit(0);

@@ -69,6 +69,7 @@
     <Compile Include="CachedFile.cs" />
     <Compile Include="CompressedCache.cs" />
     <Compile Include="FileEntry.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="Pipe.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
