@@ -174,7 +174,7 @@ namespace PPeXM64
                 if (LogFiles)
                     Console.WriteLine("!!LOADED FILELIST!!");
 
-                var loadedPP = Cache.TotalFiles.Select(x => x.ArchiveName).Distinct();
+                var loadedPP = Cache.TotalFiles.Select(x => x.EmulatedArchiveName).Distinct();
                 
                 foreach (string pp in loadedPP)
                     handler.WriteString(pp);
