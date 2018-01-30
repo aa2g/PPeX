@@ -91,12 +91,10 @@ namespace PPeX
 
             HybridChunkWriter currentChunk;
 
-            double total;
-
             
             ProgressStatus.Report("First pass hash caching...\r\n");
             int i = 0;
-            total = FilesToAdd.Count();
+            double total = FilesToAdd.Count();
 
             byte[] dummyHash;
             foreach (ISubfile file in FilesToAdd)
@@ -134,15 +132,17 @@ namespace PPeX
             
             fileList = new Queue<ISubfile>(Xx3Files.OrderBy(x => x.Source.Md5, new ByteArrayComparer()));
 
-            total = fileList.Count;
+            long totalSize = fileList.Sum(x => (long)x.Source.Size);
+            long accumulatedSize = 0;
 
             currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit, EncodingConversions);
 
             while (fileList.Count > 0)
             {
-                ProgressPercentage.Report((int)(((total - fileList.Count) * 100) / total));
-
                 ISubfile file = fileList.Dequeue();
+
+                accumulatedSize += (long)file.Source.Size;
+                ProgressPercentage.Report((int)((accumulatedSize * 100) / totalSize));
 
                 if (file.Source.Size == 0)
                     continue;
@@ -235,15 +235,17 @@ namespace PPeX
             fileList = new Queue<ISubfile>(linkedSubfileList);
 
 
-            total = fileList.Count;
+            totalSize = fileList.Sum(x => (long)x.Source.Size);
+            accumulatedSize = 0;
 
             currentChunk = new HybridChunkWriter(ID++, DefaultCompression, this, ChunkSizeLimit, EncodingConversions);
 
             while (fileList.Count > 0)
             {
-                ProgressPercentage.Report((int)(((total - fileList.Count) * 100) / total));
-
                 ISubfile file = fileList.Dequeue();
+
+                accumulatedSize += (long)file.Source.Size;
+                ProgressPercentage.Report((int)((accumulatedSize * 100) / totalSize));
 
                 if (file.Name.EndsWith(".lst"))
                 {
