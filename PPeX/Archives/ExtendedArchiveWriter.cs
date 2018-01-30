@@ -323,7 +323,7 @@ namespace PPeX
                 {
                     Stream output = item.GetData(context.Compressors);
 
-                    threadProgress.Report("Written chunk id:" + item.Receipt.ID + " (" + item.Receipt.FileReceipts.Count + " files)\r\n");
+                    threadProgress.Report($"Written chunk id:{item.Receipt.ID} ({item.Receipt.FileReceipts.Count} files) ({Utility.GetBytesReadable((long)item.Receipt.CompressedSize)} - {((double)item.Receipt.CompressedSize / item.Receipt.UncompressedSize).ToString("P")} ratio)\r\n");
 
                     lock (context.ArchiveStream)
                     {
