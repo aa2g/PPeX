@@ -1,182 +1,41 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A611A988-D477-4E16-AF2F-D3A661B909A9}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PPeX</RootNamespace>
-    <AssemblyName>PPeX</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="LZ4, Version=1.0.15.93, Culture=neutral, PublicKeyToken=62e1b5ec1eec9bdd, processorArchitecture=MSIL">
-      <HintPath>..\packages\lz4net.1.0.15.93\lib\net4-client\LZ4.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <Compile Remove="Archives\ExtendedArchiveAppender.cs" />
+    <Compile Remove="Archives\Writers\HybridChunkWriter.cs" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="Archives\ExtendedArchiveAppender.cs" />
-    <Compile Include="Archives\Writers\HybridChunkWriter.cs" />
-    <Compile Include="Archives\Writers\HybridEncoder.cs" />
-    <Compile Include="Archives\Writers\IThreadWork.cs" />
-    <Compile Include="Common\Extensions.cs" />
-    <Compile Include="Compressors\BaseCompressor.cs" />
-    <Compile Include="Encoders\Sviex2Encoder.cs" />
-    <Compile Include="Encoders\SviexEncoder.cs" />
-    <Compile Include="Encoders\Xa2Encoder.cs" />
-    <Compile Include="Encoders\XaEncoder.cs" />
-    <Compile Include="Encoders\Xx4Encoder.cs" />
-    <Compile Include="Encoders\XxEncoder.cs" />
-    <Compile Include="Encoders\WaveEncoder.cs" />
-    <Compile Include="External\Ogg\OggPage.cs" />
-    <Compile Include="External\Ogg\OggReader.cs" />
-    <Compile Include="External\Ogg\OggWrapper.cs" />
-    <Compile Include="External\CRC32\CRC32.cs" />
-    <Compile Include="External\libresample\API.cs" />
-    <Compile Include="External\libresample\LibResampler.cs" />
-    <Compile Include="External\PP\SeekableCryptoStream.cs" />
-    <Compile Include="External\Wave\WaveReader.cs" />
-    <Compile Include="External\Wave\WaveWriter.cs" />
-    <Compile Include="External\Zstandard\ArraySegmentPtr.cs" />
-    <Compile Include="External\Zstandard\CompressionOptions.cs" />
-    <Compile Include="External\Zstandard\Compressor.cs" />
-    <Compile Include="External\Zstandard\DecompressionOptions.cs" />
-    <Compile Include="External\Zstandard\Decompressor.cs" />
-    <Compile Include="External\Zstandard\DictBuilder.cs" />
-    <Compile Include="External\Zstandard\ExternMethods.cs" />
-    <Compile Include="External\Zstandard\Parameters.cs" />
-    <Compile Include="External\Zstandard\ThrowHelper.cs" />
-    <Compile Include="IArchiveContainer.cs" />
-    <Compile Include="PpexException.cs" />
-    <Compile Include="Subfiles\Xx3Subfile.cs" />
-    <Compile Include="Xx2\CompressedTextureBank.cs" />
-    <Compile Include="Xx2\EncoderCommon.cs" />
-    <Compile Include="Xx2\FloatEncoder.cs" />
-    <Compile Include="Xx2\IntegerEncoder.cs" />
-    <Compile Include="Xx2\Md5Hash.cs" />
-    <Compile Include="Xx2\SubfileTextureBank.cs" />
-    <Compile Include="Xx2\Sviex2\Sviex2Reader.cs" />
-    <Compile Include="Xx2\Sviex2\Sviex2Writer.cs" />
-    <Compile Include="Xx2\Sviex\SviexBone.cs" />
-    <Compile Include="Xx2\Sviex\SviexFile.cs" />
-    <Compile Include="Xx2\Sviex\SviexSection.cs" />
-    <Compile Include="Xx2\TextureBank.cs" />
-    <Compile Include="Xx2\Xa2\Xa2Writer.cs" />
-    <Compile Include="Xx2\Xa\XaFile.cs" />
-    <Compile Include="Xx2\Xa\XaSection2.cs" />
-    <Compile Include="Xx2\Xa\XaSection1.cs" />
-    <Compile Include="Xx2\Xa\XaSection3.cs" />
-    <Compile Include="Xx2\Xa\XaSection4.cs" />
-    <Compile Include="Xx2\Xa\XaSection5.cs" />
-    <Compile Include="Xx2\Xx2\Xx2File.cs" />
-    <Compile Include="Xx2\Xx2\Xx2Reader.cs" />
-    <Compile Include="Xx2\Xx2\Xx2Writer.cs" />
-    <Compile Include="Xx2\Xx3\Xx3Reader.cs" />
-    <Compile Include="Xx2\Xx3\Xx3File.cs" />
-    <Compile Include="Xx2\Xx3\Xx3Writer.cs" />
-    <Compile Include="Xx2\Xx3\xxTextureReference.cs" />
-    <Compile Include="Xx2\Xx4\Xx4File.cs" />
-    <Compile Include="Xx2\Xx4\Xx4Reader.cs" />
-    <Compile Include="Xx2\Xx4\Xx4Writer.cs" />
-    <Compile Include="Xx2\XX\xxBone.cs" />
-    <Compile Include="Xx2\XX\xxFace.cs" />
-    <Compile Include="Xx2\XX\xxMaterial.cs" />
-    <Compile Include="Xx2\XX\xxMeshInfo.cs" />
-    <Compile Include="Xx2\XX\xxObject.cs" />
-    <Compile Include="Xx2\XX\xxParser.cs" />
-    <Compile Include="Xx2\XX\xxTexture.cs" />
-    <Compile Include="Xx2\XX\xxVertex.cs" />
-    <Compile Include="Archives\ArchiveEnum.cs" />
-    <Compile Include="Archives\ExtendedArchiveChunk.cs" />
-    <Compile Include="CachedMd5.cs" />
-    <Compile Include="Compressors\CompressorFactory.cs" />
-    <Compile Include="Compressors\Lz4Compressor.cs" />
-    <Compile Include="Compressors\PassthroughCompressor.cs" />
-    <Compile Include="Compressors\ZstdCompressor.cs" />
-    <Compile Include="Core.cs" />
-    <Compile Include="Encoders\BaseEncoder.cs" />
-    <Compile Include="Encoders\PassthroughEncoder.cs" />
-    <Compile Include="Encoders\OpusEncoder.cs" />
-    <Compile Include="Encoders\Xx2Encoder.cs" />
-    <Compile Include="Encoders\Xx3Encoder.cs" />
-    <Compile Include="External\Opus\API.cs" />
-    <Compile Include="External\Opus\OpusDecoder.cs" />
-    <Compile Include="External\Opus\OpusEncoder.cs" />
-    <Compile Include="External\PP\IReadFile.cs" />
-    <Compile Include="External\PP\IWriteFile.cs" />
-    <Compile Include="External\PP\JchStream.cs" />
-    <Compile Include="External\PP\ppFormat.cs" />
-    <Compile Include="External\PP\ppHeader.cs" />
-    <Compile Include="External\PP\ppParser.cs" />
-    <Compile Include="External\PP\ppSubfile.cs" />
-    <Compile Include="External\PP\ppSwapfile.cs" />
-    <Compile Include="External\PP\Utility.cs" />
-    <Compile Include="External\PP\WakeariStream.cs" />
-    <Compile Include="ICompressor.cs" />
-    <Compile Include="IEncoder.cs" />
-    <Compile Include="IFileProvider.cs" />
-    <Compile Include="Settings.cs" />
-    <Compile Include="Sources\ArchiveFileSource.cs" />
-    <Compile Include="Archives\ExtendedArchiveWriter.cs" />
-    <Compile Include="Sources\BaseSource.cs" />
-    <Compile Include="Sources\MemorySource.cs" />
-    <Compile Include="Subfiles\ArchiveSubfile.cs" />
-    <Compile Include="Archives\ExtendedArchive.cs" />
-    <Compile Include="Sources\FileSource.cs" />
-    <Compile Include="IDataSource.cs" />
-    <Compile Include="ISubfile.cs" />
-    <Compile Include="Sources\PPSource.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Subfiles\Subfile.cs" />
-    <Compile Include="Substream.cs" />
-    <Compile Include="Common\Utility.cs" />
+    <None Remove="libresample32.dll" />
+    <None Remove="libresample64.dll" />
+    <None Remove="libzstd32.dll" />
+    <None Remove="libzstd64.dll" />
+    <None Remove="opus32.dll" />
+    <None Remove="opus64.dll" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
+
   <ItemGroup>
     <Content Include="libresample32.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="libresample64.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="libzstd32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -186,18 +45,18 @@
     <Content Include="opus32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Xx2\XXFormatFinal.txt" />
     <Content Include="opus64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
+  <ItemGroup>
+    <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.0.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Archives\Writers\" />
+  </ItemGroup>
+
 </Project>

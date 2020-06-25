@@ -1,24 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 using System.Threading.Tasks;
 
 namespace PPeX
 {
     public abstract class BaseSource : IDataSource
     {
-        /// <summary>
-        /// The uncompressed size of the data.
-        /// </summary>
+	    /// <inheritdoc />
         public virtual ulong Size { get; protected set; }
 
         protected byte[] _md5;
 
-        /// <summary>
-        /// The MD5 hash of the uncompressed data.
-        /// </summary>
+        /// <inheritdoc />
         public virtual byte[] Md5
         {
             get
@@ -29,13 +21,15 @@ namespace PPeX
 
                 return _md5;
             }
+            set => _md5 = value;
         }
 
+        /// <inheritdoc />
         public abstract void Dispose();
-        /// <summary>
-        /// Returns a stream of uncompressed data.
-        /// </summary>
-        /// <returns></returns>
+
+        public abstract Task GenerateMd5HashAsync();
+
+        /// <inheritdoc />
         public abstract Stream GetStream();
     }
 }

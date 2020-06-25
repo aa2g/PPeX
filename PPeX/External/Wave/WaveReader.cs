@@ -2,9 +2,7 @@
 using System;
 using System.Collections;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 
 namespace PPeX.External.Wave
@@ -163,6 +161,26 @@ namespace PPeX.External.Wave
 
                 read++;
                 buffer[i + offset] = ReadSampleAsFloat();
+            }
+
+            return read;
+        }
+
+        public int Read(Span<byte> buffer)
+        {
+            return reader.BaseStream.Read(buffer);
+        }
+
+        public int Read(Span<float> buffer)
+        {
+            int read = 0;
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                if (remainingData == 0)
+                    return read;
+
+                read++;
+                buffer[i] = ReadSampleAsFloat();
             }
 
             return read;

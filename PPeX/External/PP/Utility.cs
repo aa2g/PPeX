@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Globalization;
+﻿using System.Text;
 using System.IO;
-using System.Configuration;
-using System.Reflection;
 
 namespace PPeX.External.PP
 {
-    public static partial class Utility
+    public static class Utility
     {
+	    static Utility()
+	    {
+		    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+
         public static Encoding EncodingShiftJIS => Encoding.GetEncoding("Shift-JIS");
         public static int BufSize => 0x400000; //4096;
 
@@ -23,11 +23,6 @@ namespace PPeX.External.PP
             }
             dest += destIdx + ext;
             return dest;
-        }
-
-        public static void WriteBytes(this Stream stream, byte[] bytes)
-        {
-            stream.Write(bytes, 0, bytes.Length);
         }
     }
 }

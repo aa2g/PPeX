@@ -1,175 +1,154 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Buffers;
 using System.IO;
-using FragLabs.Audio.Codecs;
 using PPeX.External.libresample;
-using System.Linq;
 using PPeX.External.Ogg;
+using PPeX.External.Opus;
 using PPeX.External.Wave;
 
 namespace PPeX.Encoders
 {
-    public class OpusEncoder : BaseEncoder
+    public class OpusEncoder : IEncoder
     {
-        public bool PreserveStereo { get; set; } = true;
+        public ArchiveFileType Encoding => ArchiveFileType.OpusAudio;
 
-        public OpusEncoder(Stream source) : base(source)
+        public ArchiveDataType DataType => ArchiveDataType.Audio;
+
+        public void Encode(Stream input, Stream output)
         {
+			using var bufferedWaveInput = new BufferedStream(input);
+            using var wav = new WaveReader(bufferedWaveInput);
 
+            byte channels = (byte) wav.Channels;
+
+            int resampleRate = wav.SampleRate < 24000 ? 24000 : 48000;
+
+            var application = channels > 1 ? Application.Audio : Application.Voip;
+
+            using var opus = External.Opus.OpusEncoder.Create(resampleRate, channels, application);
+            using var wrapper = new OggWrapper(output, channels, (ushort) opus.LookaheadSamples, true);
+            using var resampler = new LibResampler(wav.SampleRate, resampleRate, channels);
+
+            opus.Bitrate = channels > 1 ? Core.Settings.OpusMusicBitrate : Core.Settings.OpusVoiceBitrate;
+
+            int rawSampleCount = (int) Math.Round(resampleRate * Core.Settings.OpusFrameSize);
+            int inputSampleCount = (int) Math.Round(wav.SampleRate * Core.Settings.OpusFrameSize);
+            int samplesToRead = rawSampleCount * channels;
+            int inputSamplesToRead = inputSampleCount * channels;
+
+            using var inputSampleBuffer = MemoryPool<float>.Shared.Rent(inputSamplesToRead);
+			Span<float> inputSampleSpan = inputSampleBuffer.Memory.Span.Slice(0, inputSamplesToRead);
+
+            int packetCount = 0;
+
+            int outputSamplesUpperBound = resampler.ResampleUpperBound(samplesToRead);
+            using var outputSampleBuffer = MemoryPool<float>.Shared.Rent(outputSamplesUpperBound);
+            Span<float> outputSampleSpan = inputSampleBuffer.Memory.Span.Slice(0, outputSamplesUpperBound);
+
+            using var encodedSampleBuffer = MemoryPool<byte>.Shared.Rent(outputSamplesUpperBound);
+            var encodedSampleSpan = encodedSampleBuffer.Memory.Span;
+
+			while (true)
+            {
+	            int result = wav.Read(inputSampleSpan);
+
+	            if (result < inputSamplesToRead)
+	            {
+		            int newSize = result - (result % channels);
+
+		            inputSampleSpan = inputSampleSpan.Slice(0, newSize);
+	            }
+
+	            resampler.Resample(inputSampleSpan, outputSampleSpan, result < inputSamplesToRead, out _);
+
+	            opus.Encode(outputSampleSpan, encodedSampleSpan, rawSampleCount, out int outlen);
+
+	            wrapper.WritePacket(encodedSampleBuffer.Memory.Slice(0, outlen),
+		            (int)(48000 * Core.Settings.OpusFrameSize),
+		            result < inputSamplesToRead);
+
+	            if (result < inputSamplesToRead)
+		            break;
+            }
         }
 
-        public override ArchiveFileType Encoding => ArchiveFileType.OpusAudio;
-
-        public override ArchiveDataType DataType => ArchiveDataType.Audio;
-
-        public override Stream Encode()
-        {
-            var mem = new MemoryStream();
-
-            try
-            {
-                using (var wav = new WaveReader(BaseStream))
-                {
-#warning need to add preserve stereo option
-                    byte channels = (byte)wav.Channels;
-
-                    int resampleRate = wav.SampleRate < 24000 ? 24000 : 48000;
-
-                    var application = channels > 1 ?
-                        FragLabs.Audio.Codecs.Opus.Application.Audio :
-                        FragLabs.Audio.Codecs.Opus.Application.Voip;
-
-                    using (var opus = FragLabs.Audio.Codecs.OpusEncoder.Create(resampleRate, channels, application))
-                    using (var wrapper = new OggWrapper(mem, channels, (ushort)opus.LookaheadSamples, true))
-                    using (var resampler = new LibResampler(wav.SampleRate, resampleRate, channels))
-                    {
-                        opus.Bitrate = channels > 1 ? Core.Settings.OpusMusicBitrate : Core.Settings.OpusVoiceBitrate;
-                        int packetsize = (int)(resampleRate * Core.Settings.OpusFrameSize * 2 * channels);
-
-                        int rawSampleCount = (int)Math.Round(resampleRate * Core.Settings.OpusFrameSize);
-                        int inputSampleCount = (int)Math.Round(wav.SampleRate * Core.Settings.OpusFrameSize);
-                        int samplesToRead = rawSampleCount * channels;
-                        int inputSamplesToRead = inputSampleCount * channels;
-
-                        float[] inputSampleBuffer = new float[inputSamplesToRead];
-                        int result = wav.Read(inputSampleBuffer, 0, inputSamplesToRead);
-
-                        List<float> sampleBuffer = new List<float>(samplesToRead * 2);
-
-                        int packetCount = 0;
-
-                        while (result > 0)
-                        {
-                            if (result < inputSamplesToRead)
-                            {
-                                int newSize = result;
-
-                                if (channels == 2 && result % 2 == 1)
-                                    newSize++;
-
-                                Array.Resize(ref inputSampleBuffer, newSize);
-                            }
-
-                            float[] outputBuffer = resampler.Resample(inputSampleBuffer, result < inputSamplesToRead, out int sampleBufferUsed);
-
-                            sampleBuffer.AddRange(outputBuffer);
-
-                            if (sampleBuffer.Count >= samplesToRead ||
-                                result < inputSamplesToRead)
-                            {
-                                do {
-                                    int sampleLength = Math.Min(samplesToRead, sampleBuffer.Count);
-                                    outputBuffer = sampleBuffer.GetRange(0, sampleLength).ToArray();
-                                    sampleBuffer.RemoveRange(0, sampleLength);
-
-                                    if (packetCount > 0)
-                                    {
-                                        Array.Resize(ref outputBuffer, samplesToRead);
-
-                                        byte[] output = opus.Encode(outputBuffer, rawSampleCount, out int outlen);
-
-                                        Array.Resize(ref output, outlen);
-
-                                        wrapper.WritePacket(output, (int)(48000 * Core.Settings.OpusFrameSize), result < inputSamplesToRead && sampleBuffer.Count == 0);
-                                    }
-
-                                    packetCount++;
-                                } while (result < inputSampleCount && sampleBuffer.Count > 0);
-
-                                result = wav.Read(inputSampleBuffer, 0, inputSamplesToRead);
-
-                                Array.Clear(inputSampleBuffer, result, inputSampleBuffer.Length - result);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex) when (ex is EndOfStreamException || ex is ArgumentException || ex is FormatException)
-            {
-                mem.SetLength(0);
-            }
-            finally
-            {
-                mem.Position = 0;
-            }
-
-            return mem;
-        }
-
-        public override Stream Decode()
-        {
-            MemoryStream output = new MemoryStream();
-
+        public void Decode(Stream input, Stream output)
+		{
             int resampleRate = 44100;
-            
-            using (OggReader reader = new OggReader(BaseStream))
-            using (MemoryStream temp = new MemoryStream())
-            using (BinaryWriter tempWriter = new BinaryWriter(temp))
-            using (var decoder = OpusDecoder.Create(48000, reader.Channels))
-            using (LibResampler resampler = new LibResampler(48000, resampleRate, reader.Channels))
+
+            using OggReader reader = new OggReader(input);
+            using BinaryWriter writer = new BinaryWriter(output, System.Text.Encoding.ASCII, false);
+            using var decoder = OpusDecoder.Create(48000, reader.Channels);
+            using LibResampler resampler = new LibResampler(48000, resampleRate, reader.Channels);
+
+            bool isFirst = true;
+
+            long headerPosition = output.Position;
+
+            output.Position += 44;
+
+            while (!reader.IsStreamFinished)
             {
-                bool isFirst = true;
+	            var frame = reader.ReadPacket();
 
-                while (!reader.IsStreamFinished)
-                {
-                    byte[] frame = reader.ReadPacket();
-
-                    float[] outputSamples = decoder.DecodeFloat(frame, frame.Length);
+	            float[] outputSamples = decoder.DecodeFloat(frame.Span, frame.Length);
                     
-                    if (isFirst)
-                    {
-                        //remove preskip
-                        int preskip = reader.Preskip;
+	            if (isFirst)
+	            {
+		            //remove preskip
+		            int preskip = reader.Preskip;
 
-                        float[] newSamples = new float[outputSamples.Length - preskip];
-                        Array.Copy(outputSamples, preskip, newSamples, 0, outputSamples.Length - preskip);
+		            float[] newSamples = new float[outputSamples.Length - preskip];
+		            Array.Copy(outputSamples, preskip, newSamples, 0, outputSamples.Length - preskip);
 
-                        outputSamples = newSamples;
+		            outputSamples = newSamples;
 
-                        isFirst = false;
-                    }
+		            isFirst = false;
+	            }
 
-                    outputSamples = resampler.Resample(outputSamples, reader.IsStreamFinished, out int sampleBufferUsed);
+	            float[] resampledSamples = new float[resampler.ResampleUpperBound(frame.Length)];
 
-                    foreach (float sample in outputSamples)
-                    {
-                        tempWriter.Write(WaveWriter.ConvertSample(sample));
-                    }
-                }
 
-                WaveWriter.WriteWAVHeader(output, reader.Channels, (int)temp.Length, resampleRate, 16);
+                resampler.Resample(outputSamples, resampledSamples, reader.IsStreamFinished, out int outputLength);
 
-                temp.Position = 0;
-                temp.CopyTo(output);
+	            foreach (float sample in resampledSamples)
+	            {
+		            writer.Write(WaveWriter.ConvertSample(sample));
+	            }
             }
 
-            output.Position = 0;
-            return output;
-        }
+            long endPosition = output.Position;
+            output.Position = headerPosition;
+                
+            WaveWriter.WriteWAVHeader(output, reader.Channels, (int)(endPosition - headerPosition), resampleRate, 16);
 
-        public override string NameTransform(string original)
+            output.Position = endPosition;
+		}
+
+        public string RealNameTransform(string original)
         {
             return $"{original.Substring(0, original.LastIndexOf('.'))}.opus";
         }
+
+        public void Dispose() { }
+
+        public static RequestedConversion CreateConversionArgs(int musicBitrate = 44000, int voiceBitrate = 32000, bool resample = true)
+        {
+			return new RequestedConversion(ArchiveFileType.OpusAudio, new OpusEncoderArguments(musicBitrate, voiceBitrate, resample));
+        }
+
+		public class OpusEncoderArguments
+		{
+			public int MusicBitrate { get; set; }
+			public int VoiceBitrate { get; set; }
+			public bool Resample { get; set; }
+
+			public OpusEncoderArguments(int musicBitrate, int voiceBitrate, bool resample)
+			{
+				MusicBitrate = musicBitrate;
+				VoiceBitrate = voiceBitrate;
+				Resample = resample;
+			}
+		}
     }
 }

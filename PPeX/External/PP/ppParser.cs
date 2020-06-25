@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
 using System.ComponentModel;
 
 namespace PPeX.External.PP
@@ -9,44 +8,31 @@ namespace PPeX.External.PP
 	public class ppParser
 	{
 		public string FilePath { get; protected set; }
-		public ppFormat Format { get; set; }
 		public List<IWriteFile> Subfiles { get; protected set; }
 
 		private string destPath;
 		private bool keepBackup;
 		private string backupExt;
 
-        public ppParser(string path) : this(path, new ppFormat_AA2())
-        {
 
-        }
-
-        public ppParser(string path, ppFormat format)
+        public ppParser(string path)
 		{
-			this.Format = format;
-			this.FilePath = path;
+			FilePath = path;
 			using (FileStream stream = File.OpenRead(path))
-			{
-				this.Subfiles = format.ppHeader.ReadHeader(stream, format);
-			}
-        }
+				Subfiles = ppHeader_Wakeari.ReadHeader(stream);
+		}
 
-        public ppParser(FileStream stream) : this(stream, new ppFormat_AA2())
-        {
-        }
-
-        public ppParser(FileStream stream, ppFormat format)
+        public ppParser(FileStream stream)
 		{
-			this.Format = format;
-			this.FilePath = stream.Name;
-			this.Subfiles = format.ppHeader.ReadHeader(stream, format);
+			FilePath = stream.Name;
+			Subfiles = ppHeader_Wakeari.ReadHeader(stream);
 		}
 
 		public BackgroundWorker WriteArchive(string destPath, bool keepBackup, string backupExtension, bool background)
 		{
 			this.destPath = destPath;
 			this.keepBackup = keepBackup;
-			this.backupExt = backupExtension;
+			backupExt = backupExtension;
 
 			BackgroundWorker worker = new BackgroundWorker();
 			worker.WorkerSupportsCancellation = true;
@@ -83,7 +69,7 @@ namespace PPeX.External.PP
 				backup = Utility.GetDestFile(dir, Path.GetFileNameWithoutExtension(destPath) + ".bak", backupExt);
 				File.Move(destPath, backup);
 
-				if (destPath.Equals(this.FilePath, StringComparison.InvariantCultureIgnoreCase))
+				if (destPath.Equals(FilePath, StringComparison.InvariantCultureIgnoreCase))
 				{
 					for (int i = 0; i < Subfiles.Count; i++)
 					{
@@ -100,7 +86,7 @@ namespace PPeX.External.PP
 			{
 				using (BinaryWriter writer = new BinaryWriter(File.Create(destPath)))
 				{
-					writer.BaseStream.Seek(Format.ppHeader.HeaderSize(Subfiles.Count), SeekOrigin.Begin);
+					writer.BaseStream.Seek(ppHeader_Wakeari.HeaderSize(Subfiles.Count), SeekOrigin.Begin);
 					uint offset = (uint)writer.BaseStream.Position;
 					uint[] sizes = new uint[Subfiles.Count];
 					object[] metadata = new object[Subfiles.Count];
@@ -117,8 +103,7 @@ namespace PPeX.External.PP
 
 							worker.ReportProgress(i * 100 / Subfiles.Count);
 
-							ppSubfile subfile = Subfiles[i] as ppSubfile;
-							if ((subfile != null) && (subfile.ppFormat == this.Format))
+							if (Subfiles[i] is ppSubfile subfile)
 							{
 								reader.BaseStream.Seek(subfile.offset, SeekOrigin.Begin);
 
@@ -133,18 +118,9 @@ namespace PPeX.External.PP
 							}
 							else
 							{
-								if (subfile != null)
-								{
-									reader.BaseStream.Seek(subfile.offset, SeekOrigin.Begin);
-									subfile.SourceStream = subfile.ppFormat.ReadStream(new PartialStream(reader.BaseStream, subfile.size));
-								}
-								Stream stream = Format.WriteStream(writer.BaseStream);
+								Stream stream = ppFormat_AA2.WriteStream(writer.BaseStream);
 								Subfiles[i].WriteTo(stream);
-								metadata[i] = Format.FinishWriteTo(stream);
-								if (subfile != null)
-								{
-									subfile.SourceStream = null;
-								}
+								metadata[i] = ppFormat_AA2.FinishWriteTo(stream);
 							}
 
 							uint pos = (uint)writer.BaseStream.Position;
@@ -156,12 +132,11 @@ namespace PPeX.External.PP
 					if (!e.Cancel)
 					{
 						writer.BaseStream.Seek(0, SeekOrigin.Begin);
-						Format.ppHeader.WriteHeader(writer.BaseStream, Subfiles, sizes, metadata);
+						ppHeader_Wakeari.WriteHeader(writer.BaseStream, Subfiles, sizes, metadata);
 						offset = (uint)writer.BaseStream.Position;
 						for (int i = 0; i < Subfiles.Count; i++)
 						{
-							ppSubfile subfile = Subfiles[i] as ppSubfile;
-							if (subfile != null)
+							if (Subfiles[i] is ppSubfile subfile)
 							{
 								subfile.offset = offset;
 								subfile.size = sizes[i];
@@ -177,7 +152,7 @@ namespace PPeX.External.PP
 				}
 				else
 				{
-					if (destPath.Equals(this.FilePath, StringComparison.InvariantCultureIgnoreCase))
+					if (destPath.Equals(FilePath, StringComparison.InvariantCultureIgnoreCase))
 					{
 						for (int i = 0; i < Subfiles.Count; i++)
 						{
@@ -190,7 +165,7 @@ namespace PPeX.External.PP
 					}
 					else
 					{
-						this.FilePath = destPath;
+						FilePath = destPath;
 					}
 
 					if ((backup != null) && !keepBackup)
@@ -215,7 +190,7 @@ namespace PPeX.External.PP
 				{
 					File.Move(backup, destPath);
 
-					if (destPath.Equals(this.FilePath, StringComparison.InvariantCultureIgnoreCase))
+					if (destPath.Equals(FilePath, StringComparison.InvariantCultureIgnoreCase))
 					{
 						for (int i = 0; i < Subfiles.Count; i++)
 						{

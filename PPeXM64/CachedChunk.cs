@@ -1,14 +1,10 @@
-﻿using PPeX;
-using PPeX.Compressors;
-using PPeX.Encoders;
-using System;
-using System.Collections.Concurrent;
+﻿using System;
+using PPeX;
+using System.Buffers;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using PPeX.Compressors;
 
 namespace PPeXM64
 {
@@ -20,125 +16,64 @@ namespace PPeXM64
         public uint ID => BaseChunk.ID;
         public CompressedCache BaseCache;
         public ExtendedArchiveChunk BaseChunk;
-        public static readonly ArchiveChunkCompression RecompressionMethod = ArchiveChunkCompression.LZ4;
-
-        public List<CachedFile> Files = new List<CachedFile>();
+        public static readonly ArchiveChunkCompression RecompressionMethod = ArchiveChunkCompression.Zstandard;
 
         public CachedChunk(ExtendedArchiveChunk baseChunk, CompressedCache cache)
         {
             BaseChunk = baseChunk;
             BaseCache = cache;
-
-            foreach (var file in baseChunk.Files)
-            {
-                Files.Add(new CachedFile(file.Source as ArchiveFileSource, cache, this));
-            }
-        }
-
-        public static readonly int RecompressionThreads = Environment.ProcessorCount;
-
-        protected Thread[] threads;
-        protected BlockingCollection<Tuple<IEnumerable<CachedFile>, byte[]>> QueuedFileSets;
-
-        protected void RecompressionCallback()
-        {
-            while (!QueuedFileSets.IsCompleted)
-            {
-                Tuple<IEnumerable<CachedFile>, byte[]> item;
-                bool result = QueuedFileSets.TryTake(out item, 50);
-
-                if (result)
-                {
-                    var possibleFiles = item.Item1;
-                    var uncompressed = item.Item2;
-
-                    //We don't want to recompress data that's already cached
-                    if (possibleFiles.Any(x => !x.Allocated))
-                    {
-                        using (MemoryStream uncomp = new MemoryStream(uncompressed))
-                        using (ICompressor compressor = CompressorFactory.GetCompressor(RecompressionMethod))
-                        using (MemoryStream compressed = new MemoryStream())
-                        {
-                            Stream output;
-
-                            if (Program.TurboMode)
-                            {
-                                ArchiveFileType Type = possibleFiles.First().Type;
-                                IEncoder decoder;
-
-                                if (Type == ArchiveFileType.Xx3Mesh)
-                                    decoder = new Xx3Encoder(uncomp, BaseCache.UniversalTexBank);
-                                else
-                                    decoder = EncoderFactory.GetEncoder(uncomp, possibleFiles.First().Source.BaseArchive, Type);
-                                
-                                output = decoder.Decode();
-                                output.Position = 0;
-
-                                foreach (var file in possibleFiles)
-                                {
-                                    file.Type = ArchiveFileType.Raw;
-                                }
-
-                                decoder.Dispose();
-                            }
-                            else
-                                output = uncomp;
-
-                            compressor.WriteToStream(output, compressed);
-
-                            byte[] compressedArray = compressed.ToArray();
-
-                            foreach (var file in possibleFiles)
-                            {
-                                file.CompressedData = compressedArray;
-                                file.Compression = RecompressionMethod;
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         public void Allocate()
         {
-            QueuedFileSets = new BlockingCollection<Tuple<IEnumerable<CachedFile>, byte[]>>();
-            threads = new Thread[RecompressionThreads];
+	        var filesToAllocate = BaseChunk.Files
+		        .Where(x => !BaseCache.LoadedFiles.ContainsKey(x.RawSource.Md5))
+		        .Select(x => (Md5Hash)x.RawSource.Md5)
+		        .Distinct()
+		        .ToArray();
 
-            for (int i = 0; i < RecompressionThreads; i++)
-            {
-                threads[i] = new Thread(new ThreadStart(RecompressionCallback));
-                threads[i].Start();
-            }
+	        if (filesToAllocate.Length == 0)
+		        return;
 
-            using (Stream fstream = BaseChunk.GetStream())
-            {
-                while (fstream.Position < fstream.Length)
+	        List<Task> recompressionTasks = new List<Task>();
+
+	        var memoryBuffer = MemoryPool<byte>.Shared.Rent((int)BaseChunk.UncompressedLength);
+
+            BaseChunk.CopyToMemory(memoryBuffer.Memory);
+
+	        foreach (var hash in filesToAllocate)
+	        {
+		        var subfile = BaseChunk.Files.First(x => x.RawSource.Md5 == hash);
+
+                recompressionTasks.Add(Task.Run(() =>
                 {
-                    var possibleFiles = Files.Where(x => (long)x.Source.Offset == fstream.Position).ToList();
+                    var cachedFile = BaseCache.LoadedFiles.GetOrAdd(hash, new CachedFile(BaseCache, hash, (long)subfile.Size));
 
-                    int length = possibleFiles[0].Length;
+                    using var zstdCompressor = new ZstdCompressor();
 
-                    byte[] uncompressed = new byte[length];
+                    using var compressedMemoryBuffer =
+	                    MemoryPool<byte>.Shared.Rent(ZstdCompressor.GetUpperCompressionBound((int)subfile.Size));
 
-                    fstream.Read(uncompressed, 0, length);
+                    var uncompressedSource = memoryBuffer.Memory.Slice((int)subfile.RawSource.Offset, (int)subfile.RawSource.Size);
 
-                    QueuedFileSets.Add(new Tuple<IEnumerable<CachedFile>, byte[]>(possibleFiles, uncompressed));
-                }
+                    zstdCompressor.CompressData(uncompressedSource.Span, compressedMemoryBuffer.Memory.Span, 3, out int compressedSize);
 
-                QueuedFileSets.CompleteAdding();
-            }
 
-            //wait for threads
-            for (int i = 0; i < RecompressionThreads; i++)
-                threads[i].Join();
-        }
+                    //var pointer = BaseCache.Allocator.Allocate(compressedSize);
+                    //using var pointerBuffer = pointer.GetReference();
+                    Memory<byte> compressedBuffer = new byte[compressedSize];
 
-        public void Deallocate()
-        {
-            foreach (var file in Files)
-            {
-                file.Deallocate();
-            }
+                    compressedMemoryBuffer.Memory.Slice(0, compressedSize).CopyTo(compressedBuffer); //pointerBuffer.Memory
+
+                    //cachedFile.CompressedData = pointer;
+                    cachedFile.CompressedData = compressedBuffer;
+                }));
+	        }
+
+	        Task.WhenAll(recompressionTasks).ContinueWith(t =>
+	        {
+		        memoryBuffer.Dispose();
+	        });
         }
     }
 }

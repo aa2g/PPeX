@@ -1,63 +1,87 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30204.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeX", "PPeX\PPeX.csproj", "{A611A988-D477-4E16-AF2F-D3A661B909A9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeXUI", "PPeXUI\PPeXUI.csproj", "{38A09514-215B-490E-B73F-F66894BF7AC9}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeXTests", "PPeXTests\PPeXTests.csproj", "{201A8C09-A18A-4C32-B112-292387AA24E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeXM64", "PPeXM64\PPeXM64.csproj", "{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PPeX", "PPeX\PPeX.csproj", "{E578F360-21E7-440C-AE37-CF30C611A249}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeX-CLI", "PPeX-CLI\PPeX-CLI.csproj", "{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeXM64", "PPeXM64\PPeXM64.csproj", "{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeX-CLI", "PPeX-CLI\PPeX-CLI.csproj", "{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPeXUI", "PPeXUI\PPeXUI.csproj", "{FD10CCC1-587F-469F-860C-05313E902009}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
 		Debug|Windows = Debug|Windows
 		Debug|Wine = Debug|Wine
+		Release|Any CPU = Release|Any CPU
 		Release|Windows = Release|Windows
 		Release|Wine = Release|Wine
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Debug|Windows.ActiveCfg = Debug|Any CPU
-		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Debug|Windows.Build.0 = Debug|Any CPU
-		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Debug|Wine.ActiveCfg = Debug|Any CPU
-		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Debug|Wine.Build.0 = Debug|Any CPU
-		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Release|Windows.ActiveCfg = Release|Any CPU
-		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Release|Windows.Build.0 = Release|Any CPU
-		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Release|Wine.ActiveCfg = Release|Any CPU
-		{A611A988-D477-4E16-AF2F-D3A661B909A9}.Release|Wine.Build.0 = Release|Any CPU
-		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|Windows.ActiveCfg = Debug|Any CPU
-		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|Windows.Build.0 = Debug|Any CPU
-		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|Wine.ActiveCfg = Debug|Any CPU
-		{38A09514-215B-490E-B73F-F66894BF7AC9}.Debug|Wine.Build.0 = Debug|Any CPU
-		{38A09514-215B-490E-B73F-F66894BF7AC9}.Release|Windows.ActiveCfg = Release|Any CPU
-		{38A09514-215B-490E-B73F-F66894BF7AC9}.Release|Windows.Build.0 = Release|Any CPU
-		{38A09514-215B-490E-B73F-F66894BF7AC9}.Release|Wine.ActiveCfg = Release|Any CPU
+		{201A8C09-A18A-4C32-B112-292387AA24E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{201A8C09-A18A-4C32-B112-292387AA24E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Debug|Windows.ActiveCfg = Debug|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Debug|Windows.Build.0 = Debug|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Debug|Wine.ActiveCfg = Debug|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Debug|Wine.Build.0 = Debug|Any CPU
+		{201A8C09-A18A-4C32-B112-292387AA24E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{201A8C09-A18A-4C32-B112-292387AA24E9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Release|Windows.ActiveCfg = Debug|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Release|Windows.Build.0 = Debug|Any CPU
 		{201A8C09-A18A-4C32-B112-292387AA24E9}.Release|Wine.ActiveCfg = Debug|Any CPU
-		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Debug|Windows.ActiveCfg = Debug|Any CPU
-		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Debug|Windows.Build.0 = Debug|Any CPU
-		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Debug|Wine.ActiveCfg = Debug|Any CPU
-		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Debug|Wine.Build.0 = Debug|Any CPU
-		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Release|Windows.ActiveCfg = Release|x64
-		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Release|Windows.Build.0 = Release|x64
-		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Release|Wine.ActiveCfg = Release|Any CPU
-		{10F63D2E-61AA-4A1F-BADC-8B8AA6ECE5D9}.Release|Wine.Build.0 = Release|Any CPU
-		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Debug|Windows.ActiveCfg = Debug|Any CPU
-		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Debug|Windows.Build.0 = Debug|Any CPU
-		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Debug|Wine.ActiveCfg = Debug|Any CPU
-		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Debug|Wine.Build.0 = Debug|Any CPU
-		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Release|Windows.ActiveCfg = Release|Any CPU
-		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Release|Windows.Build.0 = Release|Any CPU
-		{ED5A452C-FF00-4516-BDB9-3F6CC6E7AAD5}.Release|Wine.ActiveCfg = Release|Any CPU
+		{E578F360-21E7-440C-AE37-CF30C611A249}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E578F360-21E7-440C-AE37-CF30C611A249}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E578F360-21E7-440C-AE37-CF30C611A249}.Debug|Windows.ActiveCfg = Debug|Any CPU
+		{E578F360-21E7-440C-AE37-CF30C611A249}.Debug|Windows.Build.0 = Debug|Any CPU
+		{E578F360-21E7-440C-AE37-CF30C611A249}.Debug|Wine.ActiveCfg = Debug|Any CPU
+		{E578F360-21E7-440C-AE37-CF30C611A249}.Debug|Wine.Build.0 = Debug|Any CPU
+		{E578F360-21E7-440C-AE37-CF30C611A249}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E578F360-21E7-440C-AE37-CF30C611A249}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E578F360-21E7-440C-AE37-CF30C611A249}.Release|Windows.ActiveCfg = Release|Any CPU
+		{E578F360-21E7-440C-AE37-CF30C611A249}.Release|Windows.Build.0 = Release|Any CPU
+		{E578F360-21E7-440C-AE37-CF30C611A249}.Release|Wine.ActiveCfg = Release|Any CPU
+		{E578F360-21E7-440C-AE37-CF30C611A249}.Release|Wine.Build.0 = Release|Any CPU
+		{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}.Debug|Windows.ActiveCfg = Debug|Any CPU
+		{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}.Debug|Windows.Build.0 = Debug|Any CPU
+		{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}.Debug|Wine.ActiveCfg = Debug|Any CPU
+		{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}.Debug|Wine.Build.0 = Debug|Any CPU
+		{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}.Release|Windows.ActiveCfg = Release|Any CPU
+		{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}.Release|Windows.Build.0 = Release|Any CPU
+		{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}.Release|Wine.ActiveCfg = Release|Any CPU
+		{84FFFBF4-4C93-4E1E-801E-FAFB88A81336}.Release|Wine.Build.0 = Release|Any CPU
+		{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}.Debug|Windows.ActiveCfg = Debug|Any CPU
+		{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}.Debug|Windows.Build.0 = Debug|Any CPU
+		{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}.Debug|Wine.ActiveCfg = Debug|Any CPU
+		{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}.Debug|Wine.Build.0 = Debug|Any CPU
+		{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}.Release|Windows.ActiveCfg = Release|Any CPU
+		{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}.Release|Windows.Build.0 = Release|Any CPU
+		{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}.Release|Wine.ActiveCfg = Release|Any CPU
+		{7979C4C9-421C-4F21-A51A-0F5FDCA868E6}.Release|Wine.Build.0 = Release|Any CPU
+		{FD10CCC1-587F-469F-860C-05313E902009}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD10CCC1-587F-469F-860C-05313E902009}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD10CCC1-587F-469F-860C-05313E902009}.Debug|Windows.ActiveCfg = Debug|Any CPU
+		{FD10CCC1-587F-469F-860C-05313E902009}.Debug|Windows.Build.0 = Debug|Any CPU
+		{FD10CCC1-587F-469F-860C-05313E902009}.Debug|Wine.ActiveCfg = Debug|Any CPU
+		{FD10CCC1-587F-469F-860C-05313E902009}.Debug|Wine.Build.0 = Debug|Any CPU
+		{FD10CCC1-587F-469F-860C-05313E902009}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD10CCC1-587F-469F-860C-05313E902009}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD10CCC1-587F-469F-860C-05313E902009}.Release|Windows.ActiveCfg = Release|Any CPU
+		{FD10CCC1-587F-469F-860C-05313E902009}.Release|Windows.Build.0 = Release|Any CPU
+		{FD10CCC1-587F-469F-860C-05313E902009}.Release|Wine.ActiveCfg = Release|Any CPU
+		{FD10CCC1-587F-469F-860C-05313E902009}.Release|Wine.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

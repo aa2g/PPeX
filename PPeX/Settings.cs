@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
+﻿using System.Collections.Generic;
 
 namespace PPeX
 {
@@ -58,33 +53,11 @@ namespace PPeX
         public uint BufferSize = 4096;
 
         /// <summary>
-        /// The location to load PPX archives.
-        /// </summary>
-        public string PPXLocation = "";
-
-        /// <summary>
-        /// The location to load PPX archives.
-        /// </summary>
-        public string PlaceholdersLocation = "";
-
-        /// <summary>
-        /// Whether or not to use an MD5 cache to speed up file hashing.
-        /// </summary>
-        public bool UseMd5Cache = false;
-
-        /// <summary>
-        /// The location to load PPX archives.
-        /// </summary>
-        public Dictionary<string, CachedMd5> Md5Cache = new Dictionary<string, CachedMd5>();
-
-        /// <summary>
         /// Default encoding rules all archive writers use.
         /// </summary>
         public Dictionary<ArchiveFileType, ArchiveFileType> DefaultEncodingConversions = new Dictionary<ArchiveFileType, ArchiveFileType>
         {
-            { ArchiveFileType.WaveAudio, ArchiveFileType.OpusAudio },
-            { ArchiveFileType.XxMesh, ArchiveFileType.Xx3Mesh },
-            { ArchiveFileType.SviexMesh, ArchiveFileType.Sviex2Mesh },
+            { ArchiveFileType.WaveAudio, ArchiveFileType.OpusAudio }
         };
     }
 }

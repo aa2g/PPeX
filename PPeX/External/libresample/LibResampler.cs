@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Buffers;
 
 namespace PPeX.External.libresample
 {
@@ -27,92 +24,111 @@ namespace PPeX.External.libresample
             handles = new IntPtr[Channels];
 
             for (int i = 0; i < Channels; i++)
-                handles[i] = API.resample_open(resamplerQuality, factor, factor);
+                handles[i] = LibResampleAPI.resample_open(resamplerQuality, factor, factor);
         }
 
-        public float[] Resample(float[] samples, bool last, out int sampleBufferUsed)
+        public void Resample(ReadOnlySpan<float> samples, Span<float> output, bool last, out int outputLength)
         {
             if (samples.Length % Channels != 0)
                 throw new DataMisalignedException();
 
-            sampleBufferUsed = 0;
+            outputLength = 0;
 
-            float[][] splitChannels = new float[Channels][];
+            IMemoryOwner<float>[] splitChannels = new IMemoryOwner<float>[Channels];
+
+            int estChannelSamples = (int)Math.Round((samples.Length / Channels) * factor);
+            int actualChannelSamples = 0;
 
             for (int i = 0; i < Channels; i++)
             {
-                float[] channel = GetNth(samples, Channels, i);
+                using var tempChannelBuffer = GetNth<float>(samples, Channels, i, out int dataLength);
 
-                splitChannels[i] = ResampleStream(channel, i, last, out int localBufferUsed);
-                sampleBufferUsed += localBufferUsed;
+                splitChannels[i] = MemoryPool<float>.Shared.Rent(estChannelSamples);
+
+                ResampleStream(tempChannelBuffer.Memory.Span.Slice(0, dataLength),
+	                splitChannels[i].Memory.Span,
+	                i,
+	                last,
+	                out _,
+	                out actualChannelSamples);
+
+                outputLength += actualChannelSamples;
             }
-
-            float[] reconstructed = new float[splitChannels.Sum(x => x.Length)];
 
             for (int c = 0; c < Channels; c++)
             {
-                for (int i = 0; i < splitChannels[c].Length; i++)
-                {
-                    reconstructed[c + (Channels * i)] = splitChannels[c][i];
-                }
-            }
+	            var span = splitChannels[c].Memory.Span.Slice(0, actualChannelSamples);
 
-            return reconstructed;
+                for (int i = 0; i < actualChannelSamples; i++)
+                {
+                    output[c + (Channels * i)] = span[i];
+                }
+
+                splitChannels[c].Dispose();
+            }
         }
 
-        protected static T[] GetNth<T>(T[] original, int divisor, int offset)
+        public int ResampleUpperBound(int sampleCount)
+        {
+	        return (int)Math.Ceiling(sampleCount * factor);
+        }
+
+        protected static IMemoryOwner<T> GetNth<T>(ReadOnlySpan<T> original, int divisor, int offset, out int newLength)
         {
             if (original.Length % divisor != 0)
                 throw new DataMisalignedException();
 
-            int newLength = original.Length / divisor;
-            T[] output = new T[newLength];
+            newLength = original.Length / divisor;
+	        var output = MemoryPool<T>.Shared.Rent(newLength);
+	        var outputSpan = output.Memory.Span;
 
             int index = 0;
             for (int i = offset; i < original.Length; i += divisor)
             {
-                output[index++] = original[i];
+                outputSpan[index++] = original[i];
             }
 
             return output;
         }
         
-        protected float[] ResampleStream(float[] samples, int channel, bool last, out int sampleBufferUsed)
+        protected unsafe void ResampleStream(ReadOnlySpan<float> samples, Span<float> output, int channel, bool last, out int inputSamplesUsed, out int outputSamplesUsed)
         {
             if (handles[channel] == IntPtr.Zero)
                 throw new ObjectDisposedException(nameof(handles));
 
-            int estOutSamples = (int)Math.Round(samples.Length * factor);
-            float[] outBuffer = new float[estOutSamples];
-
             int processedSamples;
+            int sampleBufferUsed;
 
-            processedSamples = API.resample_process(handles[channel], factor, samples, samples.Length, last ? 1 : 0, out sampleBufferUsed, outBuffer, estOutSamples);
+            fixed (float* samplePtr = samples)
+            fixed (float* outputPtr = output)
+            {
+	            processedSamples = LibResampleAPI.resample_process(handles[channel],
+		            factor,
+		            samplePtr,
+		            samples.Length,
+		            last ? 1 : 0,
+		            out sampleBufferUsed,
+		            outputPtr,
+		            output.Length);
+            }
 
-            processedSamples = Math.Max(processedSamples, 0);
-
-            Array.Resize(ref outBuffer, processedSamples);
-            return outBuffer;
+            inputSamplesUsed = Math.Max(processedSamples, 0);
+            outputSamplesUsed = Math.Max(sampleBufferUsed, 0);
         }
 
-        private bool disposedValue = false; // To detect redundant calls
+        private bool disposed = false;
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!disposed)
             {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects).
-                }
-
                 for (int i = 0; i < Channels; i++)
                 {
-                    API.resample_close(handles[i]);
+                    LibResampleAPI.resample_close(handles[i]);
                     handles[i] = IntPtr.Zero;
                 }
 
-                disposedValue = true;
+                disposed = true;
             }
         }
         

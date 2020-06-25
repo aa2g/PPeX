@@ -1,14 +1,13 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO.MemoryMappedFiles;
 using PPeX;
 using System.IO;
-using System.Runtime;
-using System.Timers;
 using System.Runtime.InteropServices;
+using System.Threading;
+using PPeX.Compressors;
+using Timer = System.Timers.Timer;
 
 namespace PPeXM64
 {
@@ -31,9 +30,13 @@ namespace PPeXM64
         public static bool Preloading = true;
         public static bool TurboMode = true;
 
+        public static string PPXLocation { get; set; }
+
         static PipeServer server;
 
-        static Timer timer = new Timer(5000);
+        static Timer TrimTimer = new Timer(5000);
+
+        public static ZstdDecompressor ZstdDecompressor = new ZstdDecompressor();
 
         static void Main(string[] args)
         {
@@ -43,19 +46,15 @@ namespace PPeXM64
             LogFiles = true;
 #endif
 
-            timer = new Timer(TurboMode ? 10000 : 5000);
+            TrimTimer = new Timer(TurboMode ? 10000 : 5000);
 
             if (args.Length > 0 &&
                 Directory.Exists(args[0]))
             {
-                Core.Settings.PPXLocation = args[0];
-            }
-            else
-            {
-                Core.Settings.PPXLocation = Utility.GetGameDir() + "\\data";
+                PPXLocation = args[0];
             }
 
-            Core.Settings.PPXLocation = Core.Settings.PPXLocation.Replace("\\\\", "\\");
+            PPXLocation = PPXLocation.Replace("\\\\", "\\");
 
             if (args.Length > 0 &&
                 args.Any(x => x.ToLower() == "-nowindow"))
@@ -67,14 +66,14 @@ namespace PPeXM64
             server.OnRequest += Server_OnRequest;
             server.OnDisconnect += Server_OnDisconnect;
 
-            if (Directory.Exists(Core.Settings.PPXLocation))
+            if (Directory.Exists(PPXLocation))
             {
-                Console.WriteLine("Loading from " + Core.Settings.PPXLocation);
+                Console.WriteLine("Loading from " + PPXLocation);
 
                 List<ExtendedArchive> ArchivesToLoad = new List<ExtendedArchive>();
 
                 //Index all .ppx files in the location
-                foreach (string arc in Directory.EnumerateFiles(Core.Settings.PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
+                foreach (string arc in Directory.EnumerateFiles(PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
                 {
                     var archive = new ExtendedArchive(arc);
 
@@ -84,17 +83,18 @@ namespace PPeXM64
                 Cache = new CompressedCache(ArchivesToLoad, new Progress<string>((x) =>
                 {
                     Console.WriteLine(x);
-                }));
+                }), 512 * 1024 * 1024);
             }
             else
-                Console.WriteLine("Invalid load directory! (" + Core.Settings.PPXLocation + ")");
+                Console.WriteLine("Invalid load directory! (" + PPXLocation + ")");
 
-            timer.Elapsed += (s, e) =>
+            TrimTimer.Elapsed += (s, e) =>
             {
                 Cache.Trim((long)2 * 1024 * 1024 * 1024);
+                Console.WriteLine("Cache size:" + Utility.GetBytesReadable(Cache.AllocatedMemorySize));
             };
 
-            timer.Start();
+            TrimTimer.Start();
 
             Console.WriteLine("Finished loading " + Cache.LoadedArchives.Count + " archive(s)");
 
@@ -102,17 +102,17 @@ namespace PPeXM64
             {
                 Console.WriteLine("Preloading files...");
 
-                foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.File.EndsWith(".lst")).Select(x => x.Value.Chunk).Distinct())
+                foreach (var chunk in Cache.ReferenceMd5Sums.Keys.Where(x => x.File.EndsWith(".lst")).Select(x => Cache.LoadedFileReferences[x]).Distinct())
                     chunk.Allocate();
 
                 //foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.Archive.StartsWith("jg2p06")).Select(x => x.Value.Chunk).Distinct())
                 //    chunk.Allocate();
 
-                foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.File.EndsWith(".bmp")).Select(x => x.Value.Chunk).Distinct())
-                    chunk.Allocate();
+                foreach (var chunk in Cache.ReferenceMd5Sums.Keys.Where(x => x.File.EndsWith(".bmp")).Select(x => Cache.LoadedFileReferences[x]).Distinct())
+	                chunk.Allocate();
 
-                foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.File.EndsWith(".tga")).Select(x => x.Value.Chunk).Distinct())
-                    chunk.Allocate();
+                foreach (var chunk in Cache.ReferenceMd5Sums.Keys.Where(x => x.File.EndsWith(".tga")).Select(x => Cache.LoadedFileReferences[x]).Distinct())
+	                chunk.Allocate();
 
                 //foreach (var chunk in Cache.LoadedFiles.Where(x => x.Key.Archive.StartsWith("jg2p07")).Select(x => x.Value.Chunk).Distinct())
                 //    chunk.Allocate();
@@ -146,7 +146,7 @@ namespace PPeXM64
                         break;
                     case "size":
                         Console.WriteLine(Utility.GetBytesReadable(Cache.AllocatedMemorySize));
-                        Console.WriteLine(Cache.TotalFiles.Count(x => x.Allocated) + " files allocated");
+                        Console.WriteLine(Cache.LoadedFiles.Count + " files allocated");
                         break;
                     case "trim":
                         Cache.Trim((long)(float.Parse(arguments[1]) * 1024 * 1024));
@@ -180,7 +180,7 @@ namespace PPeXM64
                 if (LogFiles)
                     Console.WriteLine("!!LOADED FILELIST!!");
 
-                var loadedPP = Cache.TotalFiles.Select(x => x.EmulatedArchiveName).Distinct();
+                var loadedPP = Cache.LoadedFileReferences.Keys.Select(x => x.Archive).Distinct();
                 
                 foreach (string pp in loadedPP)
                     handler.WriteString(pp);
@@ -198,7 +198,7 @@ namespace PPeXM64
                     Logger.LogFile(argument);
 
                     //Ensure we have the file
-                    if (!Cache.LoadedFiles.ContainsKey(entry))
+                    if (!Cache.ReferenceMd5Sums.ContainsKey(entry))
                     {
                         //We don't have the file
                         handler.WriteString("NotAvailable");
@@ -213,17 +213,43 @@ namespace PPeXM64
                         Console.WriteLine(argument);
 
                     //Write the data to the pipe
-                    using (BinaryWriter writer = new BinaryWriter(handler.BaseStream, Encoding.Unicode, true))
-                    {
-                        CachedFile cached = Cache.LoadedFiles[entry];
-                        
-                        using (Stream output = cached.GetStream())
-                        {
-                            handler.WriteString(output.Length.ToString());
 
-                            output.CopyTo(handler.BaseStream);
+                    var fileMd5 = Cache.ReferenceMd5Sums[entry];
+
+                    if (!Cache.LoadedFiles.TryGetValue(fileMd5, out var cachedFile))
+                    {
+                        Console.WriteLine("Cache miss");
+
+	                    var chunk = Cache.LoadedFileReferences[entry];
+
+                        chunk.Allocate();
+
+                        // wait for the file to be available
+                        while (true)
+                        {
+	                        if (Cache.LoadedFiles.TryGetValue(fileMd5, out cachedFile) && cachedFile.Ready)
+	                        {
+		                        break;
+	                        }
+
+                            Thread.Sleep(50);
                         }
                     }
+
+                    while (!cachedFile.Ready)
+                    {
+	                    Thread.Sleep(50);
+                    }
+
+                    using var compressedDataRef = cachedFile.GetMemory();
+                    using var buffer = MemoryPool<byte>.Shared.Rent((int)cachedFile.UncompressedSize * 2);
+
+                    ZstdDecompressor.DecompressData(compressedDataRef.Memory.Span, buffer.Memory.Span, out int uncompressedSize);
+
+                    Console.WriteLine($"Expected: {Utility.GetBytesReadable(cachedFile.UncompressedSize)} Actual: {Utility.GetBytesReadable(uncompressedSize)}");
+
+                    handler.WriteString(uncompressedSize.ToString());
+                    handler.BaseStream.Write(buffer.Memory.Slice(0, (int)uncompressedSize).Span);
                 }
             }
             else
@@ -239,7 +265,7 @@ namespace PPeXM64
             Cache.Trim(TrimMethod.All); //deallocate everything
 
             Console.WriteLine("Pipe disconnected, game has closed");
-            Logger.Dump();
+            //Logger.Dump();
 
             System.Threading.Thread.Sleep(1500);
             Environment.Exit(0);

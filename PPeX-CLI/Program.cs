@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Buffers;
 using System.Linq;
 using System.Text.RegularExpressions;
 using PPeX;
 using System.IO;
 using PPeX.External.PP;
-using PPeX.Encoders;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using PPeX.External.CRC32;
+using Utility = PPeX.Utility;
 
 namespace PPeX_CLI
 {
@@ -67,7 +70,7 @@ namespace PPeX_CLI
             Console.WriteLine();
         }
 
-        static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             WriteLineAlternating("PPeX-CLI ", VersionToReadableString(GetVersion()));
             WriteLineAlternating("PPeX base ", VersionToReadableString(PPeX.Core.GetVersion()));
@@ -96,7 +99,7 @@ Appends files to an already existing archive
 ppex-cli -d fragmented.ppx
 Defragments an archive
 
-ppex-cli -v archive.ppx
+ppex-cli -v [options] archive.ppx
 Verifies an archive
 
 
@@ -127,14 +130,6 @@ Sets music (2 channel audio) bitrate
 (-c, -a only)
 Sets voice (1 channel audio) bitrate
 
--xx2-precision 0
-(-c, -a only)
-Sets .xx2 bit precision. Set to 0 for lossless mode. Cannot be used with -xx2-quality.
-
--xx2-quality
-(-c, -a only)
-Sets .xx2 encode quality. Not enabled by default. Cannot be used with -xx2-precision.
-
 -threads 1
 (-c, -a only)
 Sets threads to be used during compression.
@@ -158,7 +153,12 @@ Sets rules for decoding any encoded files on extraction, such as .xx3 to .xx.
 Default is on, available options are 'on' and 'off'.
 
 -regex "".+""
-Sets a regex to use for compressing or extracting.");
+Sets a regex to use for compressing or extracting.
+
+-fullverify off
+(-v only)
+Verifies individual file MD5 results, instead of just the CRC32.
+Default is off, available options are 'on' and 'off'.");
 
 #if DEBUG
                 Console.WriteLine();
@@ -173,11 +173,11 @@ Sets a regex to use for compressing or extracting.");
 
             if (args[0].ToLower() == "-c")
             {
-                CompressArg(args);
+                await CompressArg(args);
             }
             else if (args[0].ToLower() == "-e")
             {
-                DecompressArg(args);
+                await DecompressArg(args);
             }
             else if (args[0].ToLower() == "-d")
             {
@@ -205,18 +205,9 @@ Sets a regex to use for compressing or extracting.");
 
             Console.ForegroundColor = ConsoleColor.Red;
 
+            Console.WriteLine();
             Console.WriteLine("-- UNHANDLED EXCEPTION --");
-            Console.WriteLine(ex.Message);
-            Console.WriteLine($"-- USER DATA ({ex.Data.Count}) --");
-
-            foreach (var key in ex.Data.Keys)
-            {
-                Console.WriteLine(key.ToString());
-                Console.WriteLine(ex.Data[key].ToString());
-            }
-                
-            Console.WriteLine("-- STACK TRACE --");
-            Console.WriteLine(ex.StackTrace);
+            Console.WriteLine(ex.ToString());
 
             Console.CursorVisible = true;
             Console.ResetColor();
@@ -234,7 +225,7 @@ Sets a regex to use for compressing or extracting.");
         }
 
         #region Compress
-        static void CompressArg(string[] args)
+        static async Task CompressArg(string[] args)
         {
             Regex regex = new Regex(".+");
             Regex unencodedRegex = new Regex("a^");
@@ -358,6 +349,15 @@ Sets a regex to use for compressing or extracting.");
 
             foreach (string path in args.Skip(argcounter - 1).Take(args.Length - argcounter))
             {
+                if (path.EndsWith(".pp") && File.Exists(path))
+                {
+	                Console.WriteLine("Importing " + Path.GetFileName(path));
+
+	                ImportPP(path, writer.Files, regex, unencodedRegex);
+
+                    continue;
+                }
+
                 string parentpath = Path.GetDirectoryName(path);
                 string localpath = Path.GetFileName(path);
 
@@ -456,12 +456,12 @@ Sets a regex to use for compressing or extracting.");
                 }
             });
 
-            using (FileStream fs = new FileStream(filename, FileMode.Create))
-                writer.Write(fs, progressStatus, progressPercentage);
+            await using (FileStream fs = new FileStream(filename, FileMode.Create))
+                await writer.WriteAsync(fs, progressStatus, progressPercentage);
 
             //wait for progress to update
             while (lastProgress != 100)
-                System.Threading.Thread.Sleep(50);
+                await Task.Delay(50);
 
             lock (progressPercentage)
             {
@@ -478,7 +478,7 @@ Sets a regex to use for compressing or extracting.");
 
             int imported = 0;
 
-            foreach (IReadFile file in pp.Subfiles)
+            foreach (ppSubfile file in pp.Subfiles)
             {
                 string fullName = name + "/" + file.Name;
 
@@ -511,12 +511,12 @@ Sets a regex to use for compressing or extracting.");
         #endregion
 
         #region Decompress
-        static void DecompressArg(string[] args)
+        static async Task DecompressArg(string[] args)
         {
             Regex regex = new Regex(".+");
 
             int argcounter = 1;
-            string decode = "on";
+            string decode = "off";
             string currentArg;
 
             while ((currentArg = args[argcounter++]).StartsWith("-"))
@@ -541,277 +541,288 @@ Sets a regex to use for compressing or extracting.");
             if (!outputDirectory.Exists)
                 outputDirectory.Create();
 
-            if (decode == "off")
+            var chunks = archive.RawFiles
+                .Where(x => regex.IsMatch($"{x.ArchiveName}/{x.Name}"))
+                .GroupBy(x => x.ChunkID);
+
+            foreach (var chunkListing in chunks)
             {
-                //decoding raw entries
-                foreach (var file in archive.RawFiles)
+                var chunk = chunkListing.First().Chunk;
+
+                using var decompressionBuffer = MemoryPool<byte>.Shared.Rent((int)chunk.UncompressedLength);
+
+                chunk.CopyToMemory(decompressionBuffer.Memory);
+
+                List<Task> tasks = new List<Task>();
+
+                foreach (var file in chunkListing)
                 {
-                    string fullname = file.ArchiveName + "/" + file.Name;
-                    string arcname = file.ArchiveName.Replace(".pp", "");
+	                string arcname = file.ArchiveName.Replace(".pp", "");
 
-                    if (regex.IsMatch(fullname))
+	                Console.WriteLine($"Exporting {file.ArchiveName}/{file.Name}");
+
+	                if (!Directory.Exists(Path.Combine(outputDirectory.FullName, arcname)))
+		                Directory.CreateDirectory(Path.Combine(outputDirectory.FullName, arcname));
+
+                    tasks.Add(Task.Run(async () =>
                     {
-                        Console.WriteLine("Exporting " + fullname);
+                        await using FileStream fs = new FileStream(Path.Combine(outputDirectory.FullName, arcname, file.Name), FileMode.Create);
 
-                        if (!Directory.Exists(Path.Combine(outputDirectory.FullName, arcname)))
-                            Directory.CreateDirectory(Path.Combine(outputDirectory.FullName + arcname));
-
-                        using (FileStream fs = new FileStream(Path.Combine(outputDirectory.FullName, arcname, file.Name), FileMode.Create))
-                        using (Stream subfileStream = file.GetStream())
-                        {
-                            subfileStream.CopyTo(fs);
-                        }
-                    }
+                        await fs.WriteAsync(decompressionBuffer.Memory.Slice((int)file.Offset, (int)file.Size));
+                    }));
                 }
+
+                await Task.WhenAll(tasks);
             }
-            else if (decode == "on" || decode == "full")
-            {
-                //decoding raw entries
-                foreach (var file in archive.Files)
-                {
-                    string fullname = file.ArchiveName + "/" + file.Name;
-                    string arcname = file.ArchiveName.Replace(".pp", "");
 
-                    if (regex.IsMatch(fullname))
-                    {
-                        Console.WriteLine("Exporting " + fullname);
+            //else if (decode == "on" || decode == "full")
+            //{
+            //    //decoding raw entries
+            //    foreach (var file in archive.Files)
+            //    {
+            //        string fullname = file.ArchiveName + "/" + file.Name;
+            //        string arcname = file.ArchiveName.Replace(".pp", "");
 
-                        if (!Directory.Exists(Path.Combine(outputDirectory.FullName, arcname)))
-                            Directory.CreateDirectory(Path.Combine(outputDirectory.FullName, arcname));
+            //        if (regex.IsMatch(fullname))
+            //        {
+            //            Console.WriteLine("Exporting " + fullname);
 
-                        if (decode == "full" && file.Type == ArchiveFileType.OpusAudio)
-                        {
-                            string fileName = file.Name.Replace(".opus", ".wav");
+            //            if (!Directory.Exists(Path.Combine(outputDirectory.FullName, arcname)))
+            //                Directory.CreateDirectory(Path.Combine(outputDirectory.FullName, arcname));
 
-                            using (FileStream fs = new FileStream(Path.Combine(outputDirectory.FullName, arcname, fileName), FileMode.Create))
-                            using (Stream stream = file.GetRawStream())
-                            {
-                                stream.CopyTo(fs);
-                            }
-                        }
-                        else if (file.Type != ArchiveFileType.OpusAudio)
-                        {
-                            string fileName;
+            //            if (decode == "full" && file.Type == ArchiveFileType.OpusAudio)
+            //            {
+            //                string fileName = file.Name.Replace(".opus", ".wav");
+
+            //                using (FileStream fs = new FileStream(Path.Combine(outputDirectory.FullName, arcname, fileName), FileMode.Create))
+            //                using (Stream stream = file.GetRawStream())
+            //                {
+            //                    stream.CopyTo(fs);
+            //                }
+            //            }
+            //            else if (file.Type != ArchiveFileType.OpusAudio)
+            //            {
+            //                string fileName;
                             
-                            fileName = EncoderFactory.TransformName(file.Name, file.Type);
+            //                fileName = EncoderFactory.TransformName(file.Name, file.Type);
 
-                            using (FileStream fs = new FileStream(Path.Combine(outputDirectory.FullName, arcname, fileName), FileMode.Create))
-                            using (Stream stream = file.GetRawStream())
-                            {
-                                stream.CopyTo(fs);
-                            }
-                        }
-                        else
-                        {
-                            using (FileStream fs = new FileStream(Path.Combine(outputDirectory.FullName, arcname, file.Name), FileMode.Create))
-                            using (Stream stream = (file as ArchiveSubfile).RawSource.GetStream())
-                            {
-                                stream.CopyTo(fs);
-                            }
-                        }
-                    }
-                }
-            }
+            //                using (FileStream fs = new FileStream(Path.Combine(outputDirectory.FullName, arcname, fileName), FileMode.Create))
+            //                using (Stream stream = file.GetRawStream())
+            //                {
+            //                    stream.CopyTo(fs);
+            //                }
+            //            }
+            //            else
+            //            {
+            //                using (FileStream fs = new FileStream(Path.Combine(outputDirectory.FullName, arcname, file.Name), FileMode.Create))
+            //                using (Stream stream = (file as ArchiveSubfile).RawSource.GetStream())
+            //                {
+            //                    stream.CopyTo(fs);
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
         }
         #endregion
 
         #region Append
         static void AppendArg(string[] args)
         {
-            Regex regex = new Regex(".+");
-            Regex unencodedRegex = new Regex("a^");
+            //Regex regex = new Regex(".+");
+            //Regex unencodedRegex = new Regex("a^");
 
-            int argcounter = 1;
-            int chunksize = ConvertFromReadable("16M");
-            int threads = 1;
-            string name = Path.GetFileNameWithoutExtension(args.Last());
-            string compression = "zstd";
-            string currentArg;
+            //int argcounter = 1;
+            //int chunksize = ConvertFromReadable("16M");
+            //int threads = 1;
+            //string name = Path.GetFileNameWithoutExtension(args.Last());
+            //string compression = "zstd";
+            //string currentArg;
 
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
-                Core.Settings.OpusFrameSize = 0.060;
+            //if (Environment.OSVersion.Platform == PlatformID.Unix)
+            //    Core.Settings.OpusFrameSize = 0.060;
 
-            while ((currentArg = args[argcounter++]).StartsWith("-"))
-            {
-                currentArg = currentArg.ToLower();
+            //while ((currentArg = args[argcounter++]).StartsWith("-"))
+            //{
+            //    currentArg = currentArg.ToLower();
 
-                if (currentArg == "-chunksize")
-                {
-                    chunksize = ConvertFromReadable(args[argcounter++]);
-                }
-                else if (currentArg == "-opus-music")
-                {
-                    Core.Settings.OpusMusicBitrate = ConvertFromReadable(args[argcounter++]);
-                }
-                else if (currentArg == "-opus-voice")
-                {
-                    Core.Settings.OpusVoiceBitrate = ConvertFromReadable(args[argcounter++]);
-                }
-                else if (currentArg == "-xx2-precision")
-                {
-                    Core.Settings.Xx2Precision = int.Parse(args[argcounter++]);
-                    Core.Settings.Xx2IsUsingQuality = false;
-                }
-                else if (currentArg == "-xx2-quality")
-                {
-                    Core.Settings.Xx2Quality = float.Parse(args[argcounter++]);
-                    Core.Settings.Xx2IsUsingQuality = false;
-                }
-                else if (currentArg == "-threads")
-                {
-                    threads = int.Parse(args[argcounter++]);
-                }
-                else if (currentArg == "-compression")
-                {
-                    compression = args[argcounter++].ToLower();
-                }
-                else if (currentArg == "-zstd-level")
-                {
-                    Core.Settings.ZstdCompressionLevel = int.Parse(args[argcounter++]);
-                }
-                else if (currentArg == "-name")
-                {
-                    name = args[argcounter++];
-                }
-                else if (currentArg == "-regex")
-                {
-                    regex = new Regex(args[argcounter++]);
-                }
-                else if (currentArg == "-no-encode")
-                {
-                    unencodedRegex = new Regex(args[argcounter++]);
-                }
-            }
+            //    if (currentArg == "-chunksize")
+            //    {
+            //        chunksize = ConvertFromReadable(args[argcounter++]);
+            //    }
+            //    else if (currentArg == "-opus-music")
+            //    {
+            //        Core.Settings.OpusMusicBitrate = ConvertFromReadable(args[argcounter++]);
+            //    }
+            //    else if (currentArg == "-opus-voice")
+            //    {
+            //        Core.Settings.OpusVoiceBitrate = ConvertFromReadable(args[argcounter++]);
+            //    }
+            //    else if (currentArg == "-xx2-precision")
+            //    {
+            //        Core.Settings.Xx2Precision = int.Parse(args[argcounter++]);
+            //        Core.Settings.Xx2IsUsingQuality = false;
+            //    }
+            //    else if (currentArg == "-xx2-quality")
+            //    {
+            //        Core.Settings.Xx2Quality = float.Parse(args[argcounter++]);
+            //        Core.Settings.Xx2IsUsingQuality = false;
+            //    }
+            //    else if (currentArg == "-threads")
+            //    {
+            //        threads = int.Parse(args[argcounter++]);
+            //    }
+            //    else if (currentArg == "-compression")
+            //    {
+            //        compression = args[argcounter++].ToLower();
+            //    }
+            //    else if (currentArg == "-zstd-level")
+            //    {
+            //        Core.Settings.ZstdCompressionLevel = int.Parse(args[argcounter++]);
+            //    }
+            //    else if (currentArg == "-name")
+            //    {
+            //        name = args[argcounter++];
+            //    }
+            //    else if (currentArg == "-regex")
+            //    {
+            //        regex = new Regex(args[argcounter++]);
+            //    }
+            //    else if (currentArg == "-no-encode")
+            //    {
+            //        unencodedRegex = new Regex(args[argcounter++]);
+            //    }
+            //}
 
-            compression = compression.ToLower();
+            //compression = compression.ToLower();
 
-            string filename = args.Last();
+            //string filename = args.Last();
 
-            ExtendedArchiveAppender appender = new ExtendedArchiveAppender(filename);
+            //ExtendedArchiveAppender appender = new ExtendedArchiveAppender(filename);
 
-            appender.ChunkSizeLimit = (ulong)chunksize;
-            appender.Threads = threads;
-            appender.Name = name;
+            //appender.ChunkSizeLimit = (ulong)chunksize;
+            //appender.Threads = threads;
+            //appender.Name = name;
 
-            if (compression == "zstd")
-                appender.DefaultCompression = ArchiveChunkCompression.Zstandard;
-            else if (compression == "lz4")
-                appender.DefaultCompression = ArchiveChunkCompression.LZ4;
-            else if (compression == "uncompressed")
-                appender.DefaultCompression = ArchiveChunkCompression.Uncompressed;
-
-
-            foreach (string path in args.Skip(argcounter - 1).Take(args.Length - argcounter))
-            {
-                string parentpath = Path.GetDirectoryName(path);
-                string localpath = Path.GetFileName(path);
-
-                foreach (string filepath in Directory.EnumerateFiles(parentpath, localpath, SearchOption.TopDirectoryOnly))
-                {
-                    if (filepath.EndsWith(".pp"))
-                    {
-                        //.pp file
-                        Console.WriteLine("Importing " + Path.GetFileName(filepath));
-
-                        ImportPP(filepath, appender.FilesToAdd, regex, unencodedRegex);
-                    }
-                }
-
-                foreach (string dirpath in Directory.EnumerateDirectories(parentpath, localpath, SearchOption.TopDirectoryOnly))
-                {
-                    name = Path.GetFileNameWithoutExtension(dirpath) + ".pp";
-
-                    Console.WriteLine("Importing \"" + dirpath + "\" as \"" + name + "\"");
-
-                    int imported = 0;
-                    var files = Directory.EnumerateFiles(dirpath, "*.*", SearchOption.TopDirectoryOnly).ToArray();
-
-                    foreach (string file in files)
-                    {
-                        string fullName = name + "/" + Path.GetFileName(file);
-
-                        if (regex.IsMatch(fullName))
-                        {
-                            if (unencodedRegex.IsMatch(fullName))
-                            {
-                                appender.Files.Add(
-                                    new PPeX.Subfile(
-                                        new FileSource(file),
-                                        Path.GetFileName(file),
-                                        name,
-                                        ArchiveFileType.Raw));
-                            }
-                            else
-                            {
-                                appender.Files.Add(
-                                    new PPeX.Subfile(
-                                        new FileSource(file),
-                                        Path.GetFileName(file),
-                                        name));
-                            }
+            //if (compression == "zstd")
+            //    appender.DefaultCompression = ArchiveChunkCompression.Zstandard;
+            //else if (compression == "lz4")
+            //    appender.DefaultCompression = ArchiveChunkCompression.LZ4;
+            //else if (compression == "uncompressed")
+            //    appender.DefaultCompression = ArchiveChunkCompression.Uncompressed;
 
 
-                            imported++;
-                        }
-                    }
+            //foreach (string path in args.Skip(argcounter - 1).Take(args.Length - argcounter))
+            //{
+            //    string parentpath = Path.GetDirectoryName(path);
+            //    string localpath = Path.GetFileName(path);
 
-                    Console.WriteLine("Imported " + imported + "/" + files.Length + " files");
-                }
-            }
+            //    foreach (string filepath in Directory.EnumerateFiles(parentpath, localpath, SearchOption.TopDirectoryOnly))
+            //    {
+            //        if (filepath.EndsWith(".pp"))
+            //        {
+            //            //.pp file
+            //            Console.WriteLine("Importing " + Path.GetFileName(filepath));
 
-            int lastProgress = 0;
+            //            ImportPP(filepath, appender.FilesToAdd, regex, unencodedRegex);
+            //        }
+            //    }
 
-            object progressLock = new object();
-            bool isUpdating = true;
+            //    foreach (string dirpath in Directory.EnumerateDirectories(parentpath, localpath, SearchOption.TopDirectoryOnly))
+            //    {
+            //        name = Path.GetFileNameWithoutExtension(dirpath) + ".pp";
 
-            Console.CursorVisible = false;
+            //        Console.WriteLine("Importing \"" + dirpath + "\" as \"" + name + "\"");
 
-            Progress<string> progressStatus = new Progress<string>(x =>
-            {
-                if (!isUpdating)
-                    return;
+            //        int imported = 0;
+            //        var files = Directory.EnumerateFiles(dirpath, "*.*", SearchOption.TopDirectoryOnly).ToArray();
 
-                lock (progressLock)
-                {
-                    Console.SetCursorPosition(0, Console.CursorTop);
+            //        foreach (string file in files)
+            //        {
+            //            string fullName = name + "/" + Path.GetFileName(file);
 
-                    for (int i = 0; i < Console.WindowWidth - 1; i++)
-                        Console.Write(" ");
+            //            if (regex.IsMatch(fullName))
+            //            {
+            //                if (unencodedRegex.IsMatch(fullName))
+            //                {
+            //                    appender.Files.Add(
+            //                        new PPeX.Subfile(
+            //                            new FileSource(file),
+            //                            Path.GetFileName(file),
+            //                            name,
+            //                            ArchiveFileType.Raw));
+            //                }
+            //                else
+            //                {
+            //                    appender.Files.Add(
+            //                        new PPeX.Subfile(
+            //                            new FileSource(file),
+            //                            Path.GetFileName(file),
+            //                            name));
+            //                }
 
-                    Console.SetCursorPosition(0, Console.CursorTop);
 
-                    Console.WriteLine(x.Trim());
+            //                imported++;
+            //            }
+            //        }
 
-                    Console.Write("[" + lastProgress + "% complete]");
-                }
-            });
+            //        Console.WriteLine("Imported " + imported + "/" + files.Length + " files");
+            //    }
+            //}
 
-            Progress<int> progressPercentage = new Progress<int>(x =>
-            {
-                if (!isUpdating)
-                    return;
+            //int lastProgress = 0;
 
-                lock (progressLock)
-                {
-                    lastProgress = x;
+            //object progressLock = new object();
+            //bool isUpdating = true;
 
-                    Console.SetCursorPosition(0, Console.CursorTop);
+            //Console.CursorVisible = false;
 
-                    Console.Write("[" + lastProgress + "% complete]");
-                }
-            });
+            //Progress<string> progressStatus = new Progress<string>(x =>
+            //{
+            //    if (!isUpdating)
+            //        return;
+
+            //    lock (progressLock)
+            //    {
+            //        Console.SetCursorPosition(0, Console.CursorTop);
+
+            //        for (int i = 0; i < Console.WindowWidth - 1; i++)
+            //            Console.Write(" ");
+
+            //        Console.SetCursorPosition(0, Console.CursorTop);
+
+            //        Console.WriteLine(x.Trim());
+
+            //        Console.Write("[" + lastProgress + "% complete]");
+            //    }
+            //});
+
+            //Progress<int> progressPercentage = new Progress<int>(x =>
+            //{
+            //    if (!isUpdating)
+            //        return;
+
+            //    lock (progressLock)
+            //    {
+            //        lastProgress = x;
+
+            //        Console.SetCursorPosition(0, Console.CursorTop);
+
+            //        Console.Write("[" + lastProgress + "% complete]");
+            //    }
+            //});
             
-            appender.Write(progressStatus, progressPercentage);
+            //appender.Write(progressStatus, progressPercentage);
 
-            //wait for progress to update
-            while (lastProgress != 100)
-                System.Threading.Thread.Sleep(50);
+            ////wait for progress to update
+            //while (lastProgress != 100)
+            //    System.Threading.Thread.Sleep(50);
 
-            lock (progressPercentage)
-            {
-                isUpdating = false;
-                Console.CursorVisible = true;
-            }
+            //lock (progressPercentage)
+            //{
+            //    isUpdating = false;
+            //    Console.CursorVisible = true;
+            //}
         }
         #endregion
 
@@ -830,23 +841,38 @@ Sets a regex to use for compressing or extracting.");
                 HaltAndCatchFire($"Input file does not exist: {filename}", 1);
             }
 
-            ExtendedArchiveAppender appender = new ExtendedArchiveAppender(filename);
+            //ExtendedArchiveAppender appender = new ExtendedArchiveAppender(filename);
 
-            appender.Defragment();
+            //appender.Defragment();
 
-            Console.WriteLine($"\"{appender.Name}\" defragmented.");
+            //Console.WriteLine($"\"{appender.Name}\" defragmented.");
         }
         #endregion
 
         #region Verify
         static void VerifyArgs(string[] args)
         {
-            if (args.Length < 2)
+	        string currentArg;
+	        int argcounter = 1;
+
+            bool fullVerify = true;
+
+            while ((currentArg = args[argcounter++]).StartsWith("-"))
             {
-                HaltAndCatchFire($"Invalid amount of arguments.", -1);
+                currentArg = currentArg.ToLower();
+
+                if (currentArg == "-fullverify")
+                {
+	                fullVerify = args[argcounter++].ToLower() == "on";
+                }
+                else
+                {
+                    HaltAndCatchFire($"Unknown command: \"{currentArg}\"", 1);
+                    return;
+                }
             }
 
-            string filename = args[1];
+            string filename = args[--argcounter];
 
             if (!File.Exists(filename))
             {
@@ -889,15 +915,59 @@ Sets a regex to use for compressing or extracting.");
 
             var orderedChunks = arc.Chunks.OrderBy(x => x.Offset).ToArray();
 
+            Console.WriteLine("Archive name: " + arc.Title);
+            Console.WriteLine("File count: " + arc.Files.Count);
+
             long currentOffset = 0;
             long totalOffset = orderedChunks.Sum(x => (long)x.CompressedLength);
+
+            HashSet<(Md5Hash, ulong, ulong)> verifiedHashes = new HashSet<(Md5Hash, ulong, ulong)>();
 
             for (int i = 0; i < orderedChunks.Length; i++)
             {
                 ExtendedArchiveChunk chunk = orderedChunks[i];
 
-                if (!chunk.VerifyChecksum())
-                    HaltAndCatchFire($"Chunk hash mismatch; id: {chunk.ID}, offset: {chunk.Offset}", 8);
+                using var compressedBuffer = MemoryPool<byte>.Shared.Rent((int)chunk.CompressedLength);
+                var compressedMemory = compressedBuffer.Memory.Slice(0, (int)chunk.CompressedLength);
+
+                using (var rawStream = chunk.GetRawStream())
+                {
+	                rawStream.Read(compressedMemory.Span);
+                }
+
+                if (chunk.CRC32 != CRC32.Compute(compressedMemory.Span))
+					HaltAndCatchFire($"Chunk hash mismatch; id: {chunk.ID}, offset: {chunk.Offset}", 8);
+
+
+				if (fullVerify)
+                {
+	                using var uncompressedBuffer = MemoryPool<byte>.Shared.Rent((int)chunk.UncompressedLength);
+	                var uncompressedMemory = uncompressedBuffer.Memory.Slice(0, (int)chunk.UncompressedLength);
+
+	                chunk.CopyToMemory(uncompressedMemory);
+
+                    foreach (var file in chunk.Files)
+                    {
+	                    var expectedHash = (file.RawSource.Md5, file.RawSource.Offset, file.RawSource.Size);
+
+	                    if (verifiedHashes.Contains(expectedHash))
+		                    continue;
+
+                        var actualMd5 =
+			                Utility.GetMd5(uncompressedMemory.Span.Slice((int)file.RawSource.Offset,
+				                (int)file.RawSource.Size));
+
+		                if ((Md5Hash)file.RawSource.Md5 != (Md5Hash)actualMd5)
+		                {
+			                HaltAndCatchFire($"File md5 mismatch; chunk id: {chunk.ID}, archive: {file.ArchiveName}, file: {file.Name}", 9);
+                        }
+
+		                verifiedHashes.Add((actualMd5, file.RawSource.Offset, file.RawSource.Size));
+	                }
+
+                    verifiedHashes.Clear();
+                }
+
 
                 currentOffset += (long)chunk.CompressedLength;
 

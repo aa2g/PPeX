@@ -8,7 +8,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PPeXTests</RootNamespace>
     <AssemblyName>PPeXTests</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -61,45 +61,29 @@
   <ItemGroup>
     <Compile Include="ExtendedArchiveTests.cs" />
     <Compile Include="EncoderTests.cs" />
-    <Compile Include="PP2Tests.cs" />
+    <Compile Include="PPTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CachedObjectTests.cs" />
     <Compile Include="ExtendedArchiveAppenderTests.cs" />
     <Compile Include="TestCommon.cs" />
     <Compile Include="HybridChunkWriterTests.cs" />
-    <Compile Include="SviexTests.cs" />
-    <Compile Include="Xx4Tests.cs" />
-    <Compile Include="Xx3Tests.cs" />
-    <Compile Include="Xx2Tests.cs" />
-    <Compile Include="xxCommon.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PPeXM64\PPeXM64.csproj">
-      <Project>{10f63d2e-61aa-4a1f-badc-8b8aa6ece5d9}</Project>
-      <Name>PPeXM64</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\PPeX\PPeX.csproj">
-      <Project>{A611A988-D477-4E16-AF2F-D3A661B909A9}</Project>
-      <Name>PPeX</Name>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="A00_00_00_03.xx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="AA2BGM13.opus">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
-    <None Include="A00_01_O_blazer_S.sviex">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="AA2BGM13.wav">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PPeXM64\PPeXM64.csproj">
+      <Project>{84fffbf4-4c93-4e1e-801e-fafb88a81336}</Project>
+      <Name>PPeXM64</Name>
+    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

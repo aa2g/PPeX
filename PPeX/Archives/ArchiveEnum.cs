@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PPeX
+﻿namespace PPeX
 {
     /// <summary>
     /// The specific file type of the archived file.
@@ -25,46 +19,6 @@ namespace PPeX
         /// The file is audio data, encoded via <see cref="Encoders.OpusEncoder"/>.
         /// </summary>
         OpusAudio = 12,
-
-        /// <summary>
-        /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx2Encoder"/>.
-        /// </summary>
-        XxMesh = 20,
-
-        /// <summary>
-        /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx2Encoder"/>.
-        /// </summary>
-        Xx2Mesh = 21,
-
-        /// <summary>
-        /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx3Encoder"/>.
-        /// </summary>
-        Xx3Mesh = 22,
-
-        /// <summary>
-        /// The file is .xx mesh data, encoded via <see cref="Encoders.Xx4Encoder"/>.
-        /// </summary>
-        Xx4Mesh = 23,
-
-        /// <summary>
-        /// The file is .sviex mesh data, encoded via <see cref="Encoders.SviexEncoder"/>.
-        /// </summary>
-        SviexMesh = 30,
-
-        /// <summary>
-        /// The file is .sviex2 mesh data, encoded via <see cref="Encoders.Sviex2Encoder"/>.
-        /// </summary>
-        Sviex2Mesh = 31,
-
-        /// <summary>
-        /// The file is .xa animation data, encoded via <see cref="Encoders.XaEncoder"/>.
-        /// </summary>
-        XaAnimation = 40,
-
-        /// <summary>
-        /// The file is .xa2 animation data, encoded via <see cref="Encoders.Xa2Encoder"/>.
-        /// </summary>
-        Xa2Animation = 41,
     }
 
     /// <summary>

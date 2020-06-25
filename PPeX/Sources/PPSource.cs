@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using PPeX.External.PP;
 
@@ -13,18 +11,21 @@ namespace PPeX
     /// </summary>
     public class PPSource : BaseSource
     {
-        protected IReadFile subfile;
+        public ppSubfile Subfile { get; set; }
 
         /// <summary>
         /// Creates a data source from a subfile in a .pp file.
         /// </summary>
         /// <param name="subfile">The subfile to read.</param>
-        public PPSource(IReadFile subfile)
+        public PPSource(ppSubfile subfile)
         {
-            this.subfile = subfile;
+	        Subfile = subfile;
+            Size = Subfile.size;
+        }
 
-            var pp = subfile as ppSubfile;
-            Size = pp.size;
+        public override async Task GenerateMd5HashAsync()
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -33,7 +34,7 @@ namespace PPeX
         /// <returns></returns>
         public override Stream GetStream()
         {
-            return subfile.CreateReadStream();
+            return Subfile.CreateReadStream();
         }
 
         public override void Dispose()

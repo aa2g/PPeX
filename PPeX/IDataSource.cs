@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace PPeX
@@ -21,6 +18,8 @@ namespace PPeX
         /// The MD5 hash of the uncompressed data.
         /// </summary>
         byte[] Md5 { get; }
+
+        Task GenerateMd5HashAsync();
 
         /// <summary>
         /// Returns a stream that reads uncompressed data.

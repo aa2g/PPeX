@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Security.Cryptography;
-using PPeX.Compressors;
 using System.Runtime;
+using System.Threading.Tasks;
 
 namespace PPeX
 {
@@ -24,32 +22,71 @@ namespace PPeX
             return true;
         }
 
+        public static Md5Hash GetMd5(ReadOnlySpan<byte> data)
+        {
+            using MD5 md5 = MD5.Create();
+
+            byte[] md5Buffer = new byte[16];
+
+            md5.TryComputeHash(data, md5Buffer, out _);
+
+            return md5Buffer;
+        }
+
         public static Md5Hash GetMd5(byte[] data)
         {
-            MD5 md5 = MD5.Create();
+            using MD5 md5 = MD5.Create();
             return md5.ComputeHash(data);
         }
 
         public static Md5Hash GetMd5(Stream stream)
         {
-            MD5 md5 = MD5.Create();
+            using MD5 md5 = MD5.Create();
             return md5.ComputeHash(stream);
         }
 
         public static Md5Hash GetMd5(Stream stream, long offset, long length)
         {
-            MD5 md5 = MD5.Create();
-            Substream sub = new Substream(stream, offset, length);
+            using MD5 md5 = MD5.Create();
+            var sub = new PartialStream(stream, offset, length);
 
             return md5.ComputeHash(sub);
         }
 
-        public static long TestCompression(Stream data, ArchiveChunkCompression method)
+        public static Task<Md5Hash> GetMd5Async(Stream stream, long offset, long length)
         {
-            using (ICompressor compressor = CompressorFactory.GetCompressor(method))
+            using var partialStream = new PartialStream(stream, offset, length);
+            return GetMd5Async(partialStream);
+        }
+
+        public static async Task<Md5Hash> GetMd5Async(Stream stream)
+        {
+            using var md5 = MD5.Create();
+
+            const int bufferSize = 16384;
+
+            var buffer = new byte[bufferSize];
+
+
+            while (true)
             {
-                return compressor.GetStream(data).Length;
+	            var read = await stream.ReadAsync(buffer, 0, bufferSize);
+
+	            if (read == 0)
+		            break;
+
+	            if (read == bufferSize)
+	            {
+		            md5.TransformBlock(buffer, 0, bufferSize, null, 0);
+	            }
+	            else
+	            {
+		            md5.TransformFinalBlock(buffer, 0, read);
+		            break;
+	            }
             }
+
+            return md5.Hash;
         }
 
         // Returns the human-readable file size for an arbitrary, 64-bit file size 

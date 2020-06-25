@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace PPeX.External.Ogg
 {
@@ -22,9 +19,9 @@ namespace PPeX.External.Ogg
         internal const byte OggVersion = 0;
         
         public byte[] Header { get; protected set; }
-        public byte[] Data { get; protected set; }
+        public ReadOnlyMemory<byte> Data { get; protected set; }
 
-        public OggPage(byte[] data, int pageIndex, ulong granulePosition, int serialNumber, OggPageFlags flags = OggPageFlags.None)
+        public OggPage(ReadOnlyMemory<byte> data, int pageIndex, ulong granulePosition, int serialNumber, OggPageFlags flags = OggPageFlags.None)
         {
             //Create a header
             using (MemoryStream mem = new MemoryStream())
@@ -63,7 +60,7 @@ namespace PPeX.External.Ogg
 
                 long headerLength = mem.Position;
 
-                writer.Write(data);
+                writer.Write(data.Span);
 
                 mem.Position = 0;
                 uint crc = OggCRC32.Compute(mem);

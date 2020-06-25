@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using PPeX.Xx2;
 
 namespace PPeX
 {
@@ -12,10 +8,9 @@ namespace PPeX
      * Container data:
      *  0 - magic PPEX
      *  4 - version [short]
-     *  5 - archive type [short]
-     *  7 - archive name length in bytes [ushort]
-     *  9 - archive name [unicode]
-     *  9 + n - number of subfiles [uint]
+     *  8 - archive name length in bytes [ushort]
+     *  10 - archive name [unicode]
+     *  10 + n - number of subfiles [uint]
      *  2^10 to 2^20 - individual subfile headers
      *
      *  Note: The container data part of the header is capped at 2^10 bytes (1KB), an arbitrary amount of free space is left for the individual file headers and any unused area is zeroed out.
@@ -38,7 +33,7 @@ namespace PPeX
     /// An extended PPX archive.
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{Title}", Name = "{Title}")]
-    public class ExtendedArchive : IArchiveContainer
+    public class ExtendedArchive
     {
         internal static readonly string Magic = "PPEX";
 
@@ -71,8 +66,6 @@ namespace PPeX
         internal ulong FileTableOffset = 0;
         internal ulong TableInfoOffset = 0;
 
-        public SubfileTextureBank TextureBank;
-        TextureBank IArchiveContainer.TextureBank => TextureBank;
 
         /// <summary>
         /// Reads from a .ppx file.
@@ -132,8 +125,6 @@ namespace PPeX
                     RawFiles.Add(source);
                     Files.Add(new ArchiveSubfile(source));
                 }
-
-                TextureBank = new SubfileTextureBank(RawFiles.Where(x => x.ArchiveName == "_TextureBank").Select(x => new ArchiveSubfile(x)));
             }
         }
 

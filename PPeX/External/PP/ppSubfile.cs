@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
 
 namespace PPeX.External.PP
 {
@@ -14,7 +12,6 @@ namespace PPeX.External.PP
 		public string ppPath;
 		public uint offset;
 		public uint size;
-		public ppFormat ppFormat;
 
 		public object Metadata { get; set; }
 		public Stream SourceStream { get; set; }
@@ -43,7 +40,7 @@ namespace PPeX.External.PP
 			{
 				fs = File.OpenRead(ppPath);
 				fs.Seek(offset, SeekOrigin.Begin);
-				return ppFormat.ReadStream(new PartialStream(fs, size));
+				return ppFormat_AA2.ReadStream(new PartialStream(fs, size));
 			}
 			catch (Exception e)
 			{
@@ -55,135 +52,14 @@ namespace PPeX.External.PP
 			}
 		}
 
+		public Stream CreateReadStream(Stream existingStream)
+		{
+			return ppFormat_AA2.ReadStream(new PartialStream(existingStream, offset, size, true));
+		}
+
 		public override string ToString()
 		{
-			return this.Name;
-		}
-	}
-
-	// Represents a subsection of the stream. This forces a CryptoStream to use TransformFinalBlock() at the end of the subsection.
-	public class PartialStream : Stream
-	{
-		public override bool CanRead
-		{
-			get { return stream.CanRead; }
-		}
-
-		public override bool CanSeek
-		{
-			get { return stream.CanSeek; }
-		}
-
-		public override bool CanWrite
-		{
-			get { return stream.CanWrite; }
-		}
-
-		public override void Flush()
-		{
-			stream.Flush();
-		}
-
-		public override long Length
-		{
-			get { return this.length; }
-		}
-
-        public override long Position
-        {
-            get
-            {
-                return stream.Position - offset;
-            }
-            set
-            {
-                stream.Position = value + offset;
-            }
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-		{
-			if ((stream.Position + count) > end)
-			{
-				count = (int)(end - stream.Position);
-			}
-
-			if (count < 0)
-			{
-				return 0;
-			}
-			else
-			{
-				return stream.Read(buffer, offset, count);
-			}
-		}
-
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            switch (origin)
-            {
-                case SeekOrigin.Begin:
-                    Position = offset;
-                    break;
-                case SeekOrigin.Current:
-                    Position += offset;
-                    break;
-                case SeekOrigin.End:
-                    Position = length + offset;
-                    break;
-            }
-
-            return Position;
-        }
-
-
-        public override void SetLength(long value)
-		{
-			throw new NotImplementedException();
-		}
-
-		public override void Write(byte[] buffer, int offset, int count)
-		{
-			throw new NotImplementedException();
-		}
-
-		private Stream stream = null;
-		private long offset = 0;
-		private long length = 0;
-		private long end = 0;
-
-		public PartialStream(Stream stream, long length)
-		{
-			if ((length + stream.Position) > stream.Length)
-			{
-				throw new ArgumentOutOfRangeException();
-			}
-
-			this.stream = stream;
-			this.offset = stream.Position;
-			this.length = length;
-			this.end = this.offset + this.length;
-		}
-
-		public override void Close()
-		{
-			this.Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		protected override void Dispose(bool disposing)
-		{
-			try
-			{
-				if (disposing)
-				{
-					this.stream.Close();
-				}
-			}
-			finally
-			{
-				base.Dispose(disposing);
-			}
+			return Name;
 		}
 	}
 }

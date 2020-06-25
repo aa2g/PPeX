@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
+using PPeX.Encoders;
 
 namespace PPeX
 {
@@ -22,15 +18,15 @@ namespace PPeX
 
         public string Name => RawSource.Name;
 
-        public string EmulatedArchiveName => RawSource.EmulatedArchiveName;
-
         public string EmulatedName => RawSource.EmulatedName;
 
         public ulong Size => (uint)RawSource.Size;
 
         public ArchiveFileType Type => RawSource.Type;
 
-        public Stream GetRawStream()
+        RequestedConversion ISubfile.RequestedConversion => null;
+
+        public Stream GetStream()
         {
             return RawSource.GetStream();
         }

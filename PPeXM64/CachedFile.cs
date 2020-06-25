@@ -1,107 +1,62 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Buffers;
 using PPeX;
-using PPeX.Compressors;
-using PPeX.Encoders;
 
 namespace PPeXM64
 {
-    
-
     public class CachedFile
     {
-        public string Name { get; protected set; }
-
-        public string ArchiveName { get; protected set; }
-
-        public string EmulatedName { get; protected set; }
-
-        public string EmulatedArchiveName { get; protected set; }
-
-        public ArchiveFileSource Source { get; protected set; }
-
         public CompressedCache Cache { get; protected set; }
-
-        public CachedChunk Chunk { get; protected set; }
-
-        public byte[] MD5 => Source.Md5;
-
-        public ArchiveFileType Type { get; set; }
-
-        public int Length { get; protected set; }
 
         public ArchiveChunkCompression Compression { get; set; }
 
-        public byte[] CompressedData { get; set; }
+        //public PoolPointer CompressedData { get; set; }
 
-        public bool Allocated => CompressedData != null;
+        public Memory<byte>? CompressedData { get; set; }
+
+        public Md5Hash Md5 { get; }
+
+        public bool Ready => CompressedData != null;
 
         public int Accesses { get; protected set; }
 
-        public CachedFile(ArchiveFileSource source, CompressedCache cache, CachedChunk chunk)
+        public long UncompressedSize { get; protected set; }
+
+        public long Size => CompressedData?.Length ?? 0;
+
+        public CachedFile(CompressedCache cache, Md5Hash md5, long uncompressedSize)
         {
-            Source = source;
             Cache = cache;
-            Chunk = chunk;
-            Type = source.Type;
-
-            Name = source.Name;
-            ArchiveName = source.ArchiveName;
-
-            EmulatedName = source.EmulatedName;
-            EmulatedArchiveName = source.EmulatedArchiveName;
-
-            //Offset = (int)source.Offset;
-            Length = (int)source.Size;
+            Md5 = md5;
+            UncompressedSize = uncompressedSize;
 
             Accesses = 0;
         }
 
-        public void Allocate()
-        {
-            if (!Allocated)
-                Chunk.Allocate();
-        }
-
         public void Deallocate()
         {
+            //CompressedData.Release();
             CompressedData = null;
 
             Accesses = 0;
         }
 
-        public Stream GetStream()
+        public IMemoryOwner<byte> GetMemory()
         {
-            Allocate();
+	        //return CompressedData.GetReference();
+            return new DummyMemoryOwner(CompressedData.Value);
+        }
 
-            Accesses++;
+        private class DummyMemoryOwner : IMemoryOwner<byte>
+        {
+	        public Memory<byte> Memory { get; }
 
-            using (MemoryStream mem = new MemoryStream(CompressedData))
-            using (IDecompressor decompressor = CompressorFactory.GetDecompressor(Compression))
-            {
-                if (Type == ArchiveFileType.Xx3Mesh)
-                {
-                    IEncoder decoder = new Xx3Encoder(decompressor.Decompress(mem), Cache.UniversalTexBank);
-                    
-                    Stream decoded = decoder.Decode();
-                    decoded.Position = 0;
+	        public DummyMemoryOwner(Memory<byte> memory)
+	        {
+		        Memory = memory;
+	        }
 
-                    return decoded;
-                }
-                else
-                {
-                    IEncoder decoder = EncoderFactory.GetEncoder(decompressor.Decompress(mem), Source.BaseArchive, Type);
-
-                    Stream decoded = decoder.Decode();
-                    decoded.Position = 0;
-
-                    return decoded;
-                }
-            }
+	        public void Dispose() { }
         }
     }
 }

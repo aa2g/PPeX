@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using FragLabs.Audio.Codecs.Opus;
 
-namespace FragLabs.Audio.Codecs
+namespace PPeX.External.Opus
 {
     /// <summary>
     /// Opus codec wrapper.
@@ -18,29 +16,29 @@ namespace FragLabs.Audio.Codecs
         /// <returns>A new <c>OpusEncoder</c></returns>
         public static OpusEncoder Create(int inputSamplingRate, int inputChannels, Application application)
         {
-            if (inputSamplingRate != 8000 &&
-                inputSamplingRate != 12000 &&
-                inputSamplingRate != 16000 &&
-                inputSamplingRate != 24000 &&
-                inputSamplingRate != 48000)
-                throw new ArgumentOutOfRangeException("inputSamplingRate");
-            if (inputChannels != 1 && inputChannels != 2)
-                throw new ArgumentOutOfRangeException("inputChannels");
+            if (inputSamplingRate != 8000
+                && inputSamplingRate != 12000
+                && inputSamplingRate != 16000
+                && inputSamplingRate != 24000
+                && inputSamplingRate != 48000)
+                throw new ArgumentOutOfRangeException(nameof(inputSamplingRate));
 
-            IntPtr error;
-            IntPtr encoder = API.opus_encoder_create(inputSamplingRate, inputChannels, (int)application, out error);
+            if (inputChannels != 1 && inputChannels != 2)
+                throw new ArgumentOutOfRangeException(nameof(inputChannels));
+
+            IntPtr encoder = OpusAPI.opus_encoder_create(inputSamplingRate, inputChannels, (int)application, out var error);
+
             if ((Errors)error != Errors.OK)
-            {
-                throw new Exception("Exception occured while creating encoder");
-            }
+	            throw new Exception("Exception occured while creating encoder");
+
             return new OpusEncoder(encoder, inputSamplingRate, inputChannels, application);
         }
 
-        private IntPtr _encoder;
+        private IntPtr EncoderInstance { get; set; }
 
-        private OpusEncoder(IntPtr encoder, int inputSamplingRate, int inputChannels, Application application)
+        private OpusEncoder(IntPtr encoderInstance, int inputSamplingRate, int inputChannels, Application application)
         {
-            _encoder = encoder;
+            EncoderInstance = encoderInstance;
             InputSamplingRate = inputSamplingRate;
             InputChannels = inputChannels;
             Application = application;
@@ -53,30 +51,29 @@ namespace FragLabs.Audio.Codecs
         /// <param name="sampleLength">How many bytes to encode.</param>
         /// <param name="encodedLength">Set to length of encoded audio.</param>
         /// <returns>Opus encoded audio buffer.</returns>
-        public unsafe byte[] Encode(byte[] inputPcmSamples, int sampleLength, out int encodedLength)
+        public unsafe byte[] Encode(Span<byte> inputPcmSamples, int sampleLength, out int encodedLength)
         {
             if (disposed)
                 throw new ObjectDisposedException("OpusEncoder");
 
-            int MaxDataBytes = sampleLength * InputChannels * sizeof(short);
+            int maxDataBytes = sampleLength * InputChannels * sizeof(short);
 
-            int frames = FrameCount(inputPcmSamples);
-            IntPtr encodedPtr;
-            byte[] encoded = new byte[MaxDataBytes];
+            byte[] encoded = new byte[maxDataBytes];
             int length = 0;
-            fixed (byte* benc = encoded)
+
+            fixed (byte* inputPtr = inputPcmSamples)
+            fixed (byte* outputPtr = encoded)
             {
-                encodedPtr = new IntPtr((void*)benc);
-                length = API.opus_encode(_encoder, inputPcmSamples, sampleLength, encodedPtr, MaxDataBytes);
+	            length = OpusAPI.opus_encode(EncoderInstance, inputPtr, sampleLength, outputPtr, maxDataBytes);
             }
+
             encodedLength = length;
             if (length < 0)
             {
-                var exception = new Exception("Encoding failed - " + ((Errors)length).ToString());
+                var exception = new Exception("Encoding failed - " + (Errors)length);
                 exception.Data.Add("inputPcmSamples.Length", inputPcmSamples.Length.ToString());
                 exception.Data.Add("sampleLength", sampleLength.ToString());
-                exception.Data.Add("MaxDataBytes", MaxDataBytes.ToString());
-                exception.Data.Add("encodedPtr", BitConverter.ToString(BitConverter.GetBytes(encodedPtr.ToInt64())));
+                exception.Data.Add("MaxDataBytes", maxDataBytes.ToString());
                 throw exception;
             }
 
@@ -87,37 +84,32 @@ namespace FragLabs.Audio.Codecs
         /// Produces Opus encoded audio from PCM samples.
         /// </summary>
         /// <param name="inputPcmSamples">PCM samples to encode.</param>
+        /// <param name="sampleLength">How many samples to encode.</param>
         /// <param name="encodedLength">Set to length of encoded audio.</param>
         /// <returns>Opus encoded audio buffer.</returns>
-        public unsafe byte[] Encode(float[] inputPcmSamples, int sampleLength, out int encodedLength)
+        public unsafe void Encode(ReadOnlySpan<float> inputPcmSamples, Span<byte> outputSpan, int sampleLength, out int encodedLength)
         {
             if (disposed)
                 throw new ObjectDisposedException("OpusEncoder");
             
-            int MaxDataBytes = sampleLength * InputChannels * sizeof(float);
-
-            IntPtr encodedPtr;
-            byte[] encoded = new byte[MaxDataBytes];
             int length = 0;
-            fixed (byte* benc = encoded)
+
+            fixed (float* inputPtr = inputPcmSamples)
+            fixed (byte* outputPtr = outputSpan)
             {
-                encodedPtr = new IntPtr((void*)benc);
-                length = API.opus_encode_float(_encoder, inputPcmSamples, sampleLength, encodedPtr, MaxDataBytes);
+	            length = OpusAPI.opus_encode_float(EncoderInstance, inputPtr, sampleLength, outputPtr, outputSpan.Length);
             }
+
             encodedLength = length;
             if (length < 0)
             {
-                var exception = new Exception("Encoding failed - " + ((Errors)length));
+                var exception = new Exception("Encoding failed - " + (Errors)length);
                 exception.Data.Add("inputPcmSamples.Length", inputPcmSamples.Length);
                 exception.Data.Add("sampleLength", sampleLength);
-                exception.Data.Add("MaxDataBytes", MaxDataBytes);
                 exception.Data.Add("InputChannels", InputChannels);
-                exception.Data.Add("encodedPtr", BitConverter.ToString(BitConverter.GetBytes(encodedPtr.ToInt64())));
 
                 throw exception;
             }
-
-            return encoded;
         }
 
         /// <summary>
@@ -127,22 +119,20 @@ namespace FragLabs.Audio.Codecs
         /// <returns></returns>
         public int FrameCount(byte[] pcmSamples)
         {
-            //  seems like bitrate should be required
-            int bitrate = 16;
+            // seems like bitrate should be required
+            const int bitrate = 16;
             int bytesPerSample = (bitrate / 8) * InputChannels;
             return pcmSamples.Length / bytesPerSample;
         }
 
         /// <summary>
-        /// Helper method to determine how many bytes are required for encoding to work.
+        /// Helper method to determine the buffer size upper bound required for encoding to work correctly.
         /// </summary>
         /// <param name="frameCount">Target frame size.</param>
         /// <returns></returns>
-        public int FrameByteCount(int frameCount)
+        public int FrameUpperBound(int frameSize)
         {
-            int bitrate = 16;
-            int bytesPerSample = (bitrate / 8) * InputChannels;
-            return frameCount * bytesPerSample;
+            return 2 * InputChannels * frameSize;
         }
 
         /// <summary>
@@ -150,54 +140,52 @@ namespace FragLabs.Audio.Codecs
         /// </summary>
         public int InputSamplingRate { get; private set; }
 
+        private int GetCtl(Ctl ctl)
+		{
+			if (disposed)
+				throw new ObjectDisposedException("OpusEncoder");
+
+			var ret = OpusAPI.opus_encoder_ctl_out(EncoderInstance, ctl, out int result);
+
+			if (ret < 0)
+				throw new Exception("Encoder error - " + (Errors)ret);
+
+			return result;
+		}
+
+        private void SetCtl(Ctl ctl, int value)
+        {
+	        if (disposed)
+		        throw new ObjectDisposedException("OpusEncoder");
+
+	        var ret = OpusAPI.opus_encoder_ctl(EncoderInstance, ctl, value);
+
+	        if (ret < 0)
+		        throw new Exception("Encoder error - " + (Errors)ret);
+        }
+
         /// <summary>
         /// Gets the number of channels of the encoder.
         /// </summary>
         public int InputChannels
         {
-            get
-            {
-                if (disposed)
-                    throw new ObjectDisposedException("OpusEncoder");
-                int bitrate;
-                var ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_GET_FORCE_CHANNELS_REQUEST, out bitrate);
-                if (ret < 0)
-                    throw new Exception("Encoder error - " + ((Errors)ret).ToString());
-                return bitrate;
-            }
-            set
-            {
-                if (disposed)
-                    throw new ObjectDisposedException("OpusEncoder");
-                var ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_SET_FORCE_CHANNELS_REQUEST, value);
-                if (ret < 0)
-                    throw new Exception("Encoder error - " + ((Errors)ret).ToString());
-            }
+	        get => GetCtl(Ctl.OPUS_GET_FORCE_CHANNELS_REQUEST);
+            set => SetCtl(Ctl.OPUS_SET_FORCE_CHANNELS_REQUEST, value);
         }
 
         /// <summary>
         /// Gets the number of samples that need to be intially skipped.
         /// </summary>
-        public int LookaheadSamples
-        {
-            get
-            {
-                if (disposed)
-                    throw new ObjectDisposedException("OpusEncoder");
-
-                var ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_GET_LOOKAHEAD_REQUEST, out int lookahead);
-
-                if (ret < 0)
-                    throw new Exception("Encoder error - " + ((Errors)ret).ToString());
-
-                return lookahead;
-            }
-        }
+        public int LookaheadSamples => GetCtl(Ctl.OPUS_GET_LOOKAHEAD_REQUEST);
 
         /// <summary>
         /// Gets the coding mode of the encoder.
         /// </summary>
-        public Application Application { get; private set; }
+        public Application Application
+        {
+	        get => (Application)GetCtl(Ctl.OPUS_GET_APPLICATION_REQUEST);
+	        set => SetCtl(Ctl.OPUS_SET_APPLICATION_REQUEST, (int)value);
+        }
 
         /// <summary>
         /// Gets or sets the size of memory allocated for reading encoded data.
@@ -210,24 +198,8 @@ namespace FragLabs.Audio.Codecs
         /// </summary>
         public int Bitrate
         {
-            get
-            {
-                if (disposed)
-                    throw new ObjectDisposedException("OpusEncoder");
-                int bitrate;
-                var ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_GET_BITRATE_REQUEST, out bitrate);
-                if (ret < 0)
-                    throw new Exception("Encoder error - " + ((Errors)ret).ToString());
-                return bitrate;
-            }
-            set
-            {
-                if (disposed)
-                    throw new ObjectDisposedException("OpusEncoder");
-                var ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_SET_BITRATE_REQUEST, value);
-                if (ret < 0)
-                    throw new Exception("Encoder error - " + ((Errors)ret).ToString());
-            }
+	        get => GetCtl(Ctl.OPUS_GET_BITRATE_REQUEST);
+	        set => SetCtl(Ctl.OPUS_SET_BITRATE_REQUEST, value);
         }
 
         /// <summary>
@@ -235,28 +207,8 @@ namespace FragLabs.Audio.Codecs
         /// </summary>
         public bool ForwardErrorCorrection
         {
-            get
-            {
-                if (_encoder == IntPtr.Zero)
-                    throw new ObjectDisposedException("OpusEncoder");
-
-                int fec;
-                int ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_GET_INBAND_FEC_REQUEST, out fec);
-                if (ret < 0)
-                    throw new Exception("Encoder error - " + ((Errors) ret).ToString());
-
-                return fec > 0;
-            }
-
-            set
-            {
-                if (_encoder == IntPtr.Zero)
-                    throw new ObjectDisposedException("OpusEncoder");
-
-                var ret = API.opus_encoder_ctl(_encoder, Ctl.OPUS_SET_INBAND_FEC_REQUEST, value ? 1 : 0);
-                if (ret < 0)
-                    throw new Exception("Encoder error - " + ((Errors) ret).ToString());
-            }
+	        get => GetCtl(Ctl.OPUS_GET_INBAND_FEC_REQUEST) != 0;
+	        set => SetCtl(Ctl.OPUS_SET_INBAND_FEC_REQUEST, value ? 1 : 0);
         }
 
         ~OpusEncoder()
@@ -272,10 +224,10 @@ namespace FragLabs.Audio.Codecs
 
             GC.SuppressFinalize(this);
 
-            if (_encoder != IntPtr.Zero)
+            if (EncoderInstance != IntPtr.Zero)
             {
-                API.opus_encoder_destroy(_encoder);
-                _encoder = IntPtr.Zero;
+                OpusAPI.opus_encoder_destroy(EncoderInstance);
+                EncoderInstance = IntPtr.Zero;
             }
 
             disposed = true;

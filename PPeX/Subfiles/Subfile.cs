@@ -1,11 +1,5 @@
-﻿using PPeX.Compressors;
+﻿using System.IO;
 using PPeX.Encoders;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PPeX
 {
@@ -20,8 +14,6 @@ namespace PPeX
         /// The name of the .pp file the subfile is associated with.
         /// </summary>
         public string ArchiveName { get; protected set; }
-
-        public string EmulatedArchiveName { get; protected set; }
 
         public string EmulatedName { get; protected set; }
 
@@ -40,50 +32,45 @@ namespace PPeX
         /// </summary>
         public IDataSource Source { get; protected set; }
 
+        public RequestedConversion RequestedConversion { get; }
+
         /// <summary>
         /// Writes an uncompressed version of the data to a stream.
         /// </summary>
         /// <param name="stream">The stream to write the uncompressed data to.</param>
-        public Stream GetRawStream()
+        public Stream GetStream()
         {
             return Source.GetStream();
         }
 
-        public Subfile(IDataSource source, string name, string archiveName, ArchiveFileType type)
+        public Subfile(IDataSource source, string name, string archiveName) : this(source, name, archiveName, ArchiveFileType.Raw)
         {
+	        if (name.EndsWith(".wav"))
+	        {
+		        Type = ArchiveFileType.WaveAudio;
+		        RequestedConversion = OpusEncoder.CreateConversionArgs();
+	        }
+	        else if (name.EndsWith(".opus"))
+		        Type = ArchiveFileType.OpusAudio;
+	        else
+		        Type = ArchiveFileType.Raw;
+        }
+
+        public Subfile(IDataSource source, string name, string archiveName, ArchiveFileType type) : this(source, name, archiveName, type, null) { }
+
+        public Subfile(IDataSource source, string name, string archiveName, ArchiveFileType type, RequestedConversion requestedConversion)
+        {
+	        if (!archiveName.EndsWith(".pp"))
+		        archiveName += ".pp";
+
             ArchiveName = archiveName;
             Name = name;
             Source = source;
+            Size = source.Size;
             Type = type;
+            RequestedConversion = requestedConversion;
 
-            EmulatedArchiveName = $"{archiveName.Replace(".pp", "")}.pp";
             EmulatedName = name;
-        }
-
-        public Subfile(IDataSource source, string name, string archiveName) : this(source, name, archiveName, ArchiveFileType.Raw)
-        {
-            if (name.EndsWith(".wav"))
-                Type = ArchiveFileType.WaveAudio;
-            else if (name.EndsWith(".opus"))
-                Type = ArchiveFileType.OpusAudio;
-            else if (name.EndsWith(".xx"))
-                Type = ArchiveFileType.XxMesh;
-            else if (name.EndsWith(".xx2"))
-                Type = ArchiveFileType.Xx2Mesh;
-            else if (name.EndsWith(".xx3"))
-                Type = ArchiveFileType.Xx3Mesh;
-            else if (name.EndsWith(".xx4"))
-                Type = ArchiveFileType.Xx4Mesh;
-            else if (name.EndsWith(".sviex"))
-                Type = ArchiveFileType.SviexMesh;
-            else if (name.EndsWith(".sviex2"))
-                Type = ArchiveFileType.Sviex2Mesh;
-            else if (name.EndsWith(".xa"))
-                Type = ArchiveFileType.XaAnimation;
-            else if (name.EndsWith(".xa2"))
-                Type = ArchiveFileType.Xa2Animation;
-            else
-                Type = ArchiveFileType.Raw;
         }
     }
 }

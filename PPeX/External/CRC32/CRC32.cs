@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PPeX.External.CRC32
 {
@@ -44,7 +41,7 @@ namespace PPeX.External.CRC32
             return ~crc;
         }
 
-        public static uint Compute(byte[] bytes)
+        public static uint Compute(Span<byte> bytes)
         {
             var crc = 0xffffffff;
             foreach (var t in bytes)

@@ -1,7 +1,6 @@
 ﻿using System;
-using FragLabs.Audio.Codecs.Opus;
 
-namespace FragLabs.Audio.Codecs
+namespace PPeX.External.Opus
 {
     /// <summary>
     /// Opus audio decoder.
@@ -16,127 +15,32 @@ namespace FragLabs.Audio.Codecs
         /// <returns>A new <c>OpusDecoder</c>.</returns>
         public static OpusDecoder Create(int outputSampleRate, int outputChannels)
         {
-            if (outputSampleRate != 8000 &&
-                outputSampleRate != 12000 &&
-                outputSampleRate != 16000 &&
-                outputSampleRate != 24000 &&
-                outputSampleRate != 48000)
-                throw new ArgumentOutOfRangeException("outputSampleRate");
-            if (outputChannels != 1 && outputChannels != 2)
-                throw new ArgumentOutOfRangeException("outputChannels");
+            if (outputSampleRate != 8000
+                && outputSampleRate != 12000
+                && outputSampleRate != 16000
+                && outputSampleRate != 24000
+                && outputSampleRate != 48000)
+                throw new ArgumentOutOfRangeException(nameof(outputSampleRate));
 
-            IntPtr error;
-            IntPtr decoder = API.opus_decoder_create(outputSampleRate, outputChannels, out error);
+            if (outputChannels != 1 && outputChannels != 2)
+                throw new ArgumentOutOfRangeException(nameof(outputChannels));
+
+            IntPtr decoder = OpusAPI.opus_decoder_create(outputSampleRate, outputChannels, out var error);
+
             if ((Errors)error != Errors.OK)
-            {
-                throw new Exception("Exception occured while creating decoder");
-            }
+	            throw new Exception("Exception occured while creating decoder");
+
             return new OpusDecoder(decoder, outputSampleRate, outputChannels);
         }
 
-        private IntPtr _decoder;
-
-        private OpusDecoder(IntPtr decoder, int outputSamplingRate, int outputChannels)
+        private OpusDecoder(IntPtr decoderInstance, int outputSamplingRate, int outputChannels)
         {
-            _decoder = decoder;
+            DecoderInstance = decoderInstance;
             OutputSamplingRate = outputSamplingRate;
             OutputChannels = outputChannels;
         }
 
-        /// <summary>
-        /// Produces PCM samples from Opus encoded data.
-        /// </summary>
-        /// <param name="inputOpusData">Opus encoded data to decode, null for dropped packet.</param>
-        /// <param name="dataLength">Length of data to decode.</param>
-        /// <param name="decodedLength">Set to the length of the decoded sample data.</param>
-        /// <returns>PCM audio samples.</returns>
-        public unsafe byte[] Decode(byte[] inputOpusData, int dataLength, out int decodedLength)
-        {
-            if (disposed)
-                throw new ObjectDisposedException("OpusDecoder");
-
-            IntPtr decodedPtr;
-            int frameCount = MaxDataBytes * OutputChannels;
-            byte[] decoded = new byte[frameCount * 2];
-            int length = 0;
-            fixed (byte* bdec = decoded)
-            {
-                decodedPtr = new IntPtr((void*)bdec);
-
-                if (inputOpusData != null)
-                    length = API.opus_decode(_decoder, inputOpusData, dataLength, decodedPtr, frameCount, 0);
-                else
-                    length = API.opus_decode(_decoder, null, 0, decodedPtr, frameCount, (ForwardErrorCorrection) ? 1 : 0);
-            }
-            decodedLength = length * 2 * OutputChannels;
-            if (length < 0)
-                throw new Exception("Decoding failed - " + ((Errors)length).ToString());
-
-            return decoded;
-        }
-
-        /// <summary>
-        /// Produces PCM samples from Opus encoded data.
-        /// </summary>
-        /// <param name="inputOpusData">Opus encoded data to decode, null for dropped packet.</param>
-        /// <param name="dataLength">Length of data to decode.</param>
-        /// <param name="decodedLength">Set to the length of the decoded sample data.</param>
-        /// <returns>PCM audio samples.</returns>
-        public unsafe float[] DecodeFloat(byte[] inputOpusData, int dataLength)
-        {
-            if (disposed)
-                throw new ObjectDisposedException("OpusDecoder");
-
-            IntPtr decodedPtr;
-            int frameCount = GetSamples(inputOpusData) * OutputChannels;
-            float[] decoded = new float[frameCount];
-            int length = 0;
-            fixed (float* bdec = decoded)
-            {
-                decodedPtr = new IntPtr((void*)bdec);
-
-                if (inputOpusData != null)
-                    length = API.opus_decode_float(_decoder, inputOpusData, dataLength, decodedPtr, frameCount, 0);
-                else
-                    length = API.opus_decode_float(_decoder, null, 0, decodedPtr, frameCount, (ForwardErrorCorrection) ? 1 : 0);
-            }
-
-            if (length < 0)
-                throw new Exception("Decoding failed - " + ((Errors)length).ToString());
-
-            //decodedCount = length * OutputChannels;
-            Array.Resize(ref decoded, length * OutputChannels);
-
-            return decoded;
-        }
-
-        /// <summary>
-        /// Determines the number of frames that can fit into a buffer of the given size.
-        /// </summary>
-        /// <param name="bufferSize"></param>
-        /// <returns></returns>
-        public int FrameCount(int bufferSize)
-        {
-            //  seems like bitrate should be required
-            int bitrate = 16;
-            int bytesPerSample = (bitrate / 8) * OutputChannels;
-            return bufferSize / bytesPerSample;
-        }
-
-        public int GetChannels(byte[] data)
-        {
-            return API.opus_packet_get_nb_channels(data);
-        }
-
-        public int GetFrames(byte[] data)
-        {
-            return API.opus_packet_get_nb_frames(data, data.Length);
-        }
-
-        public int GetSamples(byte[] data)
-        {
-            return API.opus_packet_get_nb_samples(data, data.Length, OutputSamplingRate);
-        }
+        private IntPtr DecoderInstance { get; set; }
 
         /// <summary>
         /// Gets the output sampling rate of the decoder.
@@ -158,6 +62,103 @@ namespace FragLabs.Audio.Codecs
         /// </summary>
         public bool ForwardErrorCorrection { get; set; }
 
+        /// <summary>
+        /// Produces PCM samples from Opus encoded data.
+        /// </summary>
+        /// <param name="inputOpusData">Opus encoded data to decode, null for dropped packet.</param>
+        /// <param name="dataLength">Length of data to decode.</param>
+        /// <param name="decodedLength">Set to the length of the decoded sample data.</param>
+        /// <returns>PCM audio samples.</returns>
+        public unsafe byte[] Decode(Span<byte> inputOpusData, int dataLength, out int decodedLength)
+        {
+            if (disposed)
+                throw new ObjectDisposedException("OpusDecoder");
+
+            int frameCount = MaxDataBytes * OutputChannels;
+            byte[] decoded = new byte[frameCount * 2];
+            int length = 0;
+
+            fixed (byte* inputPtr = inputOpusData)
+            fixed (byte* outputPtr = decoded)
+            {
+	            if (inputOpusData != null)
+	                length = OpusAPI.opus_decode(DecoderInstance, inputPtr, dataLength, outputPtr, frameCount, 0);
+	            else
+	                length = OpusAPI.opus_decode(DecoderInstance, null, 0, outputPtr, frameCount, (ForwardErrorCorrection) ? 1 : 0);
+
+	            decodedLength = length * 2 * OutputChannels;
+	            if (length < 0)
+	                throw new Exception("Decoding failed - " + ((Errors)length));
+
+	            return decoded;
+            }
+        }
+
+        /// <summary>
+        /// Produces PCM samples from Opus encoded data.
+        /// </summary>
+        /// <param name="inputOpusData">Opus encoded data to decode, null for dropped packet.</param>
+        /// <param name="dataLength">Length of data to decode.</param>
+        /// <param name="decodedLength">Set to the length of the decoded sample data.</param>
+        /// <returns>PCM audio samples.</returns>
+        public unsafe float[] DecodeFloat(ReadOnlySpan<byte> inputOpusData, int dataLength)
+        {
+            if (disposed)
+                throw new ObjectDisposedException("OpusDecoder");
+
+            int frameCount = GetSamples(inputOpusData) * OutputChannels;
+            float[] decoded = new float[frameCount];
+            int length = 0;
+
+            fixed (byte* inputPtr = inputOpusData)
+            fixed (float* outputPtr = decoded)
+            {
+                if (inputOpusData != null)
+	                length = OpusAPI.opus_decode_float(DecoderInstance, inputPtr, dataLength, outputPtr, frameCount, 0);
+	            else
+	                length = OpusAPI.opus_decode_float(DecoderInstance, null, 0, outputPtr, frameCount, (ForwardErrorCorrection) ? 1 : 0);
+            }
+
+            if (length < 0)
+                throw new Exception("Decoding failed - " + (Errors)length);
+
+            //decodedCount = length * OutputChannels;
+            Array.Resize(ref decoded, length * OutputChannels);
+
+            return decoded;
+        }
+
+        /// <summary>
+        /// Determines the number of frames that can fit into a buffer of the given size.
+        /// </summary>
+        /// <param name="bufferSize"></param>
+        /// <returns></returns>
+        public int FrameCount(int bufferSize)
+        {
+            // seems like bitrate should be required
+            const int bitrate = 16;
+            int bytesPerSample = (bitrate / 8) * OutputChannels;
+            return bufferSize / bytesPerSample;
+        }
+
+        public unsafe int GetChannels(byte[] data)
+        {
+            fixed (byte* ptr = data)
+				return OpusAPI.opus_packet_get_nb_channels(ptr);
+        }
+
+        public unsafe int GetFrames(byte[] data)
+        {
+            fixed (byte* ptr = data)
+				return OpusAPI.opus_packet_get_nb_frames(ptr, data.Length);
+        }
+
+        public unsafe int GetSamples(ReadOnlySpan<byte> data)
+        {
+            fixed (byte* ptr = data)
+				return OpusAPI.opus_packet_get_nb_samples(ptr, data.Length, OutputSamplingRate);
+        }
+
         ~OpusDecoder()
         {
             Dispose();
@@ -171,10 +172,10 @@ namespace FragLabs.Audio.Codecs
 
             GC.SuppressFinalize(this);
 
-            if (_decoder != IntPtr.Zero)
+            if (DecoderInstance != IntPtr.Zero)
             {
-                API.opus_decoder_destroy(_decoder);
-                _decoder = IntPtr.Zero;
+                OpusAPI.opus_decoder_destroy(DecoderInstance);
+                DecoderInstance = IntPtr.Zero;
             }
 
             disposed = true;

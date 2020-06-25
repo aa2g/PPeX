@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ZstdNet
+﻿namespace PPeX.External.Zstandard
 {
-    public enum ZSTD_cParameter : Int32
+    internal enum ZSTD_cParameter : int
     {
         /* compression format */
         ZSTD_p_format = 10,      /* See ZSTD_format_e enum definition.

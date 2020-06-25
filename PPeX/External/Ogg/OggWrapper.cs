@@ -25,15 +25,15 @@ namespace PPeX.External.Ogg
         public void WritePage(OggPage page)
         {
             dataWriter.Write(page.Header);
-            dataWriter.Write(page.Data);
+            dataWriter.Write(page.Data.Span);
         }
 
-        public void WritePacket(byte[] packet, int samples, bool isLast)
+        public void WritePacket(ReadOnlyMemory<byte> packet, int samples, bool isLast)
         {
             WritePage(CreatePage(packet, samples, isLast));
         }
 
-        protected OggPage CreatePage(byte[] packet, int samples, bool isLast)
+        protected OggPage CreatePage(ReadOnlyMemory<byte> packet, int samples, bool isLast)
         {
             granulePosition += (ulong)samples;
 

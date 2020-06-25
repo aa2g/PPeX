@@ -1,41 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PPeX.External.PP
 {
-    public class SeekableCryptoStream : CryptoStream
-    {
-        private Stream _stream;
-        public SeekableCryptoStream(Stream stream, ICryptoTransform transform, CryptoStreamMode mode) : base(stream, transform, mode)
-        {
-            _stream = stream;
-        }
+	public class SeekableCryptoStream : CryptoStream
+	{
+		public Stream BaseStream { get; set; }
 
-        public override long Position
-        {
-            get
-            {
-                return _stream.Position;
-            }
+		public SeekableCryptoStream(Stream stream, ICryptoTransform transform, CryptoStreamMode mode) : base(stream,
+			transform, mode)
+		{
+			BaseStream = stream;
+		}
 
-            set
-            {
-                _stream.Position = value;
-            }
-        }
+		public override long Length => BaseStream.Length;
+		public override bool CanSeek => true;
 
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            return _stream.Seek(offset, origin);
-        }
+		public override long Position
+		{
+			get => BaseStream.Position;
+			set => BaseStream.Position = value;
+		}
 
-        public override long Length => _stream.Length;
-
-        public override bool CanSeek => true;
-    }
+		public override long Seek(long offset, SeekOrigin origin)
+		{
+			return BaseStream.Seek(offset, origin);
+		}
+	}
 }

@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 
 namespace PPeX
 {
@@ -17,30 +18,9 @@ namespace PPeX
             this.Filename = Filename;
         }
 
-        public override byte[] Md5
+        public override Task GenerateMd5HashAsync()
         {
-            get
-            {
-                if (Core.Settings.UseMd5Cache)
-                {
-                    CachedMd5 cached;
-                    if (Core.Settings.Md5Cache.TryGetValue(Filename, out cached))
-                    {
-                        if (cached.WeakFileCompare(Filename))
-                            return cached.Hash;
-                    }
-
-                    //otherwise generate new cached hash
-                    cached = CachedMd5.FromFile(Filename);
-
-                    Core.Settings.Md5Cache[Filename] = cached;
-
-                    return cached.Hash;
-                }
-
-                //otherwise fall back to normal hash
-                return base.Md5;
-            }
+	        throw new System.NotImplementedException();
         }
 
         /// <summary>

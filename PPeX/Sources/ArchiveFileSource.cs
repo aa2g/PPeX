@@ -1,7 +1,8 @@
-﻿using System.IO;
+﻿using System.Buffers;
+using System.IO;
 using System.Linq;
 using System.Text;
-using PPeX.Encoders;
+using System.Threading.Tasks;
 
 namespace PPeX
 {
@@ -39,11 +40,6 @@ namespace PPeX
         public string Name { get; protected set; }
 
         /// <summary>
-        /// The name of the .pp file the subfile is associated with.
-        /// </summary>
-        public string EmulatedArchiveName { get; protected set; }
-
-        /// <summary>
         /// The name of the subfile as it is stored in a .pp file.
         /// </summary>
         public string EmulatedName { get; protected set; }
@@ -53,9 +49,6 @@ namespace PPeX
         /// </summary>
         public byte[] Md5 { get; protected set; }
 
-        public const uint CanonLinkID = 0xFFFFFFFF;
-
-        public uint LinkID { get; protected set; }
 
         public ExtendedArchive BaseArchive { get; protected set; }
 
@@ -93,16 +86,11 @@ namespace PPeX
             file.Name = Encoding.Unicode.GetString(reader.ReadBytes(len));
 
             len = reader.ReadUInt16();
-            file.EmulatedArchiveName = Encoding.Unicode.GetString(reader.ReadBytes(len));
-
-            len = reader.ReadUInt16();
             file.EmulatedName = Encoding.Unicode.GetString(reader.ReadBytes(len));
 
             file.Type = (ArchiveFileType)reader.ReadUInt16();
 
             file.Md5 = reader.ReadBytes(16);
-
-            file.LinkID = reader.ReadUInt32();
 
             file.ChunkID = reader.ReadUInt32();
 
@@ -113,7 +101,10 @@ namespace PPeX
             return file;
         }
 
-
+        public Task GenerateMd5HashAsync()
+        {
+	        throw new System.NotImplementedException();
+        }
 
         /// <summary>
         /// Returns a stream of uncompressed and unencoded data.
@@ -121,21 +112,16 @@ namespace PPeX
         /// <returns></returns>
         public Stream GetStream()
         {
-            //using (var baseStream = new Substream(
-            //        Chunk.GetStream(),
-            //        (long)Offset,
-            //        (long)Size))
-            //using (var decoder = EncoderFactory.GetEncoder(baseStream, BaseArchive, Type))
-            //{
-            //    return decoder.Decode();
-            //}
+	        using var buffer = MemoryPool<byte>.Shared.Rent((int)Chunk.UncompressedLength);
+	        Chunk.CopyToMemory(buffer.Memory);
 
-            return new Substream(Chunk.GetStream(), (long)Offset, (long)Size);
+            byte[] uncompressedBuffer = new byte[Size];
+
+            buffer.Memory.Slice((int)Offset, (int)Size).CopyTo(uncompressedBuffer);
+
+            return new MemoryStream(uncompressedBuffer, false);
         }
 
-        public void Dispose()
-        {
-            
-        }
+        public void Dispose() { }
     }
 }

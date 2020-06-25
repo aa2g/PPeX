@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace PPeX.Common
 {
@@ -17,14 +13,6 @@ namespace PPeX.Common
         public static string ReadString(this BinaryReader reader, int length)
         {
             return Encoding.ASCII.GetString(reader.ReadBytes(length));
-        }
-
-        public static byte[] ToByteArray(this Stream str)
-        {
-            str.Position = 0;
-            byte[] buffer = new byte[str.Length];
-            str.Read(buffer, 0, (int)str.Length);
-            return buffer;
         }
     }
 }

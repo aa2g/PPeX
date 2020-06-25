@@ -1,12 +1,9 @@
 ﻿using PPeX;
-using PPeX.Xx2;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PPeXM64
 {
@@ -20,60 +17,39 @@ namespace PPeXM64
 
     public class CompressedCache
     {
-        public Dictionary<FileEntry, CachedFile> LoadedFiles = new Dictionary<FileEntry, CachedFile>();
+        public ConcurrentDictionary<Md5Hash, CachedFile> LoadedFiles = new ConcurrentDictionary<Md5Hash, CachedFile>();
+        public Dictionary<FileEntry, Md5Hash> ReferenceMd5Sums = new Dictionary<FileEntry, Md5Hash>();
+        public Dictionary<FileEntry, CachedChunk> LoadedFileReferences = new Dictionary<FileEntry, CachedChunk>();
 
         public List<CachedChunk> TotalChunks = new List<CachedChunk>();
-        public List<CachedFile> TotalFiles = new List<CachedFile>();
 
         public List<ExtendedArchive> LoadedArchives = new List<ExtendedArchive>();
 
-        public CompressedTextureBank UniversalTexBank;
+        public Allocator Allocator { get; }
 
-        public CompressedCache(IEnumerable<ExtendedArchive> Archives) : this(Archives, new Progress<string>())
+        public CompressedCache(IEnumerable<ExtendedArchive> Archives, long memoryPoolSize) : this(Archives, new Progress<string>(), memoryPoolSize)
         {
 
         }
 
-        protected void LoadTextures(SubfileTextureBank provider)
+        public CompressedCache(IEnumerable<ExtendedArchive> Archives, IProgress<string> Status, long memoryPoolSize)
         {
-            var chunks = provider.TextureSubfiles
-                .Select(x => (x.Value.Source as ArchiveFileSource).Chunk)
-                .Distinct();
-
-            foreach (var chunk in chunks)
-            {
-                CachedChunk cachedChunk = new CachedChunk(chunk, this);
-
-                cachedChunk.Allocate();
-
-                foreach (var file in cachedChunk.Files)
-                {
-                    UniversalTexBank.AddRaw(file.Name, file.CompressedData);
-                }
-
-                cachedChunk.Deallocate();
-            }
-        }
-
-        public CompressedCache(IEnumerable<ExtendedArchive> Archives, IProgress<string> Status)
-        {
-            UniversalTexBank = new CompressedTextureBank(CachedChunk.RecompressionMethod);
+            Allocator = new Allocator(memoryPoolSize);
 
             foreach (ExtendedArchive archive in Archives)
             {
-                LoadTextures(archive.TextureBank);
-
                 foreach (var chunk in archive.Chunks)
                 {
                     var cachedChunk = new CachedChunk(chunk, this);
 
                     TotalChunks.Add(cachedChunk);
 
-                    foreach (var file in cachedChunk.Files)
+                    foreach (var file in chunk.Files)
                     {
-                        TotalFiles.Add(file);
+	                    var entry = new FileEntry(file.ArchiveName, file.EmulatedName);
 
-                        LoadedFiles[new FileEntry(file.EmulatedArchiveName, file.EmulatedName)] = file;
+                        ReferenceMd5Sums[entry] = file.RawSource.Md5;
+	                    LoadedFileReferences[entry] = cachedChunk;
                     }
                 }
 
@@ -83,7 +59,7 @@ namespace PPeXM64
             }
         }
 
-        public long AllocatedMemorySize => TotalFiles.Where(x => x.Allocated).Sum(x => x.CompressedData.LongLength);
+        public long AllocatedMemorySize => Allocator.GetTotalAllocatedSize();
 
         public object LoadLock = new object();
 
@@ -94,44 +70,25 @@ namespace PPeXM64
         public void Trim(TrimMethod Method)
         {
             int freed = 0;
-            int freedSize = 0;
+            long freedSize = 0;
 
             lock (LoadLock)
             {
-                if (Method == TrimMethod.ZeroAccesses)
-                {
-                    foreach (var file in TotalFiles)
-                    {
-                        if (file.Allocated)
-                            if (file.Accesses == 0)
-                            {
-                                freed++;
-                                freedSize += file.CompressedData.Length;
+	            foreach (var fileKv in LoadedFiles)
+	            {
+		            if (fileKv.Value.Ready && (
+			            (Method == TrimMethod.ZeroAccesses && fileKv.Value.Accesses == 0)
+                        || (Method == TrimMethod.OneAccess && (fileKv.Value.Accesses == 0 || fileKv.Value.Accesses == 1))
+                        || Method == TrimMethod.All
+                        ))
+		            {
+			            freed++;
+			            freedSize += fileKv.Value.Size;
 
-                                file.Deallocate();
-                            }
-                    }
-                }
-                else if (Method == TrimMethod.OneAccess)
-                {
-                    foreach (var file in TotalFiles)
-                    {
-                        if (file.Allocated)
-                            if (file.Accesses == 0 | file.Accesses == 1)
-                            {
-                                freed++;
-                                freedSize += file.CompressedData.Length;
+			            fileKv.Value.Deallocate();
 
-                                file.Deallocate();
-                            }
-                    }
-                }
-                else if (Method == TrimMethod.All)
-                {
-                    foreach (var file in TotalFiles)
-                    {
-                        file.Deallocate();
-                    }
+			            LoadedFiles.Remove(fileKv.Key, out _);
+		            }
                 }
 
                 Console.WriteLine("Freed " + freed + " file(s) (" + Utility.GetBytesReadable(freedSize) + ")");
@@ -162,14 +119,19 @@ namespace PPeXM64
 
                         if (loadedDiff > MaxSize)
                         {
-                            IOrderedEnumerable<CachedFile> sortedFiles = TotalFiles.Where(x => x.Allocated).OrderBy(x => x.Accesses);
+                            IOrderedEnumerable<CachedFile> sortedFiles = LoadedFiles.Values.Where(x => x.Ready).OrderBy(x => x.Accesses);
 
                             long accumulatedSize = 0;
 
-                            IEnumerable<CachedFile> removedFiles = sortedFiles.TakeWhile(x => (accumulatedSize += x.CompressedData.Length) < (loadedDiff - MaxSize));
+                            IEnumerable<CachedFile> removedFiles = sortedFiles
+	                            .TakeWhile(x => (accumulatedSize += x.Size) < (loadedDiff - MaxSize))
+	                            .ToArray();
 
                             foreach (var file in removedFiles)
-                                file.Deallocate();
+                            {
+	                            file.Deallocate();
+	                            LoadedFiles.Remove(file.Md5, out _);
+                            }
 
                             Console.WriteLine("Freed " + removedFiles.Count() + " files(s) (" + Utility.GetBytesReadable(accumulatedSize) + ")");
                         }

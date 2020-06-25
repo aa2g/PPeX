@@ -1,10 +1,7 @@
 ﻿using PPeX.Common;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace PPeX.External.Wave
 {
@@ -21,31 +18,30 @@ namespace PPeX.External.Wave
 
         public static void WriteWAVHeader(Stream stream, int channels, int totalLength, int sampleRate, int bitRate = 16)
         {
-            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.ASCII, true))
-            {
-                int byteRate = channels * sampleRate * (bitRate / 8);
+	        using BinaryWriter writer = new BinaryWriter(stream, Encoding.ASCII, true);
 
-                //descriptor
-                writer.WriteString("RIFF");
-                writer.Write((uint)(36 + totalLength));
-                writer.WriteString("WAVE");
+	        int byteRate = channels * sampleRate * (bitRate / 8);
 
-                //fmt subchunk
-                writer.WriteString("fmt ");
-                writer.Write((uint)16);
-                writer.Write((ushort)1);
-                writer.Write((ushort)channels);
-                writer.Write((uint)sampleRate);
-                writer.Write((uint)byteRate);
-                writer.Write((ushort)(channels * (bitRate / 8)));
-                writer.Write((ushort)bitRate);
+	        //descriptor
+	        writer.WriteString("RIFF");
+	        writer.Write((uint)(36 + totalLength));
+	        writer.WriteString("WAVE");
 
-                //data subchunk
-                writer.WriteString("data");
-                writer.Write((uint)totalLength);
+	        //fmt subchunk
+	        writer.WriteString("fmt ");
+	        writer.Write((uint)16);
+	        writer.Write((ushort)1);
+	        writer.Write((ushort)channels);
+	        writer.Write((uint)sampleRate);
+	        writer.Write((uint)byteRate);
+	        writer.Write((ushort)(channels * (bitRate / 8)));
+	        writer.Write((ushort)bitRate);
 
-                writer.Flush();
-            }
+	        //data subchunk
+	        writer.WriteString("data");
+	        writer.Write((uint)totalLength);
+
+	        writer.Flush();
         }
     }
 }

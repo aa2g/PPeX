@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using PPeX.External.Zstandard;
 
 namespace PPeXUI
 {
@@ -532,7 +533,7 @@ namespace PPeXUI
                 progressStatus.Report("Loading MD5 cache...\r\n");
                 progressPercentage.Report(0);
 
-                using (var decom = new ZstdNet.Decompressor())
+                using (var decom = new ZstdDecompressor())
                 {
                     string rawCache = Encoding.ASCII.GetString(decom.Unwrap(File.ReadAllBytes("HashCache.md5.zs")));
 
@@ -591,7 +592,7 @@ namespace PPeXUI
 
                     //write hash cache
                     if (Core.Settings.UseMd5Cache)
-                        using (var comp = new ZstdNet.Compressor(new ZstdNet.CompressionOptions(3)))
+                        using (var comp = new ZstdCompressor(new ZstdCompressionOptions(3)))
                         {
                             var strings = Core.Settings.Md5Cache.Values.Select(x => x.ToWritableString());
 

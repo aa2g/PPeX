@@ -1,40 +1,37 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PPeX.Compressors
 {
-    public class ZstdCompressor : BaseCompressor
+    public class ZstdCompressor : ICompressor
     {
-        public override ArchiveChunkCompression Compression => ArchiveChunkCompression.Zstandard;
+        public ArchiveChunkCompression Compression => ArchiveChunkCompression.Zstandard;
 
-        protected ZstdNet.Compressor _compressor;
+        protected External.Zstandard.ZstdCompressor _compressor;
 
-        public ZstdCompressor(int CompressionLevel)
+        public ZstdCompressor()
         {
-            _compressor = new ZstdNet.Compressor(new ZstdNet.CompressionOptions(CompressionLevel));
+	        _compressor = new External.Zstandard.ZstdCompressor();
         }
 
-        public override long WriteToStream(Stream input, Stream output)
+        public void CompressData(ReadOnlySpan<byte> input, Span<byte> destinationBuffer, int compressionLevel, out int actualSize)
         {
-            using (MemoryStream mem = new MemoryStream())
-            {
-                input.CopyTo(mem);
-
-                byte[] buffer = _compressor.Wrap(mem.ToArray());
-
-                output.Write(buffer, 0, buffer.Length);
-
-                return output.Length;
-            }
+	        actualSize = _compressor.Wrap(input, destinationBuffer, compressionLevel);
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
-            ((IDisposable)_compressor).Dispose();
+	        _compressor?.Dispose();
+	        _compressor = null;
+        }
+
+        ~ZstdCompressor()
+        {
+	        Dispose();
+        }
+
+        public static int GetUpperCompressionBound(int uncompressedSize)
+        {
+	        return External.Zstandard.ZstdCompressor.GetCompressBound(uncompressedSize);
         }
     }
 
@@ -42,25 +39,32 @@ namespace PPeX.Compressors
     {
         public ArchiveChunkCompression Compression => ArchiveChunkCompression.Zstandard;
 
-        protected ZstdNet.Decompressor _decompressor;
+        protected External.Zstandard.ZstdDecompressor _decompressor;
 
         public ZstdDecompressor()
         {
-            _decompressor = new ZstdNet.Decompressor();
+	        _decompressor = new External.Zstandard.ZstdDecompressor();
         }
 
-        public Stream Decompress(Stream input)
+        public void DecompressData(ReadOnlySpan<byte> input, Span<byte> destinationBuffer, out int actualSize)
         {
-            using (MemoryStream buffer = new MemoryStream())
-            {
-                input.CopyTo(buffer);
-                return new MemoryStream(_decompressor.Unwrap(buffer.ToArray()));
-            }
+	        actualSize = _decompressor.Unwrap(input, destinationBuffer);
+        }
+
+        public Memory<byte> DecompressData(Span<byte> input)
+        {
+	        return _decompressor.Unwrap(input);
         }
 
         public void Dispose()
         {
-            ((IDisposable)_decompressor).Dispose();
+	        _decompressor?.Dispose();
+	        _decompressor = null;
+        }
+
+        ~ZstdDecompressor()
+        {
+            Dispose();
         }
     }
 }

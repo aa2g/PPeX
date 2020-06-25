@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace PPeX.External.Ogg
 {
@@ -25,12 +22,12 @@ namespace PPeX.External.Ogg
             var metadataPage = ReadPage();
 
 #warning Need to do this programatically
-            Channels = headerPage.Data[9];
+            Channels = headerPage.Data.Span[9];
 
-            Preskip = BitConverter.ToUInt16(headerPage.Data, 10);
+            Preskip = BitConverter.ToUInt16(headerPage.Data.Span.Slice(10, 2));
         }
 
-        public byte[] ReadPacket()
+        public ReadOnlyMemory<byte> ReadPacket()
         {
             return ReadPage().Data;
         }

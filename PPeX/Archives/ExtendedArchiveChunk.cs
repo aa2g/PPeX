@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using PPeX.Compressors;
 
@@ -18,10 +20,6 @@ namespace PPeX
 
         public ulong UncompressedLength { get; protected set; }
 
-        public uint GlobalFileIndex { get; protected set; }
-
-        public uint LocalFileCount { get; protected set; }
-
 
         protected ExtendedArchive baseArchive;
 
@@ -30,7 +28,7 @@ namespace PPeX
 
         }
 
-        public static ExtendedArchiveChunk ReadFromTable(BinaryReader reader, ExtendedArchive archive)
+        internal static ExtendedArchiveChunk ReadFromTable(BinaryReader reader, ExtendedArchive archive)
         {
             ExtendedArchiveChunk chunk = new ExtendedArchiveChunk();
             chunk.baseArchive = archive;
@@ -41,8 +39,6 @@ namespace PPeX
             chunk.Offset = reader.ReadUInt64();
             chunk.CompressedLength = reader.ReadUInt64();
             chunk.UncompressedLength = reader.ReadUInt64();
-            chunk.GlobalFileIndex = reader.ReadUInt32();
-            chunk.LocalFileCount = reader.ReadUInt32();
 
             return chunk;
         }
@@ -73,25 +69,49 @@ namespace PPeX
             }
         }
 
-        public Stream GetStream()
+        //public Stream GetStream()
+        //{
+        //    MemoryStream mem = new MemoryStream();
+
+        //    using (Stream raw = GetRawStream())
+        //    using (IDecompressor decompressor = CompressorFactory.GetDecompressor(Compression))
+        //        decompressor.Decompress(raw).CopyTo(mem);
+
+        //    mem.Position = 0;
+
+        //    return mem;
+        //       // return decompressor.Decompress();
+        //}
+
+        public void CopyToMemory(Memory<byte> memory)
         {
-            MemoryStream mem = new MemoryStream();
+            if (memory.Length < (int)UncompressedLength)
+                throw new ArgumentException("Memory buffer must be at least the uncompressed size of the chunk");
 
-            using (Stream raw = GetRawStream())
-            using (IDecompressor decompressor = CompressorFactory.GetDecompressor(Compression))
-                decompressor.Decompress(raw).CopyTo(mem);
+	        using var rawStream = GetRawStream();
 
-            mem.Position = 0;
+	        if (Compression == ArchiveChunkCompression.Zstandard)
+	        {
+                using var zstdDecompressor = new ZstdDecompressor();
 
-            return mem;
-               // return decompressor.Decompress();
+                using var buffer = MemoryPool<byte>.Shared.Rent((int)CompressedLength);
+                var compressedMemory = buffer.Memory.Slice(0, (int)CompressedLength);
+
+                rawStream.Read(compressedMemory.Span);
+
+                zstdDecompressor.DecompressData(compressedMemory.Span, memory.Span, out _);
+	        }
+            else
+	        {
+		        rawStream.Read(memory.Span);
+	        }
         }
 
         public Stream GetRawStream()
         {
             Stream stream = new FileStream(baseArchive.Filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
-            return new Substream(stream, (long)Offset, (long)CompressedLength);
+            return new PartialStream(stream, (long)Offset, (long)CompressedLength);
         }
 
         /// <summary>

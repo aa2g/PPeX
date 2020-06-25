@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.IO.Pipes;
 using System.Threading;
 using System.IO;
@@ -25,7 +22,7 @@ namespace PPeXM64
         public PipeServer(string name)
         {
             internalPipe = new NamedPipeServerStream(name, PipeDirection.InOut);
-            serverThread = new Thread(new ThreadStart(ServerMethod));
+            serverThread = new Thread(ServerMethod);
 
             serverThread.Start();
         }
@@ -33,7 +30,7 @@ namespace PPeXM64
         protected void ServerMethod()
         {
             internalPipe.WaitForConnection();
-            StreamHandler handler = new StreamHandler(internalPipe);
+            StreamHandler handler = new StreamHandler(new BufferedStream(internalPipe));
 
             while (true)
             {
@@ -54,32 +51,31 @@ namespace PPeXM64
     /// </summary>
     public class StreamHandler : IDisposable
     {
-        private Stream ioStream;
-        public Stream BaseStream => ioStream;
+	    public Stream BaseStream { get; }
 
         public StreamHandler(Stream ioStream)
         {
-            this.ioStream = ioStream;
+            BaseStream = ioStream;
         }
 
         public void Dispose()
         {
-            ((IDisposable)ioStream).Dispose();
+            ((IDisposable)BaseStream).Dispose();
         }
 
         public string ReadString()
         {
             int len;
             //Read the length
-            len = ioStream.ReadByte() << 8;
-            len |= ioStream.ReadByte();
+            len = BaseStream.ReadByte() << 8;
+            len |= BaseStream.ReadByte();
 
             if (len < 0)
                 return "";
 
             //Read the string
             byte[] inBuffer = new byte[len];
-            ioStream.Read(inBuffer, 0, len);
+            BaseStream.Read(inBuffer, 0, len);
 
             return Encoding.Unicode.GetString(inBuffer);
         }
@@ -93,12 +89,12 @@ namespace PPeXM64
             {
                 len = ushort.MaxValue;
             }
-            ioStream.WriteByte((byte)(len >> 8));
-            ioStream.WriteByte((byte)(len & 0xFF));
+            BaseStream.WriteByte((byte)(len >> 8));
+            BaseStream.WriteByte((byte)(len & 0xFF));
 
             //Write the string
-            ioStream.Write(outBuffer, 0, len);
-            ioStream.Flush();
+            BaseStream.Write(outBuffer, 0, len);
+            BaseStream.Flush();
 
             return outBuffer.Length + 2;
         }
