@@ -59,14 +59,12 @@ namespace PPeXM64
                     zstdCompressor.CompressData(uncompressedSource.Span, compressedMemoryBuffer.Memory.Span, 3, out int compressedSize);
 
 
-                    //var pointer = BaseCache.Allocator.Allocate(compressedSize);
-                    //using var pointerBuffer = pointer.GetReference();
-                    Memory<byte> compressedBuffer = new byte[compressedSize];
+                    var pointer = BaseCache.Allocator.Allocate(compressedSize);
+                    using var pointerBuffer = pointer.GetReference();
 
-                    compressedMemoryBuffer.Memory.Slice(0, compressedSize).CopyTo(compressedBuffer); //pointerBuffer.Memory
+                    compressedMemoryBuffer.Memory.Slice(0, compressedSize).CopyTo(pointerBuffer.Memory);
 
-                    //cachedFile.CompressedData = pointer;
-                    cachedFile.CompressedData = compressedBuffer;
+                    cachedFile.CompressedData = pointer;
                 }));
 	        }
 

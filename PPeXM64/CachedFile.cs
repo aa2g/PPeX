@@ -10,9 +10,7 @@ namespace PPeXM64
 
         public ArchiveChunkCompression Compression { get; set; }
 
-        //public PoolPointer CompressedData { get; set; }
-
-        public Memory<byte>? CompressedData { get; set; }
+        public PoolPointer CompressedData { get; set; }
 
         public Md5Hash Md5 { get; }
 
@@ -35,16 +33,14 @@ namespace PPeXM64
 
         public void Deallocate()
         {
-            //CompressedData.Release();
-            CompressedData = null;
+            CompressedData.Release();
 
             Accesses = 0;
         }
 
         public IMemoryOwner<byte> GetMemory()
         {
-	        //return CompressedData.GetReference();
-            return new DummyMemoryOwner(CompressedData.Value);
+	        return CompressedData.GetReference();
         }
 
         private class DummyMemoryOwner : IMemoryOwner<byte>

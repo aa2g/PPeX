@@ -101,7 +101,7 @@ namespace PPeX.External.Opus
         /// <param name="dataLength">Length of data to decode.</param>
         /// <param name="decodedLength">Set to the length of the decoded sample data.</param>
         /// <returns>PCM audio samples.</returns>
-        public unsafe float[] DecodeFloat(ReadOnlySpan<byte> inputOpusData, int dataLength)
+        public unsafe float[] DecodeFloat(ReadOnlySpan<byte> inputOpusData)
         {
             if (disposed)
                 throw new ObjectDisposedException("OpusDecoder");
@@ -114,7 +114,7 @@ namespace PPeX.External.Opus
             fixed (float* outputPtr = decoded)
             {
                 if (inputOpusData != null)
-	                length = OpusAPI.opus_decode_float(DecoderInstance, inputPtr, dataLength, outputPtr, frameCount, 0);
+	                length = OpusAPI.opus_decode_float(DecoderInstance, inputPtr, inputOpusData.Length, outputPtr, frameCount, 0);
 	            else
 	                length = OpusAPI.opus_decode_float(DecoderInstance, null, 0, outputPtr, frameCount, (ForwardErrorCorrection) ? 1 : 0);
             }
@@ -126,6 +126,36 @@ namespace PPeX.External.Opus
             Array.Resize(ref decoded, length * OutputChannels);
 
             return decoded;
+        }
+
+        /// <summary>
+        /// Produces PCM samples from Opus encoded data.
+        /// </summary>
+        /// <param name="inputOpusData">Opus encoded data to decode, null for dropped packet.</param>
+        /// <param name="dataLength">Length of data to decode.</param>
+        /// <param name="decodedLength">Set to the length of the decoded sample data.</param>
+        /// <returns>PCM audio samples.</returns>
+        public unsafe void DecodeFloat(ReadOnlySpan<byte> inputOpusData, Span<float> outputFloat, out int dataLength)
+        {
+            if (disposed)
+                throw new ObjectDisposedException("OpusDecoder");
+
+            int frameCount = GetSamples(inputOpusData) * OutputChannels;
+            int length;
+
+            fixed (byte* inputPtr = inputOpusData)
+            fixed (float* outputPtr = outputFloat)
+            {
+                if (inputOpusData != null)
+	                length = OpusAPI.opus_decode_float(DecoderInstance, inputPtr, inputOpusData.Length, outputPtr, frameCount, 0);
+	            else
+	                length = OpusAPI.opus_decode_float(DecoderInstance, null, 0, outputPtr, frameCount, (ForwardErrorCorrection) ? 1 : 0);
+            }
+
+            if (length < 0)
+                throw new Exception("Decoding failed - " + (Errors)length);
+
+            dataLength = length * OutputChannels;
         }
 
         /// <summary>

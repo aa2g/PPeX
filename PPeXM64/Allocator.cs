@@ -93,13 +93,13 @@ namespace PPeXM64
 
                     currentScanOffset = pointer.Offset + pointer.Length;
                 }
-            }
 
-            if (PoolSize - currentScanOffset >= size)
-            {
-                var newPointer = new PoolPointer(this, currentScanOffset, size, DefaultFixed);
-                PoolPointers.Add(newPointer);
-                return newPointer;
+                if (PoolSize - currentScanOffset >= size)
+                {
+	                var newPointer = new PoolPointer(this, currentScanOffset, size, DefaultFixed);
+	                PoolPointers.Add(newPointer);
+	                return newPointer;
+                }
             }
 
             return null;

@@ -9,8 +9,6 @@ namespace PPeX.External.libresample
 
         protected double factor;
 
-        public readonly int resamplerQuality = 1;
-
         public int SampleRate { get; protected set; }
         public int Channels { get; protected set; }
 
@@ -24,7 +22,7 @@ namespace PPeX.External.libresample
             handles = new IntPtr[Channels];
 
             for (int i = 0; i < Channels; i++)
-                handles[i] = LibResampleAPI.resample_open(resamplerQuality, factor, factor);
+                handles[i] = LibResampleAPI.resample_open(1, factor, factor);
         }
 
         public void Resample(ReadOnlySpan<float> samples, Span<float> output, bool last, out int outputLength)
@@ -36,7 +34,7 @@ namespace PPeX.External.libresample
 
             IMemoryOwner<float>[] splitChannels = new IMemoryOwner<float>[Channels];
 
-            int estChannelSamples = (int)Math.Round((samples.Length / Channels) * factor);
+            int estChannelSamples = (int)Math.Ceiling((samples.Length / Channels) * factor);
             int actualChannelSamples = 0;
 
             for (int i = 0; i < Channels; i++)
@@ -70,7 +68,8 @@ namespace PPeX.External.libresample
 
         public int ResampleUpperBound(int sampleCount)
         {
-	        return (int)Math.Ceiling(sampleCount * factor);
+	        //return (int)Math.Ceiling(sampleCount * factor);
+	        return sampleCount;
         }
 
         protected static IMemoryOwner<T> GetNth<T>(ReadOnlySpan<T> original, int divisor, int offset, out int newLength)
@@ -112,8 +111,8 @@ namespace PPeX.External.libresample
 		            output.Length);
             }
 
-            inputSamplesUsed = Math.Max(processedSamples, 0);
-            outputSamplesUsed = Math.Max(sampleBufferUsed, 0);
+            inputSamplesUsed = Math.Max(sampleBufferUsed, 0);
+            outputSamplesUsed = Math.Max(processedSamples, 0);
         }
 
         private bool disposed = false;

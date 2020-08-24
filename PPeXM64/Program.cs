@@ -6,7 +6,9 @@ using PPeX;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using PPeX.Common;
 using PPeX.Compressors;
+using PPeX.Encoders;
 using Timer = System.Timers.Timer;
 
 namespace PPeXM64
@@ -37,6 +39,8 @@ namespace PPeXM64
         static Timer TrimTimer = new Timer(5000);
 
         public static ZstdDecompressor ZstdDecompressor = new ZstdDecompressor();
+
+        public static OpusEncoder OpusEncoder = new OpusEncoder();
 
         static void Main(string[] args)
         {
@@ -181,9 +185,12 @@ namespace PPeXM64
                     Console.WriteLine("!!LOADED FILELIST!!");
 
                 var loadedPP = Cache.LoadedFileReferences.Keys.Select(x => x.Archive).Distinct();
-                
+
                 foreach (string pp in loadedPP)
-                    handler.WriteString(pp);
+                {
+	                handler.WriteString(pp);
+                    Console.WriteLine(pp);
+                }
 
                 handler.WriteString("");
             }
@@ -248,8 +255,28 @@ namespace PPeXM64
 
                     Console.WriteLine($"Expected: {Utility.GetBytesReadable(cachedFile.UncompressedSize)} Actual: {Utility.GetBytesReadable(uncompressedSize)}");
 
-                    handler.WriteString(uncompressedSize.ToString());
-                    handler.BaseStream.Write(buffer.Memory.Slice(0, (int)uncompressedSize).Span);
+                    if (entry.File.EndsWith("wav"))
+                    {
+	                    using (var inputStream = new ReadOnlyMemoryStream(buffer.Memory.Slice(0, (int)uncompressedSize)))
+                        //using (var rentedSpan = MemoryPool<byte>.Shared.Rent(48_000_000))
+                        using (var outputStream = new MemoryStream())
+	                    {
+		                    OpusEncoder.Decode(inputStream, outputStream, true);
+
+		                    outputStream.Position = 0;
+
+                            Console.WriteLine($"Decompressed wav size: {Utility.GetBytesReadable(outputStream.Length)}");
+
+		                    handler.WriteString(outputStream.Length.ToString());
+                            outputStream.CopyTo(handler.BaseStream);
+                        }
+                        
+                    }
+                    else
+                    {
+	                    handler.WriteString(uncompressedSize.ToString());
+                        handler.BaseStream.Write(buffer.Memory.Slice(0, (int)uncompressedSize).Span);
+                    }
                 }
             }
             else

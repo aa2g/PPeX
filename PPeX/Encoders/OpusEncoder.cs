@@ -8,7 +8,7 @@ using PPeX.External.Wave;
 
 namespace PPeX.Encoders
 {
-    public class OpusEncoder : IEncoder
+    public class OpusEncoder : IDisposable
     {
         public ArchiveFileType Encoding => ArchiveFileType.OpusAudio;
 
@@ -72,14 +72,18 @@ namespace PPeX.Encoders
             }
         }
 
-        public void Decode(Stream input, Stream output)
+        public void Decode(Stream input, Stream output, bool resample)
 		{
             int resampleRate = 44100;
 
             using OggReader reader = new OggReader(input);
-            using BinaryWriter writer = new BinaryWriter(output, System.Text.Encoding.ASCII, false);
+            using BinaryWriter writer = new BinaryWriter(output, System.Text.Encoding.ASCII, true);
             using var decoder = OpusDecoder.Create(48000, reader.Channels);
-            using LibResampler resampler = new LibResampler(48000, resampleRate, reader.Channels);
+
+            LibResampler resampler = null;
+
+            if (resample)
+				resampler = new LibResampler(48000, resampleRate, reader.Channels);
 
             bool isFirst = true;
 
@@ -87,31 +91,42 @@ namespace PPeX.Encoders
 
             output.Position += 44;
 
+            Span<float> inputBuffer = default;
+
             while (!reader.IsStreamFinished)
             {
 	            var frame = reader.ReadPacket();
 
-	            float[] outputSamples = decoder.DecodeFloat(frame.Span, frame.Length);
+                if (isFirst)
+                {
+	                inputBuffer = new float[decoder.GetSamples(frame.Span) * decoder.OutputChannels];
+                }
+
+                decoder.DecodeFloat(frame.Span, inputBuffer, out int dataLength);
+
+                var outputSamples = inputBuffer.Slice(0, dataLength);
                     
 	            if (isFirst)
 	            {
 		            //remove preskip
-		            int preskip = reader.Preskip;
-
-		            float[] newSamples = new float[outputSamples.Length - preskip];
-		            Array.Copy(outputSamples, preskip, newSamples, 0, outputSamples.Length - preskip);
-
-		            outputSamples = newSamples;
+		            outputSamples = outputSamples.Slice(reader.Preskip);
 
 		            isFirst = false;
 	            }
 
-	            float[] resampledSamples = new float[resampler.ResampleUpperBound(frame.Length)];
+	            Span<float> outputSpan = outputSamples;
+
+                if (resample)
+				{
+					float[] resampledSamples = new float[resampler.ResampleUpperBound(outputSamples.Length)];
 
 
-                resampler.Resample(outputSamples, resampledSamples, reader.IsStreamFinished, out int outputLength);
+					resampler.Resample(outputSamples, resampledSamples, reader.IsStreamFinished, out int outputLength);
 
-	            foreach (float sample in resampledSamples)
+					outputSpan = resampledSamples.AsSpan(0, outputLength);
+                }
+
+                foreach (float sample in outputSpan)
 	            {
 		            writer.Write(WaveWriter.ConvertSample(sample));
 	            }
@@ -120,7 +135,7 @@ namespace PPeX.Encoders
             long endPosition = output.Position;
             output.Position = headerPosition;
                 
-            WaveWriter.WriteWAVHeader(output, reader.Channels, (int)(endPosition - headerPosition), resampleRate, 16);
+            WaveWriter.WriteWAVHeader(output, reader.Channels, (int)(endPosition - headerPosition), resample ? resampleRate : 48000, 16);
 
             output.Position = endPosition;
 		}

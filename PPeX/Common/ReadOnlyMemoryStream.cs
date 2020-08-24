@@ -29,7 +29,7 @@ namespace PPeX.Common
 			if (readCount <= 0)
 				return 0;
 
-			Data.Span.CopyTo(buffer.Slice(0, readCount));
+			Data.Span.Slice((int)Position, readCount).CopyTo(buffer.Slice(0, readCount));
 
 			Position += readCount;
 
