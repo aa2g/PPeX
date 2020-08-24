@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using PPeX.Common;
 
 namespace PPeX
 {
@@ -112,6 +113,7 @@ namespace PPeX
         /// <returns></returns>
         public Stream GetStream()
         {
+            // TODO: Wasteful implementation. Make a method that takes a Span<byte> as parameter
 	        using var buffer = MemoryPool<byte>.Shared.Rent((int)Chunk.UncompressedLength);
 	        Chunk.CopyToMemory(buffer.Memory);
 
@@ -119,7 +121,7 @@ namespace PPeX
 
             buffer.Memory.Slice((int)Offset, (int)Size).CopyTo(uncompressedBuffer);
 
-            return new MemoryStream(uncompressedBuffer, false);
+            return new ReadOnlyMemoryStream(buffer.Memory.ToArray());
         }
 
         public void Dispose() { }

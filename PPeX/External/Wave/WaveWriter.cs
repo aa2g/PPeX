@@ -24,7 +24,7 @@ namespace PPeX.External.Wave
 
 	        //descriptor
 	        writer.WriteString("RIFF");
-	        writer.Write((uint)(36 + totalLength));
+	        writer.Write((uint)(totalLength - 8));
 	        writer.WriteString("WAVE");
 
 	        //fmt subchunk
@@ -39,7 +39,7 @@ namespace PPeX.External.Wave
 
 	        //data subchunk
 	        writer.WriteString("data");
-	        writer.Write((uint)totalLength);
+	        writer.Write((uint)totalLength - 44);
 
 	        writer.Flush();
         }
