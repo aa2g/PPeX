@@ -20,7 +20,7 @@ namespace PPeX
         /// <summary>
         /// The bitrate that the Opus encoder should use.
         /// </summary>
-        public int OpusVoiceBitrate = 32000;
+        public int OpusVoiceBitrate = 36000;
 
         /// <summary>
         /// The bit precision that the mesh encoder should use. Set to 0 for lossless mode.

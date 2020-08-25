@@ -68,8 +68,8 @@ namespace PPeX.External.libresample
 
         public int ResampleUpperBound(int sampleCount)
         {
-	        //return (int)Math.Ceiling(sampleCount * factor);
-	        return sampleCount;
+            // Really dodgy estimate
+	        return Math.Max(sampleCount, (int)Math.Ceiling(sampleCount * factor) + 32);
         }
 
         protected static IMemoryOwner<T> GetNth<T>(ReadOnlySpan<T> original, int divisor, int offset, out int newLength)

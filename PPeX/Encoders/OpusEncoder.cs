@@ -10,10 +10,6 @@ namespace PPeX.Encoders
 {
     public class OpusEncoder : IDisposable
     {
-        public ArchiveFileType Encoding => ArchiveFileType.OpusAudio;
-
-        public ArchiveDataType DataType => ArchiveDataType.Audio;
-
         public void Encode(Stream input, Stream output)
         {
 			using var bufferedWaveInput = new BufferedStream(input);
@@ -23,53 +19,100 @@ namespace PPeX.Encoders
 
             int resampleRate = wav.SampleRate < 24000 ? 24000 : 48000;
 
-            var application = channels > 1 ? Application.Audio : Application.Voip;
-
-            using var opus = External.Opus.OpusEncoder.Create(resampleRate, channels, application);
+            using var opus = External.Opus.OpusEncoder.Create(resampleRate, channels, channels > 1 ? Application.Audio : Application.Voip);
             using var wrapper = new OggWrapper(output, channels, (ushort) opus.LookaheadSamples, true);
             using var resampler = new LibResampler(wav.SampleRate, resampleRate, channels);
 
+
             opus.Bitrate = channels > 1 ? Core.Settings.OpusMusicBitrate : Core.Settings.OpusVoiceBitrate;
 
+
+
             int rawSampleCount = (int) Math.Round(resampleRate * Core.Settings.OpusFrameSize);
-            int inputSampleCount = (int) Math.Round(wav.SampleRate * Core.Settings.OpusFrameSize);
-            int samplesToRead = rawSampleCount * channels;
-            int inputSamplesToRead = inputSampleCount * channels;
+            int samplesPerFrame = rawSampleCount * channels;
 
-            using var inputSampleBuffer = MemoryPool<float>.Shared.Rent(inputSamplesToRead);
-			Span<float> inputSampleSpan = inputSampleBuffer.Memory.Span.Slice(0, inputSamplesToRead);
 
-            int packetCount = 0;
 
-            int outputSamplesUpperBound = resampler.ResampleUpperBound(samplesToRead);
-            using var outputSampleBuffer = MemoryPool<float>.Shared.Rent(outputSamplesUpperBound);
-            Span<float> outputSampleSpan = inputSampleBuffer.Memory.Span.Slice(0, outputSamplesUpperBound);
+            using var tempFloatBuffer = MemoryPool<float>.Shared.Rent(8192);
+			Span<float> tempFloatBufferSpan = tempFloatBuffer.Memory.Span;
 
-            using var encodedSampleBuffer = MemoryPool<byte>.Shared.Rent(outputSamplesUpperBound);
-            var encodedSampleSpan = encodedSampleBuffer.Memory.Span;
+            using var tempByteBuffer = MemoryPool<byte>.Shared.Rent(8192);
+			Span<byte> tempByteBufferSpan = tempByteBuffer.Memory.Span;
 
-			while (true)
+
+            int outputSamplesUpperBound = resampler.ResampleUpperBound(samplesPerFrame);
+
+            using var outputSampleBuffer = MemoryPool<float>.Shared.Rent(outputSamplesUpperBound * 3);
+            Span<float> outputSampleSpan = outputSampleBuffer.Memory.Span.Slice(0, outputSamplesUpperBound * 3);
+
+            int outputSpanStackPointer = 0;
+
+
+
+            bool AppendToOutputSpan(Span<float> inputSampleSpan, Span<float> outputSampleSpan)
             {
 	            int result = wav.Read(inputSampleSpan);
 
-	            if (result < inputSamplesToRead)
+	            bool lastBuffer = false;
+
+	            if (result < inputSampleSpan.Length)
 	            {
+		            lastBuffer = true;
+
 		            int newSize = result - (result % channels);
 
 		            inputSampleSpan = inputSampleSpan.Slice(0, newSize);
 	            }
 
-	            resampler.Resample(inputSampleSpan, outputSampleSpan, result < inputSamplesToRead, out _);
+	            resampler.Resample(inputSampleSpan, outputSampleSpan.Slice(outputSpanStackPointer), lastBuffer, out var outputLength);
 
-	            opus.Encode(outputSampleSpan, encodedSampleSpan, rawSampleCount, out int outlen);
+	            outputSpanStackPointer += outputLength;
 
-	            wrapper.WritePacket(encodedSampleBuffer.Memory.Slice(0, outlen),
-		            (int)(48000 * Core.Settings.OpusFrameSize),
-		            result < inputSamplesToRead);
-
-	            if (result < inputSamplesToRead)
-		            break;
+	            return !lastBuffer;
             }
+
+            void MoveOutputToEncoded(bool lastFrame, Span<float> outputSampleSpan, Span<byte> encodedSampleSpan)
+            {
+	            if (lastFrame)
+	            {
+                    outputSampleSpan.Slice(outputSpanStackPointer, samplesPerFrame - outputSpanStackPointer).Clear();
+					// TODO: Tweak the frame size for end frames to minimize silent time
+	            }
+
+	            opus.Encode(outputSampleSpan.Slice(0, samplesPerFrame), encodedSampleSpan, rawSampleCount, out int outlen);
+
+	            wrapper.WritePacket(tempByteBuffer.Memory.Slice(0, outlen),
+		            rawSampleCount,
+		            lastFrame);
+
+	            if (!lastFrame)
+	            {
+		            outputSampleSpan.Slice(samplesPerFrame, outputSpanStackPointer - samplesPerFrame).CopyTo(outputSampleSpan);
+
+		            outputSpanStackPointer -= samplesPerFrame;
+	            }
+            }
+
+			while (true)
+			{
+				bool lastFrame = false;
+
+				while (outputSpanStackPointer < samplesPerFrame && !lastFrame)
+				{
+					lastFrame = !AppendToOutputSpan(tempFloatBufferSpan, outputSampleSpan);
+				}
+
+				while (outputSpanStackPointer >= samplesPerFrame)
+				{
+					MoveOutputToEncoded(false, outputSampleSpan, tempByteBufferSpan);
+				}
+
+				if (lastFrame)
+				{
+					MoveOutputToEncoded(true, outputSampleSpan, tempByteBufferSpan);
+					break;
+				}
+			}
         }
 
         public void Decode(Stream input, Stream output, bool resample)
