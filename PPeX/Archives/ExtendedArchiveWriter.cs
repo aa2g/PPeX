@@ -93,31 +93,29 @@ namespace PPeX
             int i = 0;
             double total = ppSubfiles.Sum(x => x.Value.Count);
 
-            foreach (var ppFile in ppSubfiles)
+            await ppSubfiles.ForEachAsync(4, async ppFile =>
             {
-                await using var fileStream = new FileStream(ppFile.Key, FileMode.Open, FileAccess.Read);
+	            await using var fileStream = new FileStream(ppFile.Key, FileMode.Open, FileAccess.Read);
 
-                foreach (var file in ppFile.Value)
-                {
-	                using var rentedMemory = MemoryPool<byte>.Shared.Rent((int)file.Subfile.size);
+	            foreach (var file in ppFile.Value)
+	            {
+		            using var rentedMemory = MemoryPool<byte>.Shared.Rent((int)file.Subfile.size);
 
-	                await using var substream = file.Subfile.CreateReadStream(fileStream);
+		            await using var substream = file.Subfile.CreateReadStream(fileStream);
 
-	                int totalRead = 0;
-	                int read = -1;
-	                while (read != 0)
-	                {
-		                read = await substream.ReadAsync(rentedMemory.Memory.Slice(totalRead, (int)file.Subfile.size - totalRead));
-		                totalRead += read;
-	                }
+		            int totalRead = 0;
+		            int read = -1;
+		            while (read != 0)
+		            {
+			            read = await substream.ReadAsync(rentedMemory.Memory.Slice(totalRead, (int)file.Subfile.size - totalRead));
+			            totalRead += read;
+		            }
 
-					file.Md5 = Utility.GetMd5(rentedMemory.Memory.Span.Slice(0, (int)file.Subfile.size));
+		            file.Md5 = Utility.GetMd5(rentedMemory.Memory.Span.Slice(0, (int)file.Subfile.size));
 
-	                i++;
-
-	                progressPercentage.Report((int)(i * 100 / total));
-                }
-            }
+		            progressPercentage.Report((int)(Interlocked.Increment(ref i) * 100 / total));
+	            }
+            });
         }
 
         protected async Task AllocateBlocks(IProgress<string> ProgressStatus, IProgress<int> ProgressPercentage, uint startingID = 0)
