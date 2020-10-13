@@ -189,7 +189,9 @@ namespace PPeXM64
                 foreach (string pp in loadedPP)
                 {
 	                handler.WriteString(pp);
-                    Console.WriteLine(pp);
+                    
+	                if (LogFiles)
+						Console.WriteLine(pp);
                 }
 
                 handler.WriteString("");
@@ -225,7 +227,7 @@ namespace PPeXM64
 
                     if (!Cache.LoadedFiles.TryGetValue(fileMd5, out var cachedFile))
                     {
-                        Console.WriteLine("Cache miss");
+                        //Console.WriteLine("Cache miss");
 
 	                    var chunk = Cache.LoadedFileReferences[entry];
 
@@ -253,7 +255,7 @@ namespace PPeXM64
 
                     ZstdDecompressor.DecompressData(compressedDataRef.Memory.Span, buffer.Memory.Span, out int uncompressedSize);
 
-                    Console.WriteLine($"Expected: {Utility.GetBytesReadable(cachedFile.UncompressedSize)} Actual: {Utility.GetBytesReadable(uncompressedSize)}");
+                    //Console.WriteLine($"Expected: {Utility.GetBytesReadable(cachedFile.UncompressedSize)} Actual: {Utility.GetBytesReadable(uncompressedSize)}");
 
                     if (entry.File.EndsWith("wav"))
                     {
@@ -261,11 +263,11 @@ namespace PPeXM64
                         //using (var rentedSpan = MemoryPool<byte>.Shared.Rent(48_000_000))
                         using (var outputStream = new MemoryStream())
 	                    {
-		                    OpusEncoder.Decode(inputStream, outputStream, true);
+		                    OpusEncoder.Decode(inputStream, outputStream, false);
 
 		                    outputStream.Position = 0;
 
-                            Console.WriteLine($"Decompressed wav size: {Utility.GetBytesReadable(outputStream.Length)}");
+                            //Console.WriteLine($"Decompressed wav size: {Utility.GetBytesReadable(outputStream.Length)}");
 
 		                    handler.WriteString(outputStream.Length.ToString());
                             outputStream.CopyTo(handler.BaseStream);
