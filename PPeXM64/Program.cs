@@ -188,7 +188,7 @@ namespace PPeXM64
 
                 foreach (string pp in loadedPP)
                 {
-	                handler.WriteString(pp);
+	                handler.WriteString(pp + ".pp");
                     
 	                if (LogFiles)
 						Console.WriteLine(pp);
