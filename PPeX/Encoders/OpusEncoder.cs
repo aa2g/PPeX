@@ -42,8 +42,8 @@ namespace PPeX.Encoders
 
             int outputSamplesUpperBound = resampler.ResampleUpperBound(samplesPerFrame);
 
-            using var outputSampleBuffer = MemoryPool<float>.Shared.Rent(outputSamplesUpperBound * 3);
-            Span<float> outputSampleSpan = outputSampleBuffer.Memory.Span.Slice(0, outputSamplesUpperBound * 3);
+            using var outputSampleBuffer = MemoryPool<float>.Shared.Rent(outputSamplesUpperBound * 10);
+            Span<float> outputSampleSpan = outputSampleBuffer.Memory.Span.Slice(0, outputSamplesUpperBound * 10);
 
             int outputSpanStackPointer = 0;
 

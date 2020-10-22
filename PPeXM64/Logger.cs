@@ -5,7 +5,7 @@ namespace PPeXM64
 {
 	public static class Logger
 	{
-		static bool IsLogging = true;
+		static bool IsLogging = false;
 
 		static List<string> OrderedList = new List<string>();
 		static Dictionary<string, int> AccessedList = new Dictionary<string, int>();

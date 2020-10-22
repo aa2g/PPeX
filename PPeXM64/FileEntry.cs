@@ -21,14 +21,14 @@ namespace PPeXM64
 
 		public FileEntry(string archive, string file)
 		{
-			Archive = archive.ToLower().Replace(".pp", "");
-			File = file.ToLower();
+			Archive = archive.Replace(".pp", "").Trim();
+			File = file.ToLower().Trim();
 		}
 
 		public FileEntry(ArchiveSubfile subfile)
 		{
-			Archive = subfile.ArchiveName.ToLower().Replace(".pp", "");
-			File = subfile.EmulatedName.ToLower();
+			Archive = subfile.ArchiveName.Replace(".pp", "");
+			File = subfile.EmulatedName.ToLower().Trim();
 		}
 
 		public override bool Equals(object obj)

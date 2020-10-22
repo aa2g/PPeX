@@ -81,11 +81,8 @@ namespace PPeX.External
 		/// <returns>The library handle.</returns>
 		public static IntPtr OpenLibrary(string name, bool skipMapping = false, int? flags = null)
 		{
-			if (!InternalTryOpenLibrary(name, out var libraryPtr, skipMapping, flags))
+			if (!TryOpenLibrary(name, out var libraryPtr, skipMapping, flags))
 				throw new DllNotFoundException($"Unable to load library '{name}'");
-
-			if (!CheckError(out var exception))
-				throw exception;
 
 			return libraryPtr;
 		}
@@ -101,13 +98,7 @@ namespace PPeX.External
 		public static bool TryOpenLibrary(string name, out IntPtr libraryPtr, bool skipMapping = false,
 			int? flags = null)
 		{
-			if (!InternalTryOpenLibrary(name, out libraryPtr, skipMapping, flags))
-				return false;
-
-			if (!CheckError(out _))
-				return false;
-
-			return true;
+			return InternalTryOpenLibrary(name, out libraryPtr, skipMapping, flags) || CheckError(out _);
 		}
 
 		private static bool InternalTryOpenLibrary(string name, out IntPtr libraryPtr, bool skipMapping, int? flags)
@@ -184,13 +175,7 @@ namespace PPeX.External
 		/// <returns>True if the function pointer was obtained, false otherwise.</returns>
 		public static bool TryGetFunction(this IntPtr libraryPtr, string name, out IntPtr functionPtr)
 		{
-			if (!InternalTryGetFunction(libraryPtr, name, out functionPtr))
-				return false;
-
-			if (!CheckError(out _))
-				return false;
-
-			return true;
+			return InternalTryGetFunction(libraryPtr, name, out functionPtr) || CheckError(out _);
 		}
 
 		private static bool InternalTryGetFunction(IntPtr libraryPtr, string name, out IntPtr functionPtr)

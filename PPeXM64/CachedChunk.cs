@@ -16,7 +16,6 @@ namespace PPeXM64
         public uint ID => BaseChunk.ID;
         public CompressedCache BaseCache;
         public ExtendedArchiveChunk BaseChunk;
-        public static readonly ArchiveChunkCompression RecompressionMethod = ArchiveChunkCompression.Zstandard;
 
         public CachedChunk(ExtendedArchiveChunk baseChunk, CompressedCache cache)
         {

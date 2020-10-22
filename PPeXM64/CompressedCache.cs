@@ -48,6 +48,8 @@ namespace PPeXM64
                     {
 	                    var entry = new FileEntry(file.ArchiveName, file.EmulatedName);
 
+
+
                         ReferenceMd5Sums[entry] = file.RawSource.Md5;
 	                    LoadedFileReferences[entry] = cachedChunk;
                     }

@@ -61,7 +61,7 @@ namespace PPeXM64
         {
 	        PoolSize = poolSize;
 
-	        HeapPointer = Marshal.AllocHGlobal((int)poolSize);
+	        HeapPointer = Marshal.AllocHGlobal((IntPtr)poolSize);
             UnderlyingMemory = new UnmanagedMemory(HeapPointer, poolSize).Memory;
         }
 

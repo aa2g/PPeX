@@ -280,73 +280,83 @@ namespace PPeX
 
 			            foreach (var subfile in queuedChunk.Subfiles)
 			            {
-				            FileReceipt receipt;
-
-				            if ((receipt = fileReceipts.Find(x => x.Md5 == subfile.Source.Md5)) != null)
+				            try
 				            {
-					            receipt = FileReceipt.CreateDuplicate(receipt, subfile);
 
-					            receipt.Filename = subfile.Name;
-					            receipt.EmulatedName = subfile.Name;
-					            receipt.ArchiveName = subfile.ArchiveName;
-				            }
-				            else if (subfile.RequestedConversion != null)
-				            {
-					            if (subfile.RequestedConversion.TargetEncoding != ArchiveFileType.OpusAudio)
-						            throw new NotImplementedException("Only supports opus encoding at this time");
+					            FileReceipt receipt;
 
-					            using var opusEncoder = new OpusEncoder();
-
-					            using var inputStream = subfile.GetStream();
-					            using var bufferStream = new MemorySpanStream(uncompressedBuffer.Memory.Slice(currentBufferIndex));
-
-					            opusEncoder.Encode(inputStream, bufferStream);
-
-					            receipt = new FileReceipt
+					            if ((receipt = fileReceipts.Find(x => x.Md5 == subfile.Source.Md5)) != null)
 					            {
-						            Md5 = Utility.GetMd5(bufferStream.SliceToCurrentPosition().Span),
-						            Length = (ulong)bufferStream.Position,
-						            Offset = (ulong)0,
-						            Filename = opusEncoder.RealNameTransform(subfile.Name),
-						            EmulatedName = subfile.Name,
-						            Encoding = ArchiveFileType.OpusAudio,
-						            ArchiveName = subfile.ArchiveName,
-						            Subfile = subfile
-					            };
+						            receipt = FileReceipt.CreateDuplicate(receipt, subfile);
 
-					            currentBufferIndex += (int)receipt.Length;
-				            }
-				            else
-				            {
-					            using var inputStream = subfile.GetStream();
-
-					            int totalRead = 0;
-
-					            while (totalRead < (int)subfile.Size)
+						            receipt.Filename = subfile.Name;
+						            receipt.EmulatedName = subfile.Name;
+						            receipt.ArchiveName = subfile.ArchiveName;
+					            }
+					            else if (subfile.RequestedConversion != null)
 					            {
-						            int read = inputStream.Read(
-							            uncompressedBuffer.Memory.Span.Slice(currentBufferIndex,
-								            (int)subfile.Size - totalRead));
+						            if (subfile.RequestedConversion.TargetEncoding != ArchiveFileType.OpusAudio)
+							            throw new NotImplementedException("Only supports opus encoding at this time");
 
-						            totalRead += read;
+						            using var opusEncoder = new OpusEncoder();
+
+						            using var inputStream = subfile.GetStream();
+						            using var bufferStream =
+							            new MemorySpanStream(uncompressedBuffer.Memory.Slice(currentBufferIndex));
+
+						            opusEncoder.Encode(inputStream, bufferStream);
+
+						            receipt = new FileReceipt
+						            {
+							            Md5 = Utility.GetMd5(bufferStream.SliceToCurrentPosition().Span),
+							            Length = (ulong)bufferStream.Position,
+							            Offset = (ulong)0,
+							            Filename = opusEncoder.RealNameTransform(subfile.Name),
+							            EmulatedName = subfile.Name,
+							            Encoding = ArchiveFileType.OpusAudio,
+							            ArchiveName = subfile.ArchiveName,
+							            Subfile = subfile
+						            };
+
+						            currentBufferIndex += (int)receipt.Length;
+					            }
+					            else
+					            {
+						            using var inputStream = subfile.GetStream();
+
+						            int totalRead = 0;
+
+						            while (totalRead < (int)subfile.Size)
+						            {
+							            int read = inputStream.Read(
+								            uncompressedBuffer.Memory.Span.Slice(currentBufferIndex,
+									            (int)subfile.Size - totalRead));
+
+							            totalRead += read;
+						            }
+
+						            receipt = new FileReceipt
+						            {
+							            Md5 = subfile.Source.Md5,
+							            Length = subfile.Size,
+							            Offset = (ulong)currentBufferIndex,
+							            Filename = subfile.Name,
+							            EmulatedName = subfile.Name,
+							            Encoding = subfile.Type,
+							            ArchiveName = subfile.ArchiveName,
+							            Subfile = subfile
+						            };
+
+						            currentBufferIndex += (int)receipt.Length;
 					            }
 
-					            receipt = new FileReceipt
-					            {
-						            Md5 = subfile.Source.Md5,
-						            Length = subfile.Size,
-						            Offset = (ulong)currentBufferIndex,
-						            Filename = subfile.Name,
-						            EmulatedName = subfile.Name,
-						            Encoding = subfile.Type,
-						            ArchiveName = subfile.ArchiveName,
-						            Subfile = subfile
-					            };
+					            fileReceipts.Add(receipt);
 
-					            currentBufferIndex += (int)receipt.Length;
 				            }
-
-				            fileReceipts.Add(receipt);
+				            catch (Exception ex)
+				            {
+                                throw new Exception($"Failed to compress file '{subfile.ArchiveName}/{subfile.Name}'", ex);
+				            }
 			            }
 
 			            Memory<byte> uncompressedSpan = uncompressedBuffer.Memory.Slice(0, currentBufferIndex);

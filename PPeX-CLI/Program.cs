@@ -160,12 +160,6 @@ Sets a regex to use for compressing or extracting.
 Verifies individual file MD5 results, instead of just the CRC32.
 Default is off, available options are 'on' and 'off'.");
 
-#if DEBUG
-                Console.WriteLine();
-                Console.WriteLine("Press any key to continue...");
-                Console.ReadKey();
-#endif
-
                 return;
             }
 
@@ -191,12 +185,6 @@ Default is off, available options are 'on' and 'off'.");
             {
                 Console.WriteLine("No valid switch passed!");
             }
-
-#if DEBUG
-            Console.WriteLine();
-            Console.WriteLine("Press any key to continue...");
-            Console.ReadKey();
-#endif
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -232,7 +220,7 @@ Default is off, available options are 'on' and 'off'.");
 
             int argcounter = 1;
             int chunksize = ConvertFromReadable("16M");
-            int threads = 1;
+            int threads = 2;
             string name = Path.GetFileNameWithoutExtension(args.Last());
             string compression = "zstd";
             string currentArg;
@@ -358,11 +346,14 @@ Default is off, available options are 'on' and 'off'.");
                     continue;
                 }
 
-                string parentpath = Path.GetDirectoryName(path);
-                string localpath = Path.GetFileName(path);
+                string parentPath = Path.GetDirectoryName(path);
+                string localPath = Path.GetFileName(path);
 
-                foreach (string filepath in Directory.EnumerateFiles(parentpath, localpath, SearchOption.TopDirectoryOnly))
+                foreach (string filepath in Directory.EnumerateFiles(parentPath, localPath, SearchOption.TopDirectoryOnly))
                 {
+	                if (Path.GetFileName(filepath) == "base.pp")
+		                continue;
+
                     if (filepath.EndsWith(".pp"))
                     {
                         //.pp file
@@ -372,7 +363,7 @@ Default is off, available options are 'on' and 'off'.");
                     }
                 }
 
-                foreach (string dirpath in Directory.EnumerateDirectories(parentpath, localpath, SearchOption.TopDirectoryOnly))
+                foreach (string dirpath in Directory.EnumerateDirectories(parentPath, localPath, SearchOption.TopDirectoryOnly))
                 {
                     name = Path.GetFileNameWithoutExtension(dirpath) + ".pp";
 

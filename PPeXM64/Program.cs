@@ -70,31 +70,33 @@ namespace PPeXM64
             server.OnRequest += Server_OnRequest;
             server.OnDisconnect += Server_OnDisconnect;
 
-            if (Directory.Exists(PPXLocation))
+            if (!Directory.Exists(PPXLocation))
             {
-                Console.WriteLine("Loading from " + PPXLocation);
-
-                List<ExtendedArchive> ArchivesToLoad = new List<ExtendedArchive>();
-
-                //Index all .ppx files in the location
-                foreach (string arc in Directory.EnumerateFiles(PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly).OrderBy(x => x))
-                {
-                    var archive = new ExtendedArchive(arc);
-
-                    ArchivesToLoad.Add(archive);
-                }
-
-                Cache = new CompressedCache(ArchivesToLoad, new Progress<string>((x) =>
-                {
-                    Console.WriteLine(x);
-                }), 512 * 1024 * 1024);
+	            Console.WriteLine("Invalid load directory! (" + PPXLocation + ")");
+	            return;
             }
-            else
-                Console.WriteLine("Invalid load directory! (" + PPXLocation + ")");
+
+            Console.WriteLine("Loading from " + PPXLocation);
+
+            List<ExtendedArchive> ArchivesToLoad = new List<ExtendedArchive>();
+
+            //Index all .ppx files in the location
+            foreach (string arc in Directory.EnumerateFiles(PPXLocation, "*.ppx", SearchOption.TopDirectoryOnly)
+	            .OrderBy(x => x))
+            {
+	            var archive = new ExtendedArchive(arc);
+
+	            ArchivesToLoad.Add(archive);
+            }
+
+            const long cacheSize = (long)(1.8 * 1024 * 1024 * 1024);
+            const long trimSize = (long)(cacheSize * 0.9);
+
+            Cache = new CompressedCache(ArchivesToLoad, new Progress<string>(Console.WriteLine), cacheSize);
 
             TrimTimer.Elapsed += (s, e) =>
             {
-                Cache.Trim((long)2 * 1024 * 1024 * 1024);
+                Cache.Trim(trimSize);
                 Console.WriteLine("Cache size:" + Utility.GetBytesReadable(Cache.AllocatedMemorySize));
             };
 
