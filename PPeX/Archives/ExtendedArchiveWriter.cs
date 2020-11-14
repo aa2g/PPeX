@@ -564,7 +564,7 @@ namespace PPeX
                         completedFiles += chunk.Receipt.FileReceipts.Count;
                         ProgressPercentage.Report(completedFiles * 100 / totalFiles);
 	                }
-                }, TaskCreationOptions.LongRunning);
+                }, TaskCreationOptions.LongRunning).Unwrap();
 
                 ProgressStatus.Report("Allocating chunks...\r\n");
                 ProgressPercentage.Report(0);
